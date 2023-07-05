@@ -19,9 +19,13 @@ type Params = Partial<typeof defaultParams & {
 	onDragStart: DragCallback
 	onDragStop: DragCallback
 	onDrag: DragCallback
+
+	// Vertical:
 	onVerticalDragStart: DragCallback
 	onVerticalDragStop: DragCallback
 	onVerticalDrag: DragCallback
+
+	// Horizontal:
 	onHorizontalDragStart: DragCallback
 	onHorizontalDragStop: DragCallback
 	onHorizontalDrag: DragCallback
@@ -43,6 +47,7 @@ export function handleDrag(element: HTMLElement, params: Params) {
 
 	let down = false
 	let drag = false
+	let dragIsLongEnough = false
 	let frameID = -1
 	const pointer = new DOMPoint(0, 0)
 	const startPosition = new DOMPoint(0, 0)
@@ -91,7 +96,7 @@ export function handleDrag(element: HTMLElement, params: Params) {
 
 	const dragStop = () => {
 		drag = false
-		
+
 		onDragStop?.(info)
 		switch (info.direction) {
 			case 'horizontal': {
@@ -117,6 +122,12 @@ export function handleDrag(element: HTMLElement, params: Params) {
 	}
 
 	const dragUpdate = () => {
+		if (dragIsLongEnough) {
+			updatePosition(pointer.x, pointer.y)
+		} else {
+			updatePosition(startPosition.x, startPosition.y)
+		}
+
 		onDrag?.(info)
 		switch (info.direction) {
 			case 'horizontal': {
@@ -133,23 +144,17 @@ export function handleDrag(element: HTMLElement, params: Params) {
 	const dragFrame = () => {
 		if (down) {
 			frameID = window.requestAnimationFrame(dragFrame)
-	
+
 			const dx = startPosition.x - pointer.x
 			const dy = startPosition.y - pointer.y
 			const distance = Math.sqrt(dx * dx + dy * dy)
-			const dragIsLongEnough = distance > distanceThreshold
+			dragIsLongEnough = distance > distanceThreshold
 
 			if (drag === false) {
 				if (dragIsLongEnough) {
 					info.direction = Math.abs(dx / dy) >= 1 ? 'horizontal' : 'vertical'
 					dragStart()
 				}
-			}
-
-			if (dragIsLongEnough) {
-				updatePosition(pointer.x, pointer.y)
-			} else {
-				updatePosition(startPosition.x, startPosition.y)
 			}
 
 			if (drag) {
