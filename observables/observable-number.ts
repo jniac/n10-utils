@@ -94,4 +94,16 @@ export class ObservableNumber extends Observable<number> {
 	increment(delta: number): boolean {
 		return this.setValue(this._value + delta)
 	}
+
+	lerp(target: number, alpha: number, {
+		clamp = true,
+		epsilon = 1e-6,
+	} = {}): boolean {
+		const value = this._value
+		let newValue = value + (target - value) * (clamp ? alpha < 0 ? 0 : alpha > 1 ? 1 : alpha : alpha)
+		if (Math.abs(newValue - value) < epsilon) {
+			newValue = target
+		}
+		return this.setValue(newValue)
+	}
 }
