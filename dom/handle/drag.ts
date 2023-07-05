@@ -1,5 +1,8 @@
 
+type Direction = 'horizontal' | 'vertical'
+
 type Info = {
+	direction: Direction
 	startPosition: DOMPoint
 	position: DOMPoint
 	movement: DOMPoint
@@ -16,6 +19,12 @@ type Params = Partial<typeof defaultParams & {
 	onDragStart: DragCallback
 	onDragStop: DragCallback
 	onDrag: DragCallback
+	onVerticalDragStart: DragCallback
+	onVerticalDragStop: DragCallback
+	onVerticalDrag: DragCallback
+	onHorizontalDragStart: DragCallback
+	onHorizontalDragStop: DragCallback
+	onHorizontalDrag: DragCallback
 }>
 
 export function handleDrag(element: HTMLElement, params: Params) {
@@ -24,6 +33,12 @@ export function handleDrag(element: HTMLElement, params: Params) {
 		onDragStart,
 		onDragStop,
 		onDrag,
+		onVerticalDragStart,
+		onVerticalDragStop,
+		onVerticalDrag,
+		onHorizontalDragStart,
+		onHorizontalDragStop,
+		onHorizontalDrag,
 	} = { ...defaultParams, ...params }
 
 	let down = false
@@ -34,7 +49,55 @@ export function handleDrag(element: HTMLElement, params: Params) {
 	const position = new DOMPoint(0, 0)
 	const movement = new DOMPoint(0, 0)
 	const delta = new DOMPoint(0, 0)
-	const info: Info = { startPosition, position, movement, delta }
+	const info: Info = {
+		direction: 'horizontal',
+		startPosition,
+		position,
+		movement,
+		delta,
+	}
+
+	const callbackStart = () => {
+		onDragStart?.(info)
+		switch (info.direction) {
+			case 'horizontal': {
+				onHorizontalDragStart?.(info)
+				break
+			}
+			case 'vertical': {
+				onVerticalDragStart?.(info)
+				break
+			}
+		}
+	}
+
+	const callback = () => {
+		onDrag?.(info)
+		switch (info.direction) {
+			case 'horizontal': {
+				onHorizontalDrag?.(info)
+				break
+			}
+			case 'vertical': {
+				onVerticalDrag?.(info)
+				break
+			}
+		}
+	}
+
+	const callbackStop = () => {
+		onDragStop?.(info)
+		switch (info.direction) {
+			case 'horizontal': {
+				onHorizontalDragStop?.(info)
+				break
+			}
+			case 'vertical': {
+				onVerticalDragStop?.(info)
+				break
+			}
+		}
+	}
 
 	const dragFrame = () => {
 		if (down) {
@@ -48,12 +111,13 @@ export function handleDrag(element: HTMLElement, params: Params) {
 				const distance = Math.sqrt(movement.x * movement.x + movement.y * movement.y)
 				if (distance > distanceThreshold) {
 					drag = true
-					onDragStart?.(info)
+					info.direction = Math.abs(movement.x / movement.y) >= 1 ? 'horizontal' : 'vertical'
+					callbackStart()
 				}
 			}
 
 			if (drag) {
-				onDrag?.(info)
+				callback()
 			}
 		}
 	}
@@ -86,7 +150,7 @@ export function handleDrag(element: HTMLElement, params: Params) {
 		window.removeEventListener("mousemove", onMouseMove)
 		window.addEventListener("mouseup", onMouseUp)
 		if (drag) {
-			onDragStop?.(info)
+			callbackStop()
 		}
 		drag = false
 		down = false
@@ -130,7 +194,7 @@ export function handleDrag(element: HTMLElement, params: Params) {
 			window.removeEventListener("touchmove", onTouchMove)
 			window.removeEventListener("touchend", onTouchEnd)
 			if (drag) {
-				onDragStop?.(info)
+				callbackStop()
 			}
 			down = false
 			drag = false
