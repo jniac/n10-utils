@@ -47,6 +47,7 @@ export function handleDrag(element: HTMLElement, params: Params) {
 	const pointer = new DOMPoint(0, 0)
 	const startPosition = new DOMPoint(0, 0)
 	const position = new DOMPoint(0, 0)
+	const positionOld = new DOMPoint(0, 0)
 	const movement = new DOMPoint(0, 0)
 	const delta = new DOMPoint(0, 0)
 	const info: Info = {
@@ -57,7 +58,24 @@ export function handleDrag(element: HTMLElement, params: Params) {
 		delta,
 	}
 
-	const callbackStart = () => {
+	const frameStart = (x: number, y: number) => {
+		frameID = window.requestAnimationFrame(dragFrame)
+		down = true
+		startPosition.x = x
+		startPosition.y = y
+		pointer.x = x
+		pointer.y = y
+	}
+
+	const dragStart = () => {
+		drag = true
+		delta.x = 0
+		delta.y = 0
+		movement.x = 0
+		movement.y = 0
+		position.x = startPosition.x
+		position.y = startPosition.y
+
 		onDragStart?.(info)
 		switch (info.direction) {
 			case 'horizontal': {
@@ -71,21 +89,9 @@ export function handleDrag(element: HTMLElement, params: Params) {
 		}
 	}
 
-	const callback = () => {
-		onDrag?.(info)
-		switch (info.direction) {
-			case 'horizontal': {
-				onHorizontalDrag?.(info)
-				break
-			}
-			case 'vertical': {
-				onVerticalDrag?.(info)
-				break
-			}
-		}
-	}
-
-	const callbackStop = () => {
+	const dragStop = () => {
+		drag = false
+		
 		onDragStop?.(info)
 		switch (info.direction) {
 			case 'horizontal': {
@@ -99,25 +105,55 @@ export function handleDrag(element: HTMLElement, params: Params) {
 		}
 	}
 
+	const updatePosition = (x: number, y: number) => {
+		positionOld.x = position.x
+		positionOld.y = position.y
+		position.x += (x - position.x) * .2
+		position.y += (y - position.y) * .2
+		delta.x = position.x - positionOld.x
+		delta.y = position.y - positionOld.y
+		movement.x = position.x - startPosition.x
+		movement.y = position.y - startPosition.y
+	}
+
+	const dragUpdate = () => {
+		onDrag?.(info)
+		switch (info.direction) {
+			case 'horizontal': {
+				onHorizontalDrag?.(info)
+				break
+			}
+			case 'vertical': {
+				onVerticalDrag?.(info)
+				break
+			}
+		}
+	}
+
 	const dragFrame = () => {
 		if (down) {
 			frameID = window.requestAnimationFrame(dragFrame)
-			delta.x = pointer.x - position.x
-			delta.y = pointer.y - position.y
-			position.x += delta.x
-			position.y += delta.y
+	
+			const dx = startPosition.x - pointer.x
+			const dy = startPosition.y - pointer.y
+			const distance = Math.sqrt(dx * dx + dy * dy)
+			const dragIsLongEnough = distance > distanceThreshold
 
 			if (drag === false) {
-				const distance = Math.sqrt(movement.x * movement.x + movement.y * movement.y)
-				if (distance > distanceThreshold) {
-					drag = true
-					info.direction = Math.abs(movement.x / movement.y) >= 1 ? 'horizontal' : 'vertical'
-					callbackStart()
+				if (dragIsLongEnough) {
+					info.direction = Math.abs(dx / dy) >= 1 ? 'horizontal' : 'vertical'
+					dragStart()
 				}
 			}
 
+			if (dragIsLongEnough) {
+				updatePosition(pointer.x, pointer.y)
+			} else {
+				updatePosition(startPosition.x, startPosition.y)
+			}
+
 			if (drag) {
-				callback()
+				dragUpdate()
 			}
 		}
 	}
@@ -125,34 +161,20 @@ export function handleDrag(element: HTMLElement, params: Params) {
 	const onMouseDown = (event: MouseEvent) => {
 		window.addEventListener("mousemove", onMouseMove)
 		window.addEventListener("mouseup", onMouseUp)
-		frameID = window.requestAnimationFrame(dragFrame)
-		down = true
-		delta.x = 0
-		delta.y = 0
-		movement.x = 0
-		movement.y = 0
-		startPosition.x = event.clientX
-		startPosition.y = event.clientY
-		position.x = event.clientX
-		position.y = event.clientY
-		pointer.x = event.clientX
-		pointer.y = event.clientY
+		frameStart(event.clientX, event.clientY)
 	}
 
 	const onMouseMove = (event: MouseEvent) => {
 		pointer.x = event.clientX
 		pointer.y = event.clientY
-		movement.x = pointer.x - startPosition.x
-		movement.y = pointer.y - startPosition.y
 	}
 
 	const onMouseUp = () => {
 		window.removeEventListener("mousemove", onMouseMove)
 		window.addEventListener("mouseup", onMouseUp)
 		if (drag) {
-			callbackStop()
+			dragStop()
 		}
-		drag = false
 		down = false
 	}
 
@@ -183,8 +205,6 @@ export function handleDrag(element: HTMLElement, params: Params) {
 		if (touch.identifier === firstTouch!.identifier) {
 			pointer.x = touch.clientX
 			pointer.y = touch.clientY
-			movement.x = pointer.x - startPosition.x
-			movement.y = pointer.y - startPosition.y
 		}
 	}
 
@@ -194,10 +214,9 @@ export function handleDrag(element: HTMLElement, params: Params) {
 			window.removeEventListener("touchmove", onTouchMove)
 			window.removeEventListener("touchend", onTouchEnd)
 			if (drag) {
-				callbackStop()
+				dragStop()
 			}
 			down = false
-			drag = false
 			firstTouch = null
 		}
 	}
