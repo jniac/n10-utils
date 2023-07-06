@@ -29,5 +29,21 @@ export const toff = (x: number) => {
 
 export const limited = (x: number, limit: number) => {
 	return x * limit / (x + limit)
-};
+}
 
+export const signedLimited = (x: number, limit: number) => {
+	return x < 0 ? -limited(-x, limit) : limited(x, limit)
+}
+
+/**
+ * Clamps a value with progressive limit. Useful for user "drag" feedbacks.
+ * https://www.desmos.com/calculator/rnsygpvpcb
+ */
+export const limitedClamp = (x: number, min: number, minLimit: number, max: number, maxLimit: number) => {
+	let limit = 0, delta = 0
+	return (
+		x < min ? min + (limit = minLimit - min) * (delta = x - min) / (limit + delta) :
+		x > max ? max + (limit = maxLimit - max) * (delta = x - max) / (limit + delta) :
+		x
+	)
+}
