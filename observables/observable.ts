@@ -17,6 +17,8 @@ type OnChangeOptions = Partial<{
 	executeImmediately: boolean
 }>
 
+let observableCount = 0
+
 /**
  * Observable is a very simple wrapper around a value (any kind) that makes it 
  * to observe changes on that value.
@@ -46,6 +48,7 @@ type OnChangeOptions = Partial<{
  * ``` 
  */
 class Observable<T> {
+	protected _observableId = observableCount++
 	protected _value: T
 	protected _valueOld: T
 	protected _valueMapper: ValueMapper<T> | null = null;
@@ -145,6 +148,7 @@ class Observable<T> {
 	}
 
 	// Sugar syntax:
+	get observableId() { return this._observableId }
 	get value() { return this._value }
 	set value(value) { this.setValue(value) }
 	get valueOld() { return this._valueOld }
