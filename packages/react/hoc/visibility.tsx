@@ -1,6 +1,6 @@
 import { ReactNode, useMemo, useRef, useState } from "react"
-import { handleTick } from "../../dom/handle/misc"
-import { Observable, ObservableNumber } from "../../observables"
+import { handleTick } from "../../../dom/handle/misc"
+import { Observable, ObservableNumber } from "../../../observables"
 import { useEffects } from "../utils"
 
 const statusOptions = [

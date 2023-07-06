@@ -1,6 +1,6 @@
 import { DependencyList, ForwardedRef, MutableRefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { Destroyable } from "../types"
-import { Observable } from "../observables"
+import { Destroyable } from "../../types"
+import { Observable } from "../../observables"
 
 /**
  * Simplifies the declaration of className. 
