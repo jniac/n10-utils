@@ -1,5 +1,5 @@
-import { lazy } from "../lazy"
-import { DestroyableObject } from "../types"
+import { lazy } from "../../lazy"
+import { DestroyableObject } from "../../types"
 
 const init = lazy(() => {
 	const resizeObserverMap = new WeakMap<Element, any>()

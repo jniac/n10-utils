@@ -1,4 +1,4 @@
-import { DestroyableObject } from "../types"
+import { DestroyableObject } from "../../types"
 
 const defaultParams = {
   /** The max distance that the user may travel when down. */

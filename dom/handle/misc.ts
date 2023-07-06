@@ -1,5 +1,5 @@
-import { DestroyableObject } from "../types"
-import { ClockState, windowClock } from "../clock"
+import { DestroyableObject } from "../../types"
+import { ClockState, windowClock } from "../../clock"
 
 export function handleInterval(interval: number, callback: () => void) {
 	const id = window.setInterval(() => {
