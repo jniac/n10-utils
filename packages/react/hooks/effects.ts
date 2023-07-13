@@ -61,3 +61,28 @@ export function useLayoutEffects<T = undefined>(
 ): UseEffectsReturn<T> {
 	return useEffects(callback, deps, { ...options, moment: 'layoutEffect' })
 }
+
+export function handleMutations<T>(target: T, mutations: Partial<T>) {
+	const cache: Partial<T> = {}
+	for (const key in mutations) {
+		const value = mutations[key]
+		if (value !== undefined) {
+			cache[key] = target[key]
+			target[key] = value
+		}
+	}
+	return () => {
+		for (const key in mutations) {
+			target[key] = cache[key] as any
+		}
+	}
+}
+
+export function useMutations<T>(target: T, mutations: Partial<T> | (() => Partial<T>), deps: DependencyList, options?: UseEffectsOptions) {
+	return useEffects(function* () {
+		yield handleMutations(target,
+			typeof mutations !== 'function'
+				? mutations
+				: mutations())
+	}, [target, ...deps], options)
+}
