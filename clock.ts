@@ -15,8 +15,40 @@ type ClockState = Readonly<{
 	updateLastRequest: number
 }>
 
+type Listener = {
+	callback: (clock: ClockState) => void
+	order: number
+}
+
+class Listeners {
+	private _dirty = true
+	array: Listener[] = []
+	add(order: number, callback: (clock: ClockState) => void): void {
+		this.array.push({ order, callback })
+		this._dirty = true
+	}
+	remove(callback: (clock: ClockState) => void): boolean {
+		const index = this.array.findIndex(listener => listener.callback === callback)
+		if (index !== - 1) {
+			this.array.splice(index, 1)
+			return true
+		} else {
+			return false
+		}
+	}
+	call(state: ClockState) {
+		if (this._dirty) {
+			this.array.sort((A, B) => A.order - B.order)
+			this._dirty = false
+		}
+		for (const { callback } of this.array) {
+			callback(state)
+		}
+	}
+}
+
 class Clock {
-	listeners: ((clock: ClockState) => void)[] = []
+	listeners = new Listeners()
 	timeScale = 1
 	maxDeltaTime = .1
 	frame = 0
@@ -76,9 +108,7 @@ class Clock {
 
 				const freezed = deltaTime === 0 && time === timeOld
 				if (freezed === false) {
-					for (const listener of this.listeners) {
-						listener(state)
-					}
+					this.listeners.call(state)
 					this.frame++
 				}
 			}
@@ -86,13 +116,16 @@ class Clock {
 		}
 	}
 
-	onTick(callback: (clock: ClockState) => void): DestroyableObject {
-		this.listeners.push(callback)
+	onTick(callback: (clock: ClockState) => void): DestroyableObject
+	onTick(order: number, callback: (clock: ClockState) => void): DestroyableObject
+	onTick(...args: any[]): DestroyableObject{
+		if (args.length === 1) {
+			return this.onTick(0, args[0])
+		}
+		const [order, callback] = args as [number, (clock: ClockState) => void]
+		this.listeners.add(order, callback)
 		const destroy = () => {
-			const index = this.listeners.indexOf(callback)
-			if (index !== -1) {
-				this.listeners.splice(index, 1)
-			}
+			this.listeners.remove(callback)
 		}
 		return { destroy }
 	}
