@@ -53,7 +53,7 @@ function handleTap(element: HTMLElement, params: Params): DestroyableObject {
   window.addEventListener("pointerdown", onPointerDown)
 
   const destroy = () => {
-    window.addEventListener("pointerdown", onPointerDown)
+    window.removeEventListener("pointerdown", onPointerDown)
     window.removeEventListener("pointerup", onPointerUp)
   }
   return { destroy }
