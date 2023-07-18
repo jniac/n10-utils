@@ -1,0 +1,1 @@
+export { VertigoController } from './controller'
