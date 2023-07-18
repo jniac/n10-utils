@@ -67,11 +67,15 @@ class ViewportManager {
     }
     return { destroy }
   }
-  *iterateViewports() {
+  *iterateViewports(): Generator<Viewport, void, undefined> {
     if (this._dirty) {
       this._update()
     }
-    yield* this._sortedViewports
+    if (this._sortedViewports.length > 0) {
+      yield* this._sortedViewports
+    } else {
+      yield ViewportManager._defaultMainViewport
+    }
   }
 }
 
@@ -162,6 +166,19 @@ function ViewportComponent(props: ViewportProps) {
   )
 }
 
+/**
+ * Must declare <Viewport /> children to display multiple viewport. If no 
+ * viewport is specified, <ViewportCanvas /> will automatically fall back to a 
+ * fullscreen viewport.
+ * 
+ * Usage:
+ * ```tsx
+ * <ViewportCanvas>
+ *   <Viewport main />
+ *   <Viewport zIndex={10} box={[.75, .75, .25, .25]} />
+ * </ViewportCanvas>
+ * ```
+ */
 function ViewportCanvas({ 
   tickOrder = 1000, 
   children, 
