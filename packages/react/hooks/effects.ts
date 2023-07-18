@@ -1,5 +1,6 @@
 import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Destroyable } from '../../../types'
+import { digest } from '@/n10-utils/digest'
 
 type UseEffectsReturn<T> = {
 	ref: MutableRefObject<T>
@@ -76,6 +77,73 @@ export function handleMutations<T>(target: T, mutations: Partial<T>) {
 			target[key] = cache[key] as any
 		}
 	}
+}
+
+/**
+ * Safe way to "digest" an object by avoiding common pitfalls (ex: circular references).
+ * 
+ * Since it's intended to be used with React:
+ * - function props are reduced to name + length (args count)
+ * - object props are handled in a special manner: when an "id" or "uuid" is present
+ * subprops are ignored and only the id is taken into account... except if a "value"
+ * key is present: if so the only the "value" prop is taken into account anything 
+ * else being ignored (the object is considered as a wrapper around a value 
+ * (ex observables))
+ */
+export function digestProps(...propsArray: any[]): number {
+	const queue: any[] = [...propsArray]
+	digest.init()
+	while (queue.length) {
+		const current = queue.shift()!
+		if (current === null || current === undefined) {
+			continue
+		}
+		const type = typeof current
+		switch(type) {
+			case 'boolean': {
+				digest.next(current ? 0 : 1)
+				break
+			}
+			case 'function': {
+				digest.next((current as Function).length)
+				digest.string((current as Function).name)
+				break
+			}
+			case 'string': {
+				digest.string(current)
+				break
+			}
+			case 'number': {
+				digest.next(current)
+				break
+			}
+			case 'object': {
+				if ('value' in current) {
+					queue.push(current.value)
+					break
+				}
+				if ('uuid' in current) {
+					digest.string(current.uuid)
+					break
+				}
+				if ('id' in current) {
+					digest.string(current.id)
+					break
+				}
+
+				if (Array.isArray(current)) {
+					queue.push(...current)
+				} else {
+					for (const [key, value] of Object.entries(current)) {
+						digest.string(key)
+						queue.push(value)
+					}
+				}
+				break
+			}
+		}
+	}
+	return digest.result()
 }
 
 export function useMutations<T>(target: T, mutations: Partial<T> | (() => Partial<T>), deps: DependencyList, options?: UseEffectsOptions) {
