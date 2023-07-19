@@ -1,6 +1,8 @@
 import { IUniform, Material, Shader } from 'three'
 import { MeshPhysicalMaterialFragmentTokens, MeshPhysicalMaterialVertexTokens, glTokens } from './Tokens'
 
+type Uniforms = Record<string, IUniform>
+
 let current: Shader = null!
 
 const wrap = <T extends Material>(material: T, callback: (shader: Shader) => void): T => {
@@ -141,7 +143,7 @@ class ShaderTool<T> {
     return ShaderForge
   }
 
-  uniforms(uniforms: Record<string, IUniform>) {
+  uniforms(uniforms: Uniforms) {
     const declaration: string[] = []
     for (const [key, uniform] of Object.entries(uniforms)) {
       declaration.push(`uniform ${getGlType(uniform.value)} ${key};`)
@@ -165,7 +167,7 @@ const defines = (defines: Record<string, string | number>) => {
   return ShaderForge
 }
 
-const mergeUniforms = (uniforms: Record<string, IUniform>) => {
+const mergeUniforms = (uniforms: Uniforms) => {
   for (const [key, uniform] of Object.entries(uniforms)) {
     if (key in current.uniforms) {
       if (uniform.value !== current.uniforms[key].value) {
@@ -178,7 +180,7 @@ const mergeUniforms = (uniforms: Record<string, IUniform>) => {
   return ShaderForge
 }
 
-const uniforms = (uniforms: Record<string, IUniform>) => {
+const uniforms = (uniforms: Uniforms) => {
   vertex.uniforms(uniforms)
   fragment.uniforms(uniforms)
   return ShaderForge
