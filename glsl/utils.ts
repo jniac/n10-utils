@@ -29,6 +29,16 @@ export const glsl_utils = /* glsl */`
     return clamp01((x - a) / (b - a));
   }
 
+  float threshold(in float x, in float thresholdValue) {
+    return x < thresholdValue ? 0. : 1.;
+  }
+
+  float threshold(in float x, in float thresholdValue, in float width) {
+    return width < 1e-9 
+      ? (x < thresholdValue ? 0. : 1.)
+      : clamp01((x - thresholdValue + width * .5) / width);
+  }
+
   vec2 rotate(vec2 p, float a) {
     float c = cos(a);
     float s = sin(a);
