@@ -1,4 +1,4 @@
-import { Group, Mesh, Texture } from 'three'
+import { Group, Mesh, Texture, Vector3Tuple } from 'three'
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { GroupProps } from '@react-three/fiber'
 import { useEffects } from '../react/hooks'
@@ -47,7 +47,9 @@ const local = lazy(() => {
 
 type Props = {
   url: string
-} & GroupProps
+} & Partial<{
+  pivotShift: Vector3Tuple
+}> & GroupProps
 
 /**
  * Load a gltf / glb file, and automatically dispose the resources (geometry, 
@@ -55,15 +57,20 @@ type Props = {
  */
 export function Gltf({
   url,
+  pivotShift,
   ...props
 }: Props) {
   const { ref } = useEffects<Group>(function* (group) {
     local().loader.load(url, gltf => {
       local().register(url, gltf)
+      if (pivotShift) {
+        gltf.scene.position.set(...pivotShift)
+      }
       group.add(gltf.scene)
     })
     yield () => {
       local().free(url)
+      group.clear()
     }
   }, [])
   return (
