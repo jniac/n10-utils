@@ -252,3 +252,7 @@ export const ShaderForge: ShaderForgeType = {
   with: withShader,
   wrap,
 }
+
+export type {
+  Uniforms,
+}

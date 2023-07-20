@@ -1,2 +1,2 @@
-export { ShaderForge } from './ShaderForge'
+export * from './ShaderForge'
 export * from './utils'
