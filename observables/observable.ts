@@ -3,15 +3,19 @@ import { DestroyableObject } from "../types"
 type ValueMapper<T> =
 	(incomingValue: T, observable: Observable<T>) => T
 
-type Callback<T> =
-	(value: T, observable: Observable<T>) => void
-
 type ConstructorOptions<T> = Partial<{
 	valueMapper: ValueMapper<T>
 }>
 
+type Callback<T> =
+	(value: T, observable: Observable<T>) => void
+
 type DerivativeCallback<T, D> =
 	(derivative: D, derivativeOld: D, value: T, observable: Observable<T>) => void
+
+type VerifyCallback<T> =
+	(verify: boolean, value: T, observable: Observable<T>) => void
+
 
 type OnChangeOptions = Partial<{
 	executeImmediately: boolean
@@ -129,7 +133,7 @@ class Observable<T> {
 
 	onDerivativeChange<D>(derivativeExtractor: (value: T) => D, callback: DerivativeCallback<T, D>): DestroyableObject
 	onDerivativeChange<D>(derivativeExtractor: (value: T) => D, options: OnChangeOptions, callback: DerivativeCallback<T, D>): DestroyableObject
-	onDerivativeChange<D>(derivativeExtractor: (value: T) => D, ...args: any[]): { destroy: () => void } {
+	onDerivativeChange<D>(derivativeExtractor: (value: T) => D, ...args: any[]): DestroyableObject {
 		let derivative = derivativeExtractor(this._value)
 		const [{
 			executeImmediately = false,
@@ -143,6 +147,29 @@ class Observable<T> {
 			derivative = derivativeExtractor(value)
 			if (derivative !== derivativeOld) {
 				callback(derivative, derivativeOld, value, this)
+			}
+		})
+	}
+
+	onVerify(predicate: (value: T) => boolean, callback: VerifyCallback<T>): DestroyableObject
+	onVerify(options: OnChangeOptions, predicate: (value: T) => boolean, callback: VerifyCallback<T>): DestroyableObject
+	onVerify(...args: any[]): DestroyableObject {
+		// Solve args:
+		const [options, predicate, callback] = (args.length === 3
+			? args
+			: [{}, ...args]
+		) as [options: OnChangeOptions, predicate: (value: T) => boolean, callback: VerifyCallback<T>]
+		
+		// Go on:
+		let verify = predicate(this._value)
+		if (options.executeImmediately) {
+			callback(verify, this._value, this)
+		}
+		return this.onChange(value => {
+			const newVerify = predicate(value)
+			if (newVerify !== verify) {
+				verify = newVerify
+				callback(verify, value, this)
 			}
 		})
 	}
