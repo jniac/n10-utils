@@ -151,7 +151,7 @@ function during(arg: any) {
  */
 const Animation = {
   during,
-  handle: {
+  core: {
     updateInstances,
     startAnimationLoop,
     stopAnimationLoop,
