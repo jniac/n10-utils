@@ -129,28 +129,31 @@ const any = (...args: any[]) => {
 	return result();
 };
 
-/**
- * Digest any value and return the result.
- * 
- * If the value is an object, the function will recursively iterate over any 
- * sub-entries and digest keys and values.
- * 
- * Key order does NOT affect the result (entries are sorted first).
- * 
- * Usage:
- * ```
- * digest(1, 2, 3) // 0.5850774045102298
- * digest({ x: { y: 3 }, foo: "bar" }) // 0.27742494409903884
- * digest({ foo: "bar", x: { y: 3 } }) // 0.27742494409903884
- * digest({ foo: "bar", x: { y: 4 } }) // 0.27744742203503847
- * ```
- * 
- * For a finer control, the different steps used internally can also be accessed:
- * ```
- * const hash = digest.init().next(myNumber1).next(myNumber2).result()
- * ```
- */
 type Digest = {
+	/**
+	 * Digest any value and return the result.
+	 * 
+	 * If the value is an object, the function will recursively iterate over any 
+	 * sub-entries and digest keys and values.
+	 * 
+	 * Key order does NOT affect the result (entries are sorted first).
+	 * 
+	 * WARN: if the value is an object, be sure that there is no circular references
+	 * in it otherwise it will raise a "Maximum Call Stack Size Exceeded" error.
+	 * 
+	 * Usage:
+	 * ```
+	 * digest(1, 2, 3) // 0.5850774045102298
+	 * digest({ x: { y: 3 }, foo: "bar" }) // 0.27742494409903884
+	 * digest({ foo: "bar", x: { y: 3 } }) // 0.27742494409903884
+	 * digest({ foo: "bar", x: { y: 4 } }) // 0.27744742203503847
+	 * ```
+	 * 
+	 * For a finer control, the different steps used internally can also be accessed:
+	 * ```
+	 * const hash = digest.init().next(myNumber1).next(myNumber2).result()
+	 * ```
+	 */
 	(...args: any[]): number;
 	init: typeof init;
 	next: typeof next;
