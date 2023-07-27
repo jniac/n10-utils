@@ -1,4 +1,5 @@
 import { clamp01 } from '../math/basics'
+import { easing } from './easing'
 
 type Callback = (animation: AnimationInstance) => void
 
@@ -151,6 +152,7 @@ function during(arg: any) {
  */
 const Animation = {
   during,
+  easing,
   core: {
     updateInstances,
     startAnimationLoop,
