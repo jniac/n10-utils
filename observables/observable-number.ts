@@ -1,4 +1,8 @@
-import { Observable, ConstructorOptions } from "./observable"
+import { DestroyableObject } from '../types'
+import { Observable, ConstructorOptions, Callback } from './observable'
+
+const passModeValues = ['above', 'below', 'through'] as const
+type PassMode = (typeof passModeValues)[number]
 
 /**
  * Small wrapper around a Float64Array that allows to watch over numeral changes. 
@@ -84,6 +88,39 @@ export class ObservableNumber extends Observable<number> {
 		return this._memorization!
 	}
 
+	passed(mode: PassMode, threshold: number): boolean {
+		const { value, valueOld} = this
+		const isAbove = value >= threshold && valueOld < threshold
+		const isBelow = value < threshold && valueOld >= threshold
+		switch(mode) {
+			case 'through': return isAbove || isBelow
+			case 'above': return isAbove
+			case 'below': return isBelow
+		}
+		throw new Error('Impossible! Typescript, where are you?')
+	}
+
+	getPassMode(threshold: number): (typeof passModeValues)[0] | (typeof passModeValues)[1] | null {
+		const { value, valueOld} = this
+		const isAbove = value >= threshold && valueOld < threshold
+		const isBelow = value < threshold && valueOld >= threshold
+		if (isAbove) {
+			return 'above'
+		}
+		if (isBelow) {
+			return 'below'
+		}
+		return null
+	}
+
+	onPass(mode: PassMode, threshold: number, callback: Callback<number>): DestroyableObject {
+		return this.onChange(() => {
+			if (this.passed(mode, threshold)) {
+				callback(this.value, this)
+			}
+		})
+	}
+
 	setValue(incomingValue: number): boolean {
 		if (this._memorization) {
 			this._memorization.setValue(this._valueMapper?.(incomingValue, this) ?? incomingValue, true)
@@ -95,7 +132,7 @@ export class ObservableNumber extends Observable<number> {
 		return this.setValue(this._value + delta)
 	}
 
-	lerp(target: number, alpha: number, {
+	lerpTo(target: number, alpha: number, {
 		clamp = true,
 		epsilon = 1e-9,
 	} = {}): boolean {
@@ -104,5 +141,21 @@ export class ObservableNumber extends Observable<number> {
 			? target
 			: value + (target - value) * (clamp ? alpha < 0 ? 0 : alpha > 1 ? 1 : alpha : alpha)
 		return this.setValue(newValue)
+	}
+
+	lerp(a: number, b: number, options?: Partial<{ clamped: boolean }>): number {
+		let alpha = this._value
+		if (options?.clamped === true) {
+			alpha = alpha < 0 ? 0 : alpha > 1 ? 1 : alpha
+		}
+		return a + (b - a) * alpha
+	}
+
+	inverseLerp(a: number, b: number, options?: Partial<{ clamped: boolean }>): number {
+		let alpha = (this._value - a) / (b - a)
+		if (options?.clamped === true) {
+			alpha = alpha < 0 ? 0 : alpha > 1 ? 1 : alpha
+		}
+		return alpha
 	}
 }
