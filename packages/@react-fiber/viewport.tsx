@@ -45,8 +45,8 @@ class ViewportManager {
     this._sortedViewports = [...this._viewports]
       .sort((A, B) => (A.props.zIndex ?? 0) - (B.props.zIndex ?? 0))
 
-    const mainViewport = this._sortedViewports.find(v => v.props.main) 
-      ?? this._sortedViewports[0] 
+    const mainViewport = this._sortedViewports.find(v => v.props.main)
+      ?? this._sortedViewports[0]
       ?? ViewportManager._defaultMainViewport
     for (const viewport of this._sortedViewports) {
       viewport.isMainViewport = viewport === mainViewport
@@ -81,17 +81,17 @@ class ViewportManager {
 
 const ViewportContext = createContext<ViewportManager>(null!)
 
-function ViewportProvider({ 
-  tickOrder, 
-  children, 
-}: PropsWithChildren<{ 
+function ViewportProvider({
+  tickOrder,
+  children,
+}: PropsWithChildren<{
   tickOrder: number
 }>) {
   const manager = useMemo(() => {
     return new ViewportManager()
   }, [])
 
-  const { 
+  const {
     gl,
     camera: mainCamera,
     scene: mainScene,
@@ -99,13 +99,13 @@ function ViewportProvider({
 
   useEffects(function* () {
     gl.autoClear = false
-    
+
     const size = new Vector2()
     yield windowClock().onTick(tickOrder, () => {
       gl.clear(true, true, true)
       gl.resetState()
       gl.getSize(size)
-      
+
       const mainViewport = manager.getMainViewport()
       for (const viewport of manager.iterateViewports()) {
         const {
@@ -142,7 +142,7 @@ function ViewportProvider({
         gl.setScissor(x, y, width, height)
         gl.setScissorTest(true)
         gl.render(scene, camera)
-        
+
         if (extraScene) {
           gl.render(extraScene, camera)
         }
@@ -179,16 +179,22 @@ function ViewportComponent(props: ViewportProps) {
  * </ViewportCanvas>
  * ```
  */
-function ViewportCanvas({ 
-  tickOrder = 1000, 
-  children, 
-  ...props 
+function ViewportCanvas({
+  renderTickOrder = 1000,
+  gl,
+  children,
+  ...props
 }: CanvasProps & Partial<{
-  tickOrder: number
+  renderTickOrder: number
 }>) {
   return (
-    <Canvas frameloop='never' {...props}>
-      <ViewportProvider tickOrder={tickOrder}>
+    <Canvas
+      flat
+      gl={{ outputColorSpace: "srgb", ...gl }}
+      {...props}
+      frameloop='never'
+    >
+      <ViewportProvider tickOrder={renderTickOrder}>
         {children}
       </ViewportProvider>
     </Canvas>

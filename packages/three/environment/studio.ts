@@ -6,8 +6,8 @@ export const createStudioEnvironmentTexture = (renderer: WebGLRenderer): Texture
 
   const scene = new Scene()
 
-  const pointLight = new PointLight(16777215, 1, 15, 2)
-  pointLight.position.set(0, 0, -2)
+  const pointLight = new PointLight(16777215, 1.4, 12, 2)
+  pointLight.position.set(0, 0, 1)
   scene.add(pointLight)
 
   const box = new Mesh(
