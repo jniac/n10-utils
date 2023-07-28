@@ -1,9 +1,11 @@
+import { MultiKeyWeakMap } from '../collection/multi-key-map'
 import { clamp01 } from '../math/basics'
-import { easing } from './easing'
+import { isObject } from '../object/common'
+import { EasingDeclaration, easing } from './easing'
 
 type Callback = (animation: AnimationInstance) => void
 
-class Register<K, V> {
+class MultiValueMap<K, V> {
   static empty = [][Symbol.iterator]()
   map = new Map<K, Set<V>>()
   add(key: K, value: V) {
@@ -18,15 +20,15 @@ class Register<K, V> {
   clear(key: K) {
     this.map.get(key)?.clear()
   }
-  get(key: K) {
-    return this.map.get(key)?.[Symbol.iterator]() ?? Register.empty
+  get(key: K): IterableIterator<V> {
+    return this.map.get(key)?.[Symbol.iterator]() ?? MultiValueMap.empty
   }
 }
 
-const onUpdate = new Register<number, Callback>()
-const onDestroy = new Register<number, Callback>()
+const onUpdate = new MultiValueMap<number, Callback>()
+const onDestroy = new MultiValueMap<number, Callback>()
 
-const instanceMap = new Map<any, AnimationInstance>()
+const instanceWeakMap = new MultiKeyWeakMap<any, AnimationInstance>()
 
 let animationInstanceCounter = 0
 class AnimationInstance {
@@ -76,6 +78,19 @@ const destroyInstance = (instance: AnimationInstance) => {
   onDestroy.clear(instance.id)
 }
 
+const registerInstance = <T extends AnimationInstance>(instance: T): T => {
+  const { target } = instance
+  if (target !== undefined) {
+    const existingInstance = instanceWeakMap.get(target)
+    if (existingInstance) {
+      destroyInstance(existingInstance)
+    }
+    instanceWeakMap.set(target, instance)
+  }
+  instances.push(instance)
+  return instance
+}
+
 const updateInstances = (deltaTime: number) => {
   for (let i = 0, max = instances.length; i < max; i++) {
     const instance = instances[i]
@@ -121,19 +136,114 @@ function stopAnimationLoop() {
   window.cancelAnimationFrame(loopId)
 }
 
-function during(arg: { duration: number, delay?: number, target?: any }): AnimationInstance
+
+
+// --------------[ During ]--------------- //
+
+type DuringArg = { 
+  duration: number
+  delay?: number
+  target?: any
+}
+
+function during(arg: DuringArg): AnimationInstance
 function during(duration: number): AnimationInstance
 function during(arg: any) {
-  const [duration, delay, target] = (typeof arg === 'number' ? [arg, 0, undefined] : [arg.duration, arg.delay ?? 0, arg.target]) as [number, number, any]
-  const instance = new AnimationInstance(duration, delay, target)
-  if (target !== undefined) {
-    const existingInstance = instanceMap.get(target)
-    if (existingInstance) {
-      destroyInstance(existingInstance)
+  const [duration, delay, target] = (typeof arg === 'number' 
+    ? [arg, 0, undefined] 
+    : [arg.duration, arg.delay ?? 0, arg.target]
+  ) as [number, number, any]
+  return registerInstance(new AnimationInstance(duration, delay, target))
+}
+
+
+
+// --------------[ Tween ]--------------- //
+
+const defaultTweenArg = {
+  duration: 1,
+  delay: 0,
+  ease: 'inOut2' as EasingDeclaration,
+}
+
+type TweenEntry = { 
+  from: number
+  to: number
+  target: Record<string, any>
+  key: string
+}
+
+function createEntries(target: any, from: any, to: any, entries: TweenEntry[] = []): TweenEntry[] {
+  if (Array.isArray(target)) {
+    for (let index = 0, length = target.length; index < length; index++) {
+      createEntries(target[index], from, to, entries)
     }
-    instanceMap.set(target, instance)
+    return entries
   }
-  instances.push(instance)
+  if (isObject(target) === false || isObject(from ?? to) === false) {
+    // No possible tween, just ignore.
+    return entries
+  }
+  for (const key in (from ?? to)) {
+    const valueFrom = (from ?? target)[key]
+    const valueTo = (to ?? target)[key]
+    if (isObject(valueTo)) {
+      if (isObject(valueFrom) === false) {
+        throw new Error(`Tween from/to pair association error!`)
+      } else {
+        createEntries(target[key], from && valueFrom, to && valueTo, entries)
+      }
+    } else {
+      entries.push({ from: valueFrom, to: valueTo, key, target })
+    }
+  }
+  return entries
+}
+
+type TweenInstanceAddArg = { target: any, from?: any, to?: any }
+class TweenInstance extends AnimationInstance {
+  entries: TweenEntry[] = []
+  add(arg: TweenInstanceAddArg | TweenInstanceAddArg[]): this {
+    if (Array.isArray(arg)) {
+      for (const item of arg) {
+        createEntries(item.target, item.from, item.to, this.entries)
+      }
+    } else {
+      createEntries(arg.target, arg.from, arg.to, this.entries)
+    }
+    return this
+  }
+}
+
+type TweenArg<T> = {
+  target: T | T[]
+} & Partial<typeof defaultTweenArg & {
+  from: Record<string, any>
+  to: Record<string, any>
+}>
+
+function tween<T extends Record<string, any>>(arg: TweenArg<T>): TweenInstance {
+  const {
+    duration,
+    delay,
+    ease,
+    target,
+    from,
+    to,
+  } = {  ...defaultTweenArg, ...arg }
+  const instance = registerInstance(new TweenInstance(duration, delay, target))
+  if (from ?? to) {
+    instance.add({ target, from, to })
+  }
+  const easingFunction = easing(ease)
+  instance.onUpdate(({ progress }) => {
+    const alpha = easingFunction(progress)
+    const { entries } = instance
+    for (let index = 0, length = entries.length; index < length; index++) {
+      const { target, key, from, to } = entries[index]
+      target[key] = from + (to - from) * alpha
+    }
+  })
   return instance
 }
 
@@ -150,9 +260,10 @@ function during(arg: any) {
  *   })
  * ```
  */
-const Animation = {
+const AnimationBundle = {
   during,
   easing,
+  tween,
   core: {
     updateInstances,
     startAnimationLoop,
@@ -162,8 +273,13 @@ const Animation = {
 
 export type {
   Callback as AnimationCallback,
+  TweenArg as AnimationTweenArg,
 }
 
 export {
-  Animation,
+  AnimationBundle as Animation,
 }
+
+// if (typeof window !== 'undefined') {
+//   Object.assign(window, { Animation: AnimationBundle })
+// }

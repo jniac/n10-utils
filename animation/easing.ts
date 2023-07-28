@@ -1,3 +1,5 @@
+import { clamp01 } from '../math/basics'
+import { solveCubicEasing } from '../math/cubic-bezier'
 import {
   easeIn1 as in1,
   easeIn2 as in2,
@@ -16,9 +18,8 @@ import {
   easeInOut5 as inOut5,
 } from '../math/easing'
 
-import { solveCubicEasing } from '../math/cubic-bezier'
-
 const simple = {
+  linear: clamp01,
   in1,
   in2,
   in3,
@@ -55,7 +56,7 @@ function cacheParametricEasing(declaration: string) {
   return easing
 }
 
-export function easing(declaration: EasingDeclaration): (value: number) => number {
+function easing(declaration: EasingDeclaration): (value: number) => number {
   if (isSimpleEasingDeclaration(declaration)) {
     return simple[declaration]
   }
@@ -63,4 +64,12 @@ export function easing(declaration: EasingDeclaration): (value: number) => numbe
     return parametricEasingMap.get(declaration) ?? cacheParametricEasing(declaration)
   }
   throw new Error(`Invalid argument for Animation.easing(): "${declaration}"`)
+}
+
+export type {
+  EasingDeclaration,
+}
+
+export {
+  easing,
 }
