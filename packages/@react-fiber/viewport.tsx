@@ -122,10 +122,10 @@ function ViewportProvider({
         width *= size.x
         height *= size.y
 
-        viewport.x = x
-        viewport.y = y
-        viewport.width = width
-        viewport.height = height
+        viewport.x = Math.floor(x)
+        viewport.y = Math.floor(y)
+        viewport.width = Math.ceil(x + width) - viewport.x
+        viewport.height = Math.ceil(y + height) - viewport.y
 
         if (camera instanceof PerspectiveCamera) {
           if (camera instanceof VertigoCamera) {
