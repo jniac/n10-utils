@@ -88,6 +88,14 @@ export class ObservableNumber extends Observable<number> {
 		return this._memorization!
 	}
 
+	isAbove(threshold: number): boolean {
+		return this._value >= threshold
+	}
+
+	isBelow(threshold: number): boolean {
+		return this._value < threshold
+	}
+
 	passed(mode: PassMode, threshold: number): boolean {
 		const { value, valueOld} = this
 		const isAbove = value >= threshold && valueOld < threshold

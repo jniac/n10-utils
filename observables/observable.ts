@@ -179,6 +179,13 @@ class Observable<T> {
 	get value() { return this._value }
 	set value(value) { this.setValue(value) }
 	get valueOld() { return this._valueOld }
+
+	// Debug
+	log(formatValue: (value: T) => string = (value: T) => `Obs#${this._observableId} value has changed: ${value}`): DestroyableObject {
+		return this.onChange(value => {
+			console.log(formatValue(value))
+		})
+	}
 }
 
 export type {
