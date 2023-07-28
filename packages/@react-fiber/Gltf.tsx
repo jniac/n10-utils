@@ -1,4 +1,4 @@
-import { Group, Mesh, Texture, Vector3Tuple } from 'three'
+import { BufferGeometry, Group, Mesh, Texture, Vector3Tuple } from 'three'
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { GroupProps } from '@react-three/fiber'
 import { useEffects } from '../react/hooks'
@@ -49,6 +49,7 @@ type Props = {
   url: string
 } & Partial<{
   pivotShift: Vector3Tuple
+  modelScale: number
 }> & GroupProps
 
 /**
@@ -58,6 +59,7 @@ type Props = {
 export function Gltf({
   url,
   pivotShift,
+  modelScale,
   ...props
 }: Props) {
   const { ref } = useEffects<Group>(function* (group) {
@@ -66,6 +68,18 @@ export function Gltf({
       if (pivotShift) {
         gltf.scene.position.set(...pivotShift)
       }
+
+      // Apply "modelScale" to position and geometries:
+      if (modelScale !== undefined) {
+        gltf.scene.traverse(child => {
+          child.position.multiplyScalar(modelScale)
+          if (child instanceof Mesh) {
+            const geometry = child.geometry as BufferGeometry
+            geometry.scale(modelScale, modelScale, modelScale)
+          }
+        })
+      }
+
       group.add(gltf.scene)
     })
     yield () => {
