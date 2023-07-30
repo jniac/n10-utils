@@ -1,6 +1,7 @@
 import { MultiKeyWeakMap } from '../collection/multi-key-map'
 import { clamp01 } from '../math/basics'
 import { isObject } from '../object/common'
+import { expandObject } from '../object/expand'
 import { EasingDeclaration, easing } from './easing'
 
 type Callback = (animation: AnimationInstance) => void
@@ -140,7 +141,7 @@ function stopAnimationLoop() {
 
 // --------------[ During ]--------------- //
 
-type DuringArg = { 
+type DuringArg = {
   duration: number
   delay?: number
   target?: any
@@ -149,8 +150,8 @@ type DuringArg = {
 function during(arg: DuringArg): AnimationInstance
 function during(duration: number): AnimationInstance
 function during(arg: any) {
-  const [duration, delay, target] = (typeof arg === 'number' 
-    ? [arg, 0, undefined] 
+  const [duration, delay, target] = (typeof arg === 'number'
+    ? [arg, 0, undefined]
     : [arg.duration, arg.delay ?? 0, arg.target]
   ) as [number, number, any]
   return registerInstance(new AnimationInstance(duration, delay, target))
@@ -166,17 +167,17 @@ const defaultTweenArg = {
   ease: 'inOut2' as EasingDeclaration,
 }
 
-type TweenEntry = { 
+type TweenEntry = {
   from: number
   to: number
   target: Record<string, any>
   key: string
 }
 
-function createEntries(target: any, from: any, to: any, entries: TweenEntry[] = []): TweenEntry[] {
+function createTweenEntries(target: any, from: any, to: any, entries: TweenEntry[] = []): TweenEntry[] {
   if (Array.isArray(target)) {
     for (let index = 0, length = target.length; index < length; index++) {
-      createEntries(target[index], from, to, entries)
+      createTweenEntries(target[index], from, to, entries)
     }
     return entries
   }
@@ -191,7 +192,7 @@ function createEntries(target: any, from: any, to: any, entries: TweenEntry[] = 
       if (isObject(valueFrom) === false) {
         throw new Error(`Tween from/to pair association error!`)
       } else {
-        createEntries(target[key], from && valueFrom, to && valueTo, entries)
+        createTweenEntries(target[key], from && valueFrom, to && valueTo, entries)
       }
     } else {
       entries.push({ from: valueFrom, to: valueTo, key, target })
@@ -204,12 +205,14 @@ type TweenInstanceAddArg = { target: any, from?: any, to?: any }
 class TweenInstance extends AnimationInstance {
   entries: TweenEntry[] = []
   add(arg: TweenInstanceAddArg | TweenInstanceAddArg[]): this {
-    if (Array.isArray(arg)) {
-      for (const item of arg) {
-        createEntries(item.target, item.from, item.to, this.entries)
-      }
-    } else {
-      createEntries(arg.target, arg.from, arg.to, this.entries)
+    const array = Array.isArray(arg) ? arg : [arg]
+    for (const item of array) {
+      createTweenEntries(
+        item.target,
+        expandObject(item.from),
+        expandObject(item.to),
+        this.entries,
+      )
     }
     return this
   }
@@ -230,7 +233,7 @@ function tween<T extends Record<string, any>>(arg: TweenArg<T>): TweenInstance {
     target,
     from,
     to,
-  } = {  ...defaultTweenArg, ...arg }
+  } = { ...defaultTweenArg, ...arg }
   const instance = registerInstance(new TweenInstance(duration, delay, target))
   if (from ?? to) {
     instance.add({ target, from, to })
