@@ -1,13 +1,13 @@
 
-let state = 0;
+let state = 0
 
 /**
  * Initialize the digest algorithm.
  */
 const init = () => {
-	state = 1073741823;
-	return digest;
-};
+	state = 1073741823
+	return digest
+}
 
 /**
  * Digest the new number.
@@ -29,105 +29,114 @@ const init = () => {
  * ```
  */
 const next = (x: number, scalar = 1e14) => {
-	state += (x * scalar) & 0x7fffffff;
-	state = Math.imul(state, 48271);
-	state = (state & 0x7fffffff) + (state >> 31);
-	return digest;
-};
+	state += (x * scalar) & 0x7fffffff
+	state = Math.imul(state, 48271)
+	state = (state & 0x7fffffff) + (state >> 31)
+	return digest
+}
 
 /**
  * Returns the result of all previous digested numbers.
  */
 const result = () => {
-	return (state & 0x7fffffff) / 0x80000000;
-};
+	return (state & 0x7fffffff) / 0x80000000
+}
+
+/**
+ * Digests one number and returns a unique, predictable number (hash).
+ */
+const number = (number: number) => {
+	init()
+	next(number)
+	return result()
+}
 
 /**
  * Digests numbers and returns a unique, predictable number (hash).
  */
 const numbers = (numbers: number[]) => {
-	init();
-	const max = numbers.length;
+	init()
+	const max = numbers.length
 	for (let i = 0; i < max; i++) {
-		next(numbers[i]);
+		next(numbers[i])
 	}
-	return result();
-};
+	return result()
+}
 
 /**
  * Digests a string and returns a unique, predictable number (hash).
  */
 const string = (str: string) => {
-	init();
-	const max = str.length;
+	init()
+	const max = str.length
 	for (let i = 0; i < max; i++) {
-		next(str.charCodeAt(i));
+		next(str.charCodeAt(i))
 	}
-	return result();
-};
+	return result()
+}
 
-const NULL_NUMBER = 34567849373;
-const UNDEFINED_NUMBER = 7743012743;
+const NULL_NUMBER = 34567849373
+const UNDEFINED_NUMBER = 7743012743
 
 const anyNext = (value: any) => {
 	switch (typeof value) {
 		case "undefined": {
-			next(UNDEFINED_NUMBER);
-			break;
+			next(UNDEFINED_NUMBER)
+			break
 		}
 		case "string": {
 			for (let i = 0, max = value.length; i < max; i++) {
-				next(value.charCodeAt(i));
+				next(value.charCodeAt(i))
 			}
-			break;
+			break
 		}
 		case "number": {
-			next(value);
-			break;
+			next(value)
+			break
 		}
 		case "boolean": {
-			next(value ? 0 : 1);
-			break;
+			next(value ? 0 : 1)
+			break
 		}
 		case "object": {
 			if (value === null) {
-				next(NULL_NUMBER);
+				next(NULL_NUMBER)
 			} else {
 				if (Array.isArray(value)) {
 					// NOTE: If the value is an array, do not iterate over keys, the order 
 					// is sufficient to produce an unique result.
 					for (let i = 0, max = value.length; i < max; i++) {
-						anyNext(value[i]);
+						anyNext(value[i])
 					}
 				} else {
 					// NOTE: But if the value is an object, iterate over SORTED keys since 
 					// { x, y } should produce the same than { y, x }
-					const entries = Object.entries(value) as [string, any];
-					entries.sort((a, b) => a[0] < b[0] ? -1 : 1);
+					const entries = Object.entries(value) as [string, any]
+					entries.sort((a, b) => a[0] < b[0] ? -1 : 1)
 					for (let i = 0, imax = entries.length; i < imax; i++) {
-						const [key, value2] = entries[i];
+						const [key, value2] = entries[i]
 						for (let j = 0, jmax = key.length; j < jmax; j++) {
-							next(key.charCodeAt(j));
+							next(key.charCodeAt(j))
 						}
-						anyNext(value2);
+						anyNext(value2)
 					}
 				}
 			}
-			break;
+			break
 		}
 	}
-};
+}
 
 
 const any = (...args: any[]) => {
-	init();
-	const max = args.length;
+	init()
+	const max = args.length
 	for (let i = 0; i < max; i++) {
-		const x = args[i];
-		anyNext(x);
+		const x = args[i]
+		anyNext(x)
 	}
-	return result();
-};
+	return result()
+}
 
 type Digest = {
 	/**
@@ -154,16 +163,17 @@ type Digest = {
 	 * const hash = digest.init().next(myNumber1).next(myNumber2).result()
 	 * ```
 	 */
-	(...args: any[]): number;
-	init: typeof init;
-	next: typeof next;
-	result: typeof result;
-	numbers: typeof numbers;
-	string: typeof string;
-	any: typeof any;
-};
+	(...args: any[]): number
+	init: typeof init
+	next: typeof next
+	result: typeof result
+	number: typeof number
+	numbers: typeof numbers
+	string: typeof string
+	any: typeof any
+}
 
-const digest = ((...args: any[]) => any(...args)) as Digest;
+const digest = ((...args: any[]) => any(...args)) as Digest
 
 Object.assign(digest, {
 	// internal steps:
@@ -172,9 +182,10 @@ Object.assign(digest, {
 	result,
 
 	// specific functions:
+	number,
 	numbers,
 	string,
 	any,
-});
+})
 
-export { digest };
+export { digest }
