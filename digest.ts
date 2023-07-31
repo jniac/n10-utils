@@ -43,6 +43,14 @@ const result = () => {
 }
 
 /**
+ * Returns the result of all previous digested numbers.
+ */
+const resultAsInt = () => {
+	const obfuscation = 0b1100000101010011110111011001111
+	return (state & 0x7fffffff) ^ obfuscation
+}
+
+/**
  * Digests one number and returns a unique, predictable number (hash).
  */
 const number = (number: number) => {
@@ -164,9 +172,14 @@ type Digest = {
 	 * ```
 	 */
 	(...args: any[]): number
+
+	// internal steps:
 	init: typeof init
 	next: typeof next
 	result: typeof result
+	resultAsInt: typeof resultAsInt
+
+	// specific functions:
 	number: typeof number
 	numbers: typeof numbers
 	string: typeof string
@@ -180,6 +193,7 @@ Object.assign(digest, {
 	init,
 	next,
 	result,
+	resultAsInt,
 
 	// specific functions:
 	number,
