@@ -63,6 +63,7 @@ export function Gltf({
   ...props
 }: Props) {
   const { ref } = useEffects<Group>(function* (group) {
+    group.name = Gltf.name
     local().loader.load(url, gltf => {
       local().register(url, gltf)
       if (pivotShift) {
