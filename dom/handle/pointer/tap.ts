@@ -69,6 +69,7 @@ function handleTap(element: HTMLElement, params: Params): () => void {
 
 export type {
   Params as HandleTapParams,
+  Info as HandleTapInfo,
 }
 
 export {

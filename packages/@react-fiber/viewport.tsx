@@ -271,6 +271,7 @@ function ViewportCanvas({
 
 export type {
   ViewportProps,
+  ViewportManager,
 }
 
 export {
