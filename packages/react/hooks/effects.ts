@@ -7,6 +7,12 @@ type UseEffectsReturn<T> = {
 }
 type UseEffectsOptions = Partial<{
 	moment: 'effect' | 'layoutEffect' | 'memo'
+	/**
+	 * Use "smart digest" for deps hashing.
+	 * 
+	 * Defaults to true.
+	 */
+	useSmartDigest: boolean
 }>
 
 export function useEffects<T = undefined>(
@@ -14,8 +20,14 @@ export function useEffects<T = undefined>(
 	deps: DependencyList,
 	{
 		moment = 'effect',
+		useSmartDigest = true,
 	}: UseEffectsOptions = {}
 ): UseEffectsReturn<T> {
+	if (useSmartDigest) {
+		// Pack deps into one predictible number
+		deps = [smartDigest(deps)]		
+	}
+
 	const ref = useRef<T>(null) as MutableRefObject<T>
 	const destroyables = useMemo((): Destroyable[] => [], [])
 
@@ -90,12 +102,13 @@ export function handleMutations<T>(target: T, mutations: Partial<T>) {
  * else being ignored (the object is considered as a wrapper around a value 
  * (ex observables))
  */
-export function digestProps(...propsArray: any[]): number {
+export function smartDigest(...propsArray: any[]): number {
 	const queue: any[] = [...propsArray]
 	digest.init()
 	while (queue.length) {
 		const current = queue.shift()!
 		if (current === null || current === undefined) {
+			digest.next(123456)
 			continue
 		}
 		const type = typeof current

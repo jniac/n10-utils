@@ -3,7 +3,7 @@ import { Camera, Object3D, PerspectiveCamera, Vector2 } from 'three'
 import { Canvas, CanvasProps, useThree } from '@react-three/fiber'
 
 import { DestroyableObject } from '../../types'
-import { digestProps, useEffects } from '../react/hooks'
+import { useEffects } from '../react/hooks'
 import { windowClock } from '../../clock'
 import { VertigoCamera } from '../three/vertigo/VertigoCamera'
 
@@ -160,7 +160,7 @@ function ViewportComponent(props: ViewportProps) {
   const manager = useContext(ViewportContext)
   useEffects(function* () {
     yield manager.addViewport({ ...defaultViewportProps, ...props })
-  }, [digestProps(props)])
+  }, [props])
   return (
     null
   )
