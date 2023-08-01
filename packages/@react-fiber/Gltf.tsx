@@ -6,6 +6,7 @@ import { lazy } from '../../lazy'
 
 const local = lazy(() => {
   const loader = new GLTFLoader()
+
   const map = new Map<string, { gltf: GLTF, count: number }>()
   const register = (url: string, gltf: GLTF) => {
     const bundle = map.get(url)
@@ -45,11 +46,18 @@ const local = lazy(() => {
   }
 })
 
+export function getGltfLoader() {
+  return local().loader
+}
+
 type Props = {
   url: string
 } & Partial<{
   pivotShift: Vector3Tuple
   modelScale: number
+  /** Because sometimes, quaternions are not normalized (???), and the geometry is deformed. */
+  normalizeQuaternion: boolean
+  onLoad: (gltf: GLTF) => void
 }> & GroupProps
 
 /**
@@ -60,6 +68,8 @@ export function Gltf({
   url,
   pivotShift,
   modelScale,
+  normalizeQuaternion = true,
+  onLoad,
   ...props
 }: Props) {
   const { ref } = useEffects<Group>(function* (group) {
@@ -78,6 +88,14 @@ export function Gltf({
             const geometry = child.geometry as BufferGeometry
             geometry.scale(modelScale, modelScale, modelScale)
           }
+        })
+      }
+
+      onLoad?.(gltf)
+
+      if (normalizeQuaternion) {
+        gltf.scene.traverse(child => {
+          child.quaternion.normalize()      
         })
       }
 
