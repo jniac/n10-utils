@@ -27,11 +27,46 @@ class Viewport {
   width = 0
   height = 0
   isMainViewport = false
+  camera: PerspectiveCamera
+  renderScene: Object3D = null!
   constructor(props: ViewportProps) {
     this.props = props
+    this.camera = new PerspectiveCamera()
+    this.camera.matrixAutoUpdate = false
+  }
+  updateCamera(otherCamera: Camera) {
+    this.camera.matrix.copy(otherCamera.matrix)
+    this.camera.matrixWorld.copy(otherCamera.matrixWorld)
+    this.camera.projectionMatrix.copy(otherCamera.projectionMatrix)
+    this.camera.matrixWorldInverse.copy(otherCamera.matrixWorldInverse)
+    this.camera.projectionMatrixInverse.copy(otherCamera.projectionMatrixInverse)
+  }
+  getBox(): [x: number, y: number, width: number, height: number] {
+    return this.props.box ?? defaultViewportProps.box
+  }
+  containsRelativePoint(pointX: number, pointY: number): boolean {
+    const [x, y, width, height] = this.getBox()
+    pointX += -x
+    pointY += -y
+    return pointX >= 0 && pointY >= 0 && pointX < width && pointY < height
   }
   getAspect(): number {
     return this.width / this.height
+  }
+  toNdcCoords<T extends { x: number, y: number }>(pointX: number, pointY: number, out: T): T {
+    const [x, y, width, height] = this.getBox()
+    pointX += -x
+    pointY += -y
+    pointX /= width
+    pointY /= height
+    out.x = pointX * 2 - 1
+    out.y = -(pointY * 2 - 1)
+    return out
+  }
+  toString(): string {
+    const box = this.getBox()
+    const type = this.isMainViewport ? 'main' : 'sub'
+    return `Viewport-${type}{ ${box.map(n => n.toFixed(2)).join(', ')} }`
   }
 }
 
@@ -55,6 +90,12 @@ class ViewportManager {
 
     this._dirty = false
   }
+  private _getSortedViewports(): Viewport[] {
+    if (this._dirty) {
+      this._update()
+    }
+    return this._sortedViewports
+  }
   getMainViewport(): Viewport {
     return this._mainViewport
   }
@@ -68,14 +109,30 @@ class ViewportManager {
     return { destroy }
   }
   *iterateViewports(): Generator<Viewport, void, undefined> {
-    if (this._dirty) {
-      this._update()
-    }
-    if (this._sortedViewports.length > 0) {
-      yield* this._sortedViewports
+    const viewports = this._getSortedViewports()
+    if (viewports.length > 0) {
+      yield* viewports
     } else {
       yield ViewportManager._defaultMainViewport
     }
+  }
+  getViewportAt(x: number, y: number): Viewport {
+    const viewports = this._getSortedViewports()
+    if (viewports.length > 0) {
+      // Loop over sorted viewports in REVERSE order (z-index)
+      for (let i = viewports.length - 1; i >= 0; i--) {
+        const viewport = viewports[i]
+        if (viewport.containsRelativePoint(x, y)) {
+          return viewport
+        }
+      }
+      throw new Error('Where is my main viewport???')
+    } else {
+      return ViewportManager._defaultMainViewport
+    }
+  }
+  get viewports(): Viewport[] {
+    return [...this.iterateViewports()]
   }
 }
 
@@ -116,6 +173,8 @@ function ViewportProvider({
           onBeforeRender,
         } = viewport.props
 
+        viewport.renderScene = scene
+
         let [x, y, width, height] = box
         x *= size.x
         y *= size.y
@@ -127,6 +186,9 @@ function ViewportProvider({
         viewport.width = Math.ceil(x + width) - viewport.x
         viewport.height = Math.ceil(y + height) - viewport.y
 
+        // Use the dom orientation (y going positive downwards)
+        viewport.y = size.y - viewport.y - viewport.height
+
         if (camera instanceof PerspectiveCamera) {
           if (camera instanceof VertigoCamera) {
             camera.updateVertigoCamera(viewport.getAspect())
@@ -136,15 +198,17 @@ function ViewportProvider({
           }
         }
 
+        viewport.updateCamera(camera)
+
         onBeforeRender?.({ camera, mainCamera, viewport, mainViewport })
 
-        gl.setViewport(x, y, width, height)
-        gl.setScissor(x, y, width, height)
+        gl.setViewport(viewport.x, viewport.y, viewport.width, viewport.height)
+        gl.setScissor(viewport.x, viewport.y, viewport.width, viewport.height)
         gl.setScissorTest(true)
-        gl.render(scene, camera)
+        gl.render(scene, viewport.camera)
 
         if (extraScene) {
-          gl.render(extraScene, camera)
+          gl.render(extraScene, viewport.camera)
         }
       }
     })
@@ -156,8 +220,12 @@ function ViewportProvider({
   )
 }
 
+function useViewportManager() {
+  return useContext(ViewportContext)
+}
+
 function ViewportComponent(props: ViewportProps) {
-  const manager = useContext(ViewportContext)
+  const manager = useViewportManager()
   useEffects(function* () {
     yield manager.addViewport({ ...defaultViewportProps, ...props })
   }, [props])
@@ -208,4 +276,5 @@ export type {
 export {
   ViewportComponent as Viewport,
   ViewportCanvas,
+  useViewportManager,
 }
