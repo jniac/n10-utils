@@ -1,11 +1,3 @@
-import { DestroyableObject } from "../../types"
-
-const defaultParams = {
-  /** The max distance that the user may travel when down. */
-  maxDistance: 10,
-  /** The max duration that the user may stay down (seconds). */
-  maxDuration: .3,
-}
 
 type Info = {
   timestamp: number
@@ -14,11 +6,28 @@ type Info = {
   clientY: number
 }
 
-type Params = Partial<typeof defaultParams & {
-  onTap: (info: Info) => void
-}>
+type Callback = (info: Info) => void
 
-function handleTap(element: HTMLElement, params: Params): DestroyableObject {
+const defaultParams = {
+  /** The max distance that the user may travel when down. */
+  maxDistance: 10,
+  /** The max duration that the user may stay down (seconds). */
+  maxDuration: .3,
+}
+
+const callbackNames = [
+  'onTap',
+] as const
+
+type CallbackName = (typeof callbackNames)[number]
+
+type Params = Partial<typeof defaultParams & Record<CallbackName, Callback>>
+
+function hasTapCallback(params: Record<string, any>): boolean {
+	return callbackNames.some(name => name in params)
+}
+
+function handleTap(element: HTMLElement, params: Params): () => void {
   const {
     maxDistance,
     maxDuration,
@@ -50,13 +59,12 @@ function handleTap(element: HTMLElement, params: Params): DestroyableObject {
     }
   }
 
-  window.addEventListener("pointerdown", onPointerDown)
+  element.addEventListener("pointerdown", onPointerDown)
 
-  const destroy = () => {
-    window.removeEventListener("pointerdown", onPointerDown)
+  return () => {
+    element.removeEventListener("pointerdown", onPointerDown)
     window.removeEventListener("pointerup", onPointerUp)
   }
-  return { destroy }
 }
 
 export type {
@@ -64,5 +72,6 @@ export type {
 }
 
 export {
+  hasTapCallback,
   handleTap,
 }

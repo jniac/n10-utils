@@ -9,31 +9,35 @@ type Info = {
 	delta: DOMPoint
 }
 
-type DragCallback = (info: Info) => void
+type Callback = (info: Info) => void
 
 const defaultParams = {
-	distanceThreshold: 10,
+	dragDistanceThreshold: 10,
 }
 
-type Params = Partial<typeof defaultParams & {
-	onDragStart: DragCallback
-	onDragStop: DragCallback
-	onDrag: DragCallback
+const callbackNames = [
+	'onDragStart',
+	'onDragStop',
+	'onDrag',
+	'onVerticalDragStart',
+	'onVerticalDragStop',
+	'onVerticalDrag',
+	'onHorizontalDragStart',
+	'onHorizontalDragStop',
+	'onHorizontalDrag',
+] as const
 
-	// Vertical:
-	onVerticalDragStart: DragCallback
-	onVerticalDragStop: DragCallback
-	onVerticalDrag: DragCallback
+type CallbackName = (typeof callbackNames)[number]
 
-	// Horizontal:
-	onHorizontalDragStart: DragCallback
-	onHorizontalDragStop: DragCallback
-	onHorizontalDrag: DragCallback
-}>
+type Params = Partial<typeof defaultParams & Record<CallbackName, Callback>>
 
-export function handleDrag(element: HTMLElement, params: Params) {
+function hasDragCallback(params: Record<string, any>): boolean {
+	return callbackNames.some(name => name in params)
+}
+
+function handleDrag(element: HTMLElement, params: Params): () => void {
 	const {
-		distanceThreshold,
+		dragDistanceThreshold,
 		onDragStart,
 		onDragStop,
 		onDrag,
@@ -148,7 +152,7 @@ export function handleDrag(element: HTMLElement, params: Params) {
 			const dx = startPosition.x - pointer.x
 			const dy = startPosition.y - pointer.y
 			const distance = Math.sqrt(dx * dx + dy * dy)
-			dragIsLongEnough = distance > distanceThreshold
+			dragIsLongEnough = distance > dragDistanceThreshold
 
 			if (drag === false) {
 				if (dragIsLongEnough) {
@@ -240,4 +244,13 @@ export function handleDrag(element: HTMLElement, params: Params) {
 
 		window.cancelAnimationFrame(frameID)
 	}
+}
+
+export type {
+	Params as HandleDragParams,
+}
+
+export {
+	handleDrag,
+	hasDragCallback,
 }

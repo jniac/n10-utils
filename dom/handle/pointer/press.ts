@@ -1,13 +1,21 @@
 
-type PressCallback = (info: { position: DOMPoint }) => void
+type Callback = (info: { position: DOMPoint }) => void
 
-type Params = Partial<{
-	onPressStart: PressCallback
-	onPressStop: PressCallback
-	onPressFrame: PressCallback
-}>
+const callbackNames = [
+	'onPressStart',
+	'onPressStop',
+	'onPressFrame',
+] as const
 
-export function handlePress(element: HTMLElement, params: Params) {
+type CallbackName = (typeof callbackNames)[number]
+
+type Params = Partial<Record<CallbackName, Callback>>
+
+function hasPressCallback(params: Record<string, any>): boolean {
+	return callbackNames.some(name => name in params)
+}
+
+function handlePress(element: HTMLElement, params: Params) {
 	const {
 		onPressStart,
 		onPressStop,
@@ -104,4 +112,13 @@ export function handlePress(element: HTMLElement, params: Params) {
 
 		window.cancelAnimationFrame(frameID)
 	}
+}
+
+export type {
+	Params as HandlePressParams,
+}
+
+export {
+	handlePress,
+	hasPressCallback,
 }
