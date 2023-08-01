@@ -87,9 +87,10 @@ export function Gltf({
       local().free(url)
       group.clear()
     }
-  }, [])
+  }, [url, pivotShift, modelScale])
+
   return (
-    <group 
+    <group
       ref={ref}
       {...props}
     />
