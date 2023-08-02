@@ -1,3 +1,5 @@
+import { Vector3Declaration, Vector2Declaration, solveVector3Declaration, solveVector2Declaration } from './basic-types'
+
 const PERSPECTIVE_ONE = .8
 
 enum SIZE_MODE {
@@ -27,7 +29,7 @@ const defaultVertigoState = {
   sizeMode: SIZE_MODE.CONTAIN,
 
   rangeMin: -1_000,
-  rangeMax: 10_000,
+  rangeMax: 1_000,
   nearMin: .01,
   farMax: 100_000,
 
@@ -35,6 +37,43 @@ const defaultVertigoState = {
 }
 
 type VertigoState = typeof defaultVertigoState
+
+type VertigoStateDeclaration = Partial<VertigoState & {
+  focus: Vector3Declaration
+  rotation: Vector3Declaration
+  size: Vector2Declaration
+}>
+
+function solveVertigoStateDeclaration(arg: VertigoStateDeclaration): VertigoState {
+  const {
+    focus,
+    rotation,
+    size,
+    ...props
+  } = arg
+  const state = {
+    ...defaultVertigoState,
+    ...props
+  }
+  if (focus) {
+    const [x, y, z] = solveVector3Declaration(focus)
+    state.focusX = x
+    state.focusY = y
+    state.focusZ = z
+  }
+  if (rotation) {
+    const [x, y, z] = solveVector3Declaration(rotation)
+    state.rotationX = x
+    state.rotationY = y
+    state.rotationZ = z
+  }
+  if (size) {
+    const [width, height] = solveVector2Declaration(size)
+    state.width = width
+    state.height = height
+  }
+  return state
+}
 
 function copyVertigoState(source: VertigoState, target: VertigoState) {
   target.perspective = source.perspective
@@ -56,6 +95,7 @@ function copyVertigoState(source: VertigoState, target: VertigoState) {
 
 export type {
   VertigoState,
+  VertigoStateDeclaration,
 }
 
 export {
@@ -63,4 +103,5 @@ export {
   SIZE_MODE,
   defaultVertigoState,
   copyVertigoState,
+  solveVertigoStateDeclaration,
 }
