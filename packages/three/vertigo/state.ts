@@ -42,6 +42,10 @@ type VertigoStateDeclaration = Partial<VertigoState & {
   focus: Vector3Declaration
   rotation: Vector3Declaration
   size: Vector2Declaration
+  yaw: number
+  pitch: number
+  roll: number
+  useDegree: boolean
 }>
 
 function solveVertigoStateDeclaration(arg: VertigoStateDeclaration): VertigoState {
@@ -49,6 +53,10 @@ function solveVertigoStateDeclaration(arg: VertigoStateDeclaration): VertigoStat
     focus,
     rotation,
     size,
+    yaw,
+    pitch,
+    roll,
+    useDegree,
     ...props
   } = arg
   const state = {
@@ -71,6 +79,20 @@ function solveVertigoStateDeclaration(arg: VertigoStateDeclaration): VertigoStat
     const [width, height] = solveVector2Declaration(size)
     state.width = width
     state.height = height
+  }
+  if (yaw !== undefined) {
+    state.rotationY = yaw
+  }
+  if (pitch !== undefined) {
+    state.rotationX = pitch
+  }
+  if (roll !== undefined) {
+    state.rotationZ = roll
+  }
+  if (useDegree) {
+    state.rotationX *= Math.PI / 180
+    state.rotationY *= Math.PI / 180
+    state.rotationZ *= Math.PI / 180
   }
   return state
 }
