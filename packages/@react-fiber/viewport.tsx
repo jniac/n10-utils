@@ -1,5 +1,6 @@
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
-import { Camera, Object3D, PerspectiveCamera, Vector2 } from 'three'
+import { Camera, DepthTexture, HalfFloatType, Object3D, PerspectiveCamera, Vector2, WebGLRenderTarget, WebGLRenderer } from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 import { Canvas, CanvasProps, useThree } from '@react-three/fiber'
 
 import { DestroyableObject } from '../../types'
@@ -14,13 +15,13 @@ const defaultViewportProps = {
 }
 
 type ViewportProps = Partial<typeof defaultViewportProps & {
-  onBeforeRender: (info: { mainCamera: Camera, camera: Camera, viewport: Viewport, mainViewport: Viewport }) => void
+  onBeforeRender: (info: { mainCamera: Camera, camera: Camera, viewport: ViewportInstance, mainViewport: ViewportInstance }) => void
   camera: Camera
   scene: Object3D
   extraScene: Object3D
 }>
 
-class Viewport {
+class ViewportInstance {
   props: ViewportProps
   x = 0
   y = 0
@@ -28,7 +29,8 @@ class Viewport {
   height = 0
   isMainViewport = false
   camera: PerspectiveCamera
-  renderScene: Object3D = null!
+  scene: Object3D = null!
+  composer: EffectComposer = null! 
   constructor(props: ViewportProps) {
     this.props = props
     this.camera = new PerspectiveCamera()
@@ -71,10 +73,10 @@ class Viewport {
 }
 
 class ViewportManager {
-  private static _defaultMainViewport = new Viewport(defaultViewportProps)
-  private _viewports: Set<Viewport> = new Set()
-  private _sortedViewports: Viewport[] = []
-  private _mainViewport: Viewport = ViewportManager._defaultMainViewport
+  private static _defaultMainViewport = new ViewportInstance(defaultViewportProps)
+  private _viewports: Set<ViewportInstance> = new Set()
+  private _sortedViewports: ViewportInstance[] = []
+  private _mainViewport: ViewportInstance = ViewportManager._defaultMainViewport
   private _dirty = false
   private _update() {
     this._sortedViewports = [...this._viewports]
@@ -90,17 +92,17 @@ class ViewportManager {
 
     this._dirty = false
   }
-  private _getSortedViewports(): Viewport[] {
+  private _getSortedViewports(): ViewportInstance[] {
     if (this._dirty) {
       this._update()
     }
     return this._sortedViewports
   }
-  getMainViewport(): Viewport {
+  getMainViewport(): ViewportInstance {
     return this._mainViewport
   }
   addViewport(props: ViewportProps): DestroyableObject {
-    const viewport = new Viewport(props)
+    const viewport = new ViewportInstance(props)
     this._viewports.add(viewport)
     this._dirty = true
     const destroy = () => {
@@ -108,7 +110,7 @@ class ViewportManager {
     }
     return { destroy }
   }
-  *iterateViewports(): Generator<Viewport, void, undefined> {
+  *iterateViewports(): Generator<ViewportInstance, void, undefined> {
     const viewports = this._getSortedViewports()
     if (viewports.length > 0) {
       yield* viewports
@@ -116,7 +118,7 @@ class ViewportManager {
       yield ViewportManager._defaultMainViewport
     }
   }
-  getViewportAt(x: number, y: number): Viewport {
+  getViewportAt(x: number, y: number): ViewportInstance {
     const viewports = this._getSortedViewports()
     if (viewports.length > 0) {
       // Loop over sorted viewports in REVERSE order (z-index)
@@ -131,8 +133,22 @@ class ViewportManager {
       return ViewportManager._defaultMainViewport
     }
   }
-  get viewports(): Viewport[] {
+  get viewports(): ViewportInstance[] {
     return [...this.iterateViewports()]
+  }
+
+  onAfterRenderCallbacks: ((viewport: ViewportInstance, renderer: WebGLRenderer) => void)[] = []
+  onAfterRender(callback: (viewport: ViewportInstance, renderer: WebGLRenderer) => void): DestroyableObject {
+    this.onAfterRenderCallbacks.push(callback)
+    let destroyed = false
+    const destroy = () => {
+      if (destroyed === false) {
+        const index = this.onAfterRenderCallbacks.indexOf(callback)
+        this.onAfterRenderCallbacks.splice(index, 1)
+        destroyed = true
+      }
+    }
+    return { destroy }
   }
 }
 
@@ -149,19 +165,19 @@ function ViewportProvider({
   }, [])
 
   const {
-    gl,
+    gl: renderer,
     camera: mainCamera,
     scene: mainScene,
   } = useThree()
 
   useEffects(function* () {
-    gl.autoClear = false
+    renderer.autoClear = false
 
     const size = new Vector2()
     yield windowClock().onTick(tickOrder, () => {
-      gl.clear(true, true, true)
-      gl.resetState()
-      gl.getSize(size)
+      renderer.clear(true, true, true)
+      renderer.resetState()
+      renderer.getSize(size)
 
       const mainViewport = manager.getMainViewport()
       for (const viewport of manager.iterateViewports()) {
@@ -173,7 +189,13 @@ function ViewportProvider({
           onBeforeRender,
         } = viewport.props
 
-        viewport.renderScene = scene
+        viewport.scene = scene
+
+        // if (viewport.composer === null) {
+        //   const renderTarget = new WebGLRenderTarget(size.x, size.y, { type: HalfFloatType })
+        //   const depthTexture = new DepthTexture(size.x, size.y)
+        //   viewport.composer = new EffectComposer(renderer)
+        // }
 
         let [x, y, width, height] = box
         x *= size.x
@@ -202,13 +224,17 @@ function ViewportProvider({
 
         onBeforeRender?.({ camera, mainCamera, viewport, mainViewport })
 
-        gl.setViewport(viewport.x, viewport.y, viewport.width, viewport.height)
-        gl.setScissor(viewport.x, viewport.y, viewport.width, viewport.height)
-        gl.setScissorTest(true)
-        gl.render(scene, viewport.camera)
+        renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height)
+        renderer.setScissor(viewport.x, viewport.y, viewport.width, viewport.height)
+        renderer.setScissorTest(true)
+        renderer.render(scene, viewport.camera)
 
         if (extraScene) {
-          gl.render(extraScene, viewport.camera)
+          renderer.render(extraScene, viewport.camera)
+        }
+
+        for (const callback of manager.onAfterRenderCallbacks) {
+          callback(viewport, renderer)
         }
       }
     })
@@ -271,6 +297,7 @@ function ViewportCanvas({
 
 export type {
   ViewportProps,
+  ViewportInstance,
   ViewportManager,
 }
 
