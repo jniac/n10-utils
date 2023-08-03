@@ -227,6 +227,7 @@ function ViewportProvider({
         renderer.setViewport(viewport.x, viewport.y, viewport.width, viewport.height)
         renderer.setScissor(viewport.x, viewport.y, viewport.width, viewport.height)
         renderer.setScissorTest(true)
+        renderer.clear()
         renderer.render(scene, viewport.camera)
 
         if (extraScene) {
