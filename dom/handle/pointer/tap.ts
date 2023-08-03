@@ -1,12 +1,12 @@
 
-type Info = {
+type TapInfo = {
   timestamp: number
   downTarget: HTMLElement
   clientX: number
   clientY: number
 }
 
-type Callback = (info: Info) => void
+type Callback = (info: TapInfo) => void
 
 const defaultParams = {
   /** The max distance that the user may travel when down. */
@@ -34,7 +34,7 @@ function handleTap(element: HTMLElement, params: Params): () => void {
     onTap,
   } = { ...defaultParams, ...params }
 
-  const info: Info = {
+  const info: TapInfo = {
     timestamp: -1,
     downTarget: null!,
     clientX: 0,
@@ -69,7 +69,7 @@ function handleTap(element: HTMLElement, params: Params): () => void {
 
 export type {
   Params as HandleTapParams,
-  Info as HandleTapInfo,
+  TapInfo,
 }
 
 export {

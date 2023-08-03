@@ -1,7 +1,7 @@
 
 type Direction = 'horizontal' | 'vertical'
 
-type Info = {
+type DragInfo = {
 	direction: Direction
 	startPosition: DOMPoint
 	position: DOMPoint
@@ -9,7 +9,7 @@ type Info = {
 	delta: DOMPoint
 }
 
-type Callback = (info: Info) => void
+type Callback = (info: DragInfo) => void
 
 const defaultParams = {
 	dragDistanceThreshold: 10,
@@ -59,7 +59,7 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 	const positionOld = new DOMPoint(0, 0)
 	const movement = new DOMPoint(0, 0)
 	const delta = new DOMPoint(0, 0)
-	const info: Info = {
+	const info: DragInfo = {
 		direction: 'horizontal',
 		startPosition,
 		position,
@@ -248,6 +248,7 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 
 export type {
 	Params as HandleDragParams,
+	DragInfo,
 }
 
 export {

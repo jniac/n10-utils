@@ -1,5 +1,7 @@
 
-type Callback = (info: { position: DOMPoint }) => void
+type PressInfo = { position: DOMPoint }
+
+type Callback = (info: PressInfo) => void
 
 const callbackNames = [
 	'onPressStart',
@@ -116,6 +118,7 @@ function handlePress(element: HTMLElement, params: Params) {
 
 export type {
 	Params as HandlePressParams,
+	PressInfo,
 }
 
 export {
