@@ -2,6 +2,7 @@
 type TapInfo = {
   timestamp: number
   downTarget: HTMLElement
+  downPosition: DOMPoint
   clientX: number
   clientY: number
 }
@@ -37,6 +38,7 @@ function handleTap(element: HTMLElement, params: Params): () => void {
   const info: TapInfo = {
     timestamp: -1,
     downTarget: null!,
+    downPosition: new DOMPoint(),
     clientX: 0,
     clientY: 0,
   }
@@ -45,14 +47,16 @@ function handleTap(element: HTMLElement, params: Params): () => void {
     info.timestamp = Date.now()
     info.clientX = event.clientX
     info.clientY = event.clientY
-    window.addEventListener("pointerup", onPointerUp)
     info.downTarget = event.target as HTMLElement
+    info.downPosition.x = event.clientX
+    info.downPosition.y = event.clientY
+    window.addEventListener("pointerup", onPointerUp)
   }
   const onPointerUp = (event: PointerEvent) => {
     window.removeEventListener("pointerup", onPointerUp)
     const duration = (Date.now() - info.timestamp) / 1e3
-    const x = event.clientX - info.clientX
-    const y = event.clientY - info.clientY
+    const x = event.clientX - info.downPosition.x
+    const y = event.clientY - info.downPosition.y
     const distance = Math.sqrt(x * x + y * y)
     if (distance <= maxDistance && duration < maxDuration) {
       onTap?.(info)
