@@ -1,5 +1,5 @@
 import { Object3D, PerspectiveCamera, Vector3 } from 'three'
-import { Vector3Declaration, solveVector3Declaration } from './basic-types'
+import { Vector3Declaration, solveVector3Declaration } from '../declaration'
 import { VertigoState, VertigoStateDeclaration, copyVertigoState, defaultVertigoState, solveVertigoStateDeclaration } from './state'
 import { updateVertigoCamera } from './update'
 

@@ -1,4 +1,4 @@
-import { Vector3Declaration, Vector2Declaration, solveVector3Declaration, solveVector2Declaration } from './basic-types'
+import { Vector3Declaration, Vector2Declaration, solveVector3Declaration, solveVector2Declaration } from '../declaration'
 
 const PERSPECTIVE_ONE = .8
 
@@ -64,21 +64,21 @@ function solveVertigoStateDeclaration(arg: VertigoStateDeclaration): VertigoStat
     ...props
   }
   if (focus) {
-    const [x, y, z] = solveVector3Declaration(focus)
+    const { x, y, z } = solveVector3Declaration(focus)
     state.focusX = x
     state.focusY = y
     state.focusZ = z
   }
   if (rotation) {
-    const [x, y, z] = solveVector3Declaration(rotation)
+    const { x, y, z } = solveVector3Declaration(rotation)
     state.rotationX = x
     state.rotationY = y
     state.rotationZ = z
   }
   if (size) {
-    const [width, height] = solveVector2Declaration(size)
-    state.width = width
-    state.height = height
+    const { x, y } = solveVector2Declaration(size)
+    state.width = x
+    state.height = y
   }
   if (yaw !== undefined) {
     state.rotationY = yaw
