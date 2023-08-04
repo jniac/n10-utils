@@ -1,12 +1,13 @@
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
-import { Camera, DepthTexture, HalfFloatType, Object3D, PerspectiveCamera, Vector2, WebGLRenderTarget, WebGLRenderer } from 'three'
+import { Camera, Object3D, PerspectiveCamera, Vector2, WebGLRenderer } from 'three'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
-import { Canvas, CanvasProps, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 
-import { DestroyableObject } from '../../types'
-import { useEffects } from '../react/hooks'
-import { windowClock } from '../../clock'
-import { VertigoCamera } from '../three/vertigo/VertigoCamera'
+import { DestroyableObject } from '../../../types'
+import { useEffects } from '../../react/hooks'
+import { windowClock } from '../../../clock'
+import { VertigoCamera } from '../../three/vertigo/VertigoCamera'
+import { clamp01 } from '@/n10-utils/math/basics'
 
 const defaultViewportProps = {
   main: false,
@@ -19,16 +20,18 @@ type ViewportProps = Partial<typeof defaultViewportProps & {
   camera: Camera
   scene: Object3D
   extraScene: Object3D
+  topView: boolean
 }>
 
 class ViewportInstance {
+  static default = new ViewportInstance(defaultViewportProps)
   props: ViewportProps
   x = 0
   y = 0
   width = 0
   height = 0
   isMainViewport = false
-  camera: PerspectiveCamera
+  camera: Camera
   scene: Object3D = null!
   composer: EffectComposer = null! 
   constructor(props: ViewportProps) {
@@ -50,7 +53,7 @@ class ViewportInstance {
     const [x, y, width, height] = this.getBox()
     pointX += -x
     pointY += -y
-    return pointX >= 0 && pointY >= 0 && pointX < width && pointY < height
+    return pointX >= 0 && pointY >= 0 && pointX <= width && pointY <= height
   }
   getAspect(): number {
     return this.width / this.height
@@ -67,16 +70,16 @@ class ViewportInstance {
   }
   toString(): string {
     const box = this.getBox()
+    const currentBox = [this.x, this.y, this.width, this.height].join(', ')
     const type = this.isMainViewport ? 'main' : 'sub'
-    return `Viewport-${type}{ ${box.map(n => n.toFixed(2)).join(', ')} }`
+    return `Viewport-${type}{ \n  [${box.map(n => n.toFixed(2)).join(', ')}]\n  [${currentBox}]\n}`
   }
 }
 
 class ViewportManager {
-  private static _defaultMainViewport = new ViewportInstance(defaultViewportProps)
   private _viewports: Set<ViewportInstance> = new Set()
   private _sortedViewports: ViewportInstance[] = []
-  private _mainViewport: ViewportInstance = ViewportManager._defaultMainViewport
+  private _mainViewport: ViewportInstance = ViewportInstance.default
   private _dirty = false
   private _update() {
     this._sortedViewports = [...this._viewports]
@@ -84,7 +87,7 @@ class ViewportManager {
 
     const mainViewport = this._sortedViewports.find(v => v.props.main)
       ?? this._sortedViewports[0]
-      ?? ViewportManager._defaultMainViewport
+      ?? ViewportInstance.default
     for (const viewport of this._sortedViewports) {
       viewport.isMainViewport = viewport === mainViewport
     }
@@ -115,11 +118,13 @@ class ViewportManager {
     if (viewports.length > 0) {
       yield* viewports
     } else {
-      yield ViewportManager._defaultMainViewport
+      yield ViewportInstance.default
     }
   }
   getViewportAt(x: number, y: number): ViewportInstance {
     const viewports = this._getSortedViewports()
+    x = clamp01(x)
+    y = clamp01(y)
     if (viewports.length > 0) {
       // Loop over sorted viewports in REVERSE order (z-index)
       for (let i = viewports.length - 1; i >= 0; i--) {
@@ -130,7 +135,7 @@ class ViewportManager {
       }
       throw new Error('Where is my main viewport???')
     } else {
-      return ViewportManager._defaultMainViewport
+      return ViewportInstance.default
     }
   }
   get viewports(): ViewportInstance[] {
@@ -154,7 +159,7 @@ class ViewportManager {
 
 const ViewportContext = createContext<ViewportManager>(null!)
 
-function ViewportProvider({
+export function ViewportProvider({
   tickOrder,
   children,
 }: PropsWithChildren<{
@@ -261,49 +266,13 @@ function ViewportComponent(props: ViewportProps) {
   )
 }
 
-/**
- * Must declare <Viewport /> children to display multiple viewport. If no 
- * viewport is specified, <ViewportCanvas /> will automatically fall back to a 
- * fullscreen viewport.
- * 
- * Usage:
- * ```tsx
- * <ViewportCanvas>
- *   <Viewport main />
- *   <Viewport zIndex={10} box={[.75, .75, .25, .25]} />
- * </ViewportCanvas>
- * ```
- */
-function ViewportCanvas({
-  renderTickOrder = 1000,
-  gl,
-  children,
-  ...props
-}: CanvasProps & Partial<{
-  renderTickOrder: number
-}>) {
-  return (
-    <Canvas
-      flat
-      gl={{ outputColorSpace: "srgb", ...gl }}
-      {...props}
-      frameloop='never'
-    >
-      <ViewportProvider tickOrder={renderTickOrder}>
-        {children}
-      </ViewportProvider>
-    </Canvas>
-  )
-}
-
 export type {
   ViewportProps,
-  ViewportInstance,
   ViewportManager,
 }
 
 export {
   ViewportComponent as Viewport,
-  ViewportCanvas,
+  ViewportInstance,
   useViewportManager,
 }
