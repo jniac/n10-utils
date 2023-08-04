@@ -75,6 +75,8 @@ const numbers = (numbers: number[]) => {
  * Digests a string and returns a unique, predictable number (hash).
  */
 const string = (str: string) => {
+	// NOTE: Make sure that the string is a "string" (bug if "number"):
+	str = String(str)
 	init()
 	const max = str.length
 	for (let i = 0; i < max; i++) {
