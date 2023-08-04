@@ -131,10 +131,12 @@ export function smartDigest(...propsArray: any[]): number {
 				break
 			}
 			case 'object': {
+				// If object has "value" key, object is a wrapper, ignore everything else the value.
 				if ('value' in current) {
 					queue.push(current.value)
 					break
 				}
+				// If object has id, the id is enough to deduce identity, ignore everything else.
 				if ('uuid' in current) {
 					digest.string(current.uuid)
 					break
