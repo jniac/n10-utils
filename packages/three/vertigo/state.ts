@@ -56,7 +56,7 @@ function solveVertigoStateDeclaration(arg: VertigoStateDeclaration): VertigoStat
     yaw,
     pitch,
     roll,
-    useDegree,
+    useDegree = true,
     ...props
   } = arg
   const state = {
