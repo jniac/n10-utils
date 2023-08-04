@@ -18,7 +18,6 @@ type TapInfo = {
 
 type DragInfo = {
   pointer: PointerManager
-  /** The */
   hitDeltaStart: Vector3
   hitStart: PointerHit
   viewportStart: ViewportInstance
@@ -112,8 +111,9 @@ const Pointer = () => {
 class PointerManager {
   private static counter = 0
   readonly id = PointerManager.counter++
-  private destroyHandler: () => void
+
   private m = {
+    onDestroyCallbacks: new Set<() => void>(),
     onTapCallbacks: new Set<(info: TapInfo) => void>
   }
 
@@ -130,7 +130,20 @@ class PointerManager {
 
     this.viewportManager = viewportManager
     this.canvas = canvas
+  }
 
+  destroyed = false
+  destroy = () => {
+    for (const callback of this.m.onDestroyCallbacks) {
+      callback()
+    }
+    const index = pointerManagers.indexOf(this)
+    pointerManagers.splice(index, 1)
+    this.destroyed = true
+    this.destroy = () => { }
+  }
+
+  bindPointerEvents() {
     let dragHasStarted = false
     const dragInfo: DragInfo = {
       pointer: this,
@@ -142,7 +155,7 @@ class PointerManager {
       rayOld: null!,
     }
 
-    this.destroyHandler = handlePointer(canvas, {
+    const destroyHandler = handlePointer(this.canvas, {
       onMove: info => {
         this.update(info.position.x, info.position.y)
       },
@@ -194,15 +207,8 @@ class PointerManager {
         }
       },
     })
-  }
 
-  destroyed = false
-  destroy = () => {
-    this.destroyHandler()
-    const index = pointerManagers.indexOf(this)
-    pointerManagers.splice(index, 1)
-    this.destroyed = true
-    this.destroy = () => { }
+    this.m.onDestroyCallbacks.add(destroyHandler)
   }
 
   update(clientX: number, clientY: number): void {
@@ -218,6 +224,9 @@ class PointerManager {
       root = this.currentViewport.scene,
       filter = () => true,
     } = options ?? {}
+    if (root === null) {
+      debugger
+    }
     return processPointerRaycast(this.raycaster, root, filter)
   }
 
@@ -262,12 +271,16 @@ function usePointerManager() {
 function PointerProvider({ children }: PropsWithChildren) {
   const three = useThree()
   const viewportManager = useViewportManager()
-  const pointerManager = useMemo(() =>
-    new PointerManager(viewportManager, three.gl.domElement),
-    [three, viewportManager])
+  
+  const pointerManager = useMemo(() => {
+    return new PointerManager(viewportManager, three.gl.domElement)
+  }, [three, viewportManager])
+
   useEffects(function* () {
+    pointerManager.bindPointerEvents()
     yield pointerManager
   }, [pointerManager])
+
   return (
     <PointerContext.Provider value={pointerManager}>
       {children}

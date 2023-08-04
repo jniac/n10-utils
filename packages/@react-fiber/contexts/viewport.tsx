@@ -76,18 +76,20 @@ class ViewportInstance {
     return out
   }
   toString(): string {
-    const box = this.getBox()
-    const currentBox = [this.x, this.y, this.width, this.height].join(', ')
     const type = this.isMainViewport ? 'main' : 'sub'
-    return `Viewport-${type}{ \n  [${box.map(n => n.toFixed(2)).join(', ')}]\n  [${currentBox}]\n}`
+    return `Viewport-${type}{ ${this.width}x${this.height} @(${this.x},${this.y}) }`
   }
 }
 
+let viewportManagerCounter = 0
 class ViewportManager {
+  readonly id = viewportManagerCounter++
+
   private _viewports: Set<ViewportInstance> = new Set()
   private _sortedViewports: ViewportInstance[] = []
   private _mainViewport: ViewportInstance = ViewportInstance.default
   private _dirty = false
+
   private _update() {
     this._sortedViewports = [...this._viewports]
       .sort((A, B) => (A.props.zIndex ?? 0) - (B.props.zIndex ?? 0))
@@ -166,6 +168,7 @@ class ViewportManager {
 
 const ViewportContext = createContext<ViewportManager>(null!)
 
+let counter = 0
 export function ViewportProvider({
   tickOrder,
   children,
@@ -175,13 +178,13 @@ export function ViewportProvider({
   const manager = useMemo(() => {
     return new ViewportManager()
   }, [])
-
+  
   const {
     gl: renderer,
     camera: mainCamera,
     scene: mainScene,
   } = useThree()
-
+  
   useEffects(function* () {
     renderer.autoClear = false
 
@@ -202,12 +205,6 @@ export function ViewportProvider({
         } = viewport.props
 
         viewport.scene = scene
-
-        // if (viewport.composer === null) {
-        //   const renderTarget = new WebGLRenderTarget(size.x, size.y, { type: HalfFloatType })
-        //   const depthTexture = new DepthTexture(size.x, size.y)
-        //   viewport.composer = new EffectComposer(renderer)
-        // }
 
         let [x, y, width, height] = box
         x *= size.x

@@ -1,3 +1,5 @@
+'use client'
+
 import { Canvas, CanvasProps } from '@react-three/fiber'
 import { ViewportProvider } from './viewport'
 import { PointerProvider } from './pointer'

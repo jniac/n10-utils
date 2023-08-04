@@ -71,7 +71,6 @@ class DebugDrawGroup extends Group {
   }
 
   constructor() {
-    console.log('dqsdq')
     super()
     debugDrawGroups.push(this)
     this.add(this.m.lineSegments)
