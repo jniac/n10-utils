@@ -176,7 +176,6 @@ class PointerManager {
       onDrag: info => {
         if (dragHasStarted) {
           this.update(info.position.x, info.position.y)
-          console.log(this.ndcCoords.x, this.ndcCoords.y)
           dragInfo.rayOld = dragInfo.ray
           dragInfo.ray = this.raycaster.ray.clone()
           const { onDrag } = extractPointerCallbacks(dragInfo.hitStart.object)
