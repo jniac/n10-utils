@@ -146,6 +146,10 @@ class PointerManager {
       onMove: info => {
         this.update(info.position.x, info.position.y)
       },
+      // onDown: () => {
+      //   const hit = this.raycast()
+      //   console.log(hit?.intersection, (this.raycaster.camera as any).isPerspectiveCamera)
+      // },
       onTap: ({ downPosition }) => {
         this.update(downPosition.x, downPosition.y)
         const hit = this.raycast()

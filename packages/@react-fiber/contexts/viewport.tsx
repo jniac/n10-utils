@@ -40,6 +40,13 @@ class ViewportInstance {
     this.camera.matrixAutoUpdate = false
   }
   updateCamera(otherCamera: Camera) {
+    // VertigoCamera support in the viewport:
+    // NOTE: This is hacky and must be changed if it occurs bug in the future.
+    // @ts-ignore
+    this.camera.isOrthographicCamera = otherCamera.isOrthographicCamera
+    // @ts-ignore
+    this.camera.isPerspectiveCamera = otherCamera.isPerspectiveCamera
+
     this.camera.matrix.copy(otherCamera.matrix)
     this.camera.matrixWorld.copy(otherCamera.matrixWorld)
     this.camera.projectionMatrix.copy(otherCamera.projectionMatrix)
