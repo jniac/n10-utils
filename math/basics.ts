@@ -24,7 +24,7 @@ export const inverseLerpUnclamped = (a: number, b: number, x: number) => {
 }
 
 export const toff = (x: number) => {
-	return clamp(0x100 * x, 0, 0xff)
+	return clamp(Math.floor(0x100 * x), 0, 0xff)
 }
 
 export const limited = (x: number, limit: number) => {
@@ -33,6 +33,17 @@ export const limited = (x: number, limit: number) => {
 
 export const signedLimited = (x: number, limit: number) => {
 	return x < 0 ? -limited(-x, limit) : limited(x, limit)
+}
+
+/**
+ * Returns the "positive" modulo of "x".
+ * ```
+ * positiveModulo(-2, 10) // -> 8
+ * ```
+ */
+export const positiveModulo = (x: number, base: number) => {
+	x %= base
+	return x < 0 ? x + base : x
 }
 
 /**
