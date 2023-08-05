@@ -1,10 +1,11 @@
+import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
 import { Intersection, Mesh, Object3D, Ray, Raycaster, Vector2, Vector3 } from 'three'
 import { useThree } from '@react-three/fiber'
+
 import { ViewportInstance, ViewportManager, useViewportManager } from '@/n10-utils/packages/@react-fiber/contexts/viewport'
 import { useEffects } from '@/n10-utils/packages/react/hooks'
 import { handlePointer } from '@/n10-utils/dom/handle/pointer'
 import { mapRecord } from '@/n10-utils/object/map-record'
-import { PropsWithChildren, createContext, useContext, useEffect, useMemo } from 'react'
 
 type PointerHit = {
   object: Object3D
@@ -43,8 +44,8 @@ type RaycastOptions = Partial<{
   filter: (intersection: Intersection) => boolean
 }>
 
-function isCollider(object: Object3D): boolean {
-  return object.userData.collider === true
+function isPointerCollider(object: Object3D): boolean {
+  return object.userData.pointerCollider === true
 }
 
 function isIgnoringPointer(object: Object3D): boolean {
@@ -63,10 +64,10 @@ function processPointerRaycast(raycaster: Raycaster, root: Object3D, optionalFil
     if (isIgnoringPointer(current)) {
       continue
     }
-    const colliders = current.children.filter(isCollider)
+    const colliders = current.children.filter(isPointerCollider)
     if (colliders.length > 0) {
       // Current node has colliders, ignore his own geomtry and use colliders to evaluate hit.
-      // NOTE: children are ignored (since colliders)
+      // NOTE: children are ignored (since colliders are present)
       let intersections = raycaster.intersectObjects(colliders, true)
       if (optionalFilter) {
         intersections = intersections.filter(optionalFilter)
@@ -159,10 +160,10 @@ class PointerManager {
       onMove: info => {
         this.update(info.position.x, info.position.y)
       },
-      // onDown: () => {
-      //   const hit = this.raycast()
-      //   console.log(hit?.intersection, (this.raycaster.camera as any).isPerspectiveCamera)
-      // },
+      onDown: () => {
+        const hit = this.raycast()
+        console.log(hit?.object)
+      },
       onTap: ({ downPosition }) => {
         this.update(downPosition.x, downPosition.y)
         const hit = this.raycast()
