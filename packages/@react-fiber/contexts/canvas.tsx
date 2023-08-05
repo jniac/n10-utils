@@ -1,34 +1,43 @@
 'use client'
 
+import { useMemo } from 'react'
+import { Camera } from 'three'
 import { Canvas, CanvasProps } from '@react-three/fiber'
+
 import { ViewportProvider } from './viewport'
 import { PointerProvider } from './pointer'
 import { DebugDrawProvider } from './debug-draw'
+import { VertigoStateDeclaration } from '../../three/vertigo/state'
+import { VertigoCamera } from '../../three/vertigo/VertigoCamera'
 
-/**
- * Must declare <Viewport /> children to display multiple viewport. If no
- * viewport is specified, <ViewportCanvas /> will automatically fall back to a
- * fullscreen viewport.
- *
- * Usage:
- * ```tsx
- * <ViewportCanvas>
- *   <Viewport main />
- *   <Viewport zIndex={10} box={[.75, .75, .25, .25]} />
- * </ViewportCanvas>
- * ```
- */
+function solveCamera(camera: Camera | VertigoStateDeclaration | undefined): Camera | undefined {
+  if (camera instanceof Camera) {
+    return camera
+  }
+  if (camera && typeof camera === 'object') {
+    return new VertigoCamera().setVertigo(camera)
+  }
+  return undefined
+}
+
 export function ContextCanvas({
-  renderTickOrder = 1000, gl, children, ...props
-}: CanvasProps & Partial<{
+  renderTickOrder = 1000, 
+  gl, 
+  children,
+  camera,
+  ...props
+}: Omit<CanvasProps, 'camera'> & Partial<{
   renderTickOrder: number
+  camera: Camera | VertigoStateDeclaration
 }>) {
+  const solvedCamera = useMemo(() => solveCamera(camera), [camera])
   return (
     <Canvas
       flat
       gl={{ outputColorSpace: "srgb", ...gl }}
       {...props}
       frameloop='never'
+      camera={solvedCamera as any}
     >
       <ViewportProvider tickOrder={renderTickOrder}>
         <PointerProvider>
