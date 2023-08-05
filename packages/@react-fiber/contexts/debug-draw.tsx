@@ -74,8 +74,6 @@ class DebugDrawGroup extends Group {
     super()
     debugDrawGroups.push(this)
     this.add(this.m.lineSegments)
-    this.with(this)
-      .line([0, 0, 0], [10, 0, 0])
   }
 
   destroyed = false
