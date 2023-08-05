@@ -2,20 +2,25 @@ import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
 import { Intersection, Mesh, Object3D, Ray, Raycaster, Vector2, Vector3 } from 'three'
 import { useThree } from '@react-three/fiber'
 
-import { ViewportInstance, ViewportManager, useViewportManager } from '@/n10-utils/packages/@react-fiber/contexts/viewport'
-import { useEffects } from '@/n10-utils/packages/react/hooks'
-import { handlePointer } from '@/n10-utils/dom/handle/pointer'
-import { mapRecord } from '@/n10-utils/object/map-record'
+import { mapRecord } from '../../../object/map-record'
+import { CallbackStack } from '../../../misc/CallbackStack'
+import { handlePointer } from '../../../dom/handle/pointer'
+import { useEffects } from '../../react/hooks'
+import { ViewportInstance, ViewportManager, useViewportManager } from './viewport'
 
 type PointerHit = {
   object: Object3D
   intersection: Intersection
 }
 
+type BasicInfo = {
+  pointer: PointerManager
+}
+
 type TapInfo = {
   pointer: PointerManager
   hit: PointerHit | null
-}
+}  
 
 type DragInfo = {
   pointer: PointerManager
@@ -115,7 +120,8 @@ class PointerManager {
 
   private m = {
     onDestroyCallbacks: new Set<() => void>(),
-    onTapCallbacks: new Set<(info: TapInfo) => void>
+    onMoveCallbacks: new CallbackStack<BasicInfo>,
+    onTapCallbacks: new CallbackStack<TapInfo>,
   }
 
   raycaster = new Raycaster()
@@ -159,6 +165,7 @@ class PointerManager {
     const destroyHandler = handlePointer(this.canvas, {
       onMove: info => {
         this.update(info.position.x, info.position.y)
+        this.m.onMoveCallbacks.invoke({ pointer: this })
       },
       // onDown: () => {
       //   const hit = this.raycast()
@@ -167,17 +174,9 @@ class PointerManager {
       onTap: ({ downPosition }) => {
         this.update(downPosition.x, downPosition.y)
         const hit = this.raycast()
-        const info = { pointer: this, hit }
-        const callbacks = [...this.m.onTapCallbacks]
-        if (hit) {
-          const { onTap } = extractPointerCallbacks(hit.object)
-          if (onTap) {
-            callbacks.push(onTap)
-          }
-        }
-        for (const callback of callbacks) {
-          callback(info)
-        }
+        this.m.onTapCallbacks
+          .add({ once: true }, hit && extractPointerCallbacks(hit.object).onTap)
+          .invoke({ pointer: this, hit })
       },
       onDragStart: () => {
         const hit = this.raycast()
@@ -243,23 +242,18 @@ class PointerManager {
     return out
   }
 
+  onMove(callback: (info: BasicInfo) => void): () => void {
+    this.m.onMoveCallbacks.add(callback)
+    return () => this.m.onMoveCallbacks.remove(callback)
+  }
+
   onTap(callback: OnTapCallback): () => void
   onTap(options: CallbackOptions, callback: OnTapCallback): () => void
   onTap(...args: any[]): () => void {
     const [options, callback] = (args.length === 2 ? args : [{ once: false }, args[0]]) as [CallbackOptions, OnTapCallback]
     const { once = false } = options
-    let finalCallback = callback
-    if (once) {
-      finalCallback = (info: TapInfo) => {
-        destroy()
-        callback(info)
-      }
-    }
-    this.m.onTapCallbacks.add(finalCallback)
-    const destroy = () => {
-      this.m.onTapCallbacks.delete(finalCallback)
-    }
-    return destroy
+    this.m.onTapCallbacks.add({ once }, callback)
+    return () => this.m.onTapCallbacks.remove(callback)
   }
 }
 
