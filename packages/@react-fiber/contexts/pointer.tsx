@@ -54,7 +54,7 @@ function isPointerCollider(object: Object3D): boolean {
 }
 
 function isIgnoringPointer(object: Object3D): boolean {
-  return object.visible === false || object.userData.ignorePointer === true
+  return (object.visible === false || object.userData.ignorePointer === true) && isPointerCollider(object) === false
 }
 
 function childrenAreIgnoringPointer(object: Object3D): boolean {
@@ -225,7 +225,8 @@ class PointerManager {
       filter = () => true,
     } = options ?? {}
     if (root === null) {
-      debugger
+      console.log('??')
+      return []
     }
     return processPointerRaycast(this.raycaster, root, filter)
   }
@@ -268,8 +269,9 @@ function PointerProvider({ children }: PropsWithChildren) {
   const viewportManager = useViewportManager()
   
   const pointerManager = useMemo(() => {
+    console.log(viewportManager.id)
     return new PointerManager(viewportManager, three.gl.domElement)
-  }, [three, viewportManager])
+  }, [three.gl.domElement, viewportManager])
 
   useEffects(function* () {
     pointerManager.bindPointerEvents()

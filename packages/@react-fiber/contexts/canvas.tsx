@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Camera } from 'three'
+import { Camera, LinearToneMapping } from 'three'
 import { Canvas, CanvasProps } from '@react-three/fiber'
 
 import { ViewportProvider } from './viewport'
@@ -34,7 +34,7 @@ export function ContextCanvas({
   return (
     <Canvas
       flat
-      gl={{ outputColorSpace: "srgb", ...gl }}
+      gl={{ outputColorSpace: 'srgb', toneMapping: LinearToneMapping, ...gl }}
       {...props}
       frameloop='never'
       camera={solvedCamera as any}
