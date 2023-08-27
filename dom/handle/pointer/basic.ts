@@ -40,20 +40,29 @@ function handleBasicPointer(element: HTMLElement, params: Params): () => void {
     info.upPosition.y = event.clientY
     params.onUp?.(info)
   }
-  const onPointerMove = (event: PointerEvent) => {
+
+  // Move is tricky, handle "mouse" & "touch" separately.
+  const onMouseMove = (event: MouseEvent) => {
     info.position.x = event.clientX
     info.position.y = event.clientY
     params.onMove?.(info)
   }
+  const onTouchMove = (event: TouchEvent) => {
+    info.position.x = event.touches[0].clientX
+    info.position.y = event.touches[0].clientY
+    params.onMove?.(info)
+  }
 	
-  element.addEventListener("pointerdown", onPointerDown)
-	element.addEventListener("pointerup", onPointerUp)
-	element.addEventListener("pointermove", onPointerMove)
-
+  element.addEventListener('pointerdown', onPointerDown)
+	element.addEventListener('pointerup', onPointerUp)
+	element.addEventListener('mousemove', onMouseMove)
+	element.addEventListener('touchmove', onTouchMove)
+  
   return () => {
-    element.removeEventListener("pointerdown", onPointerDown)
-    element.removeEventListener("pointerup", onPointerUp)
-    element.removeEventListener("pointermove", onPointerMove)
+    element.removeEventListener('pointerdown', onPointerDown)
+    element.removeEventListener('pointerup', onPointerUp)
+    element.removeEventListener('mousemove', onMouseMove)
+    element.removeEventListener('touchmove', onTouchMove)
   }
 }
 
