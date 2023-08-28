@@ -9,6 +9,7 @@ import { PointerProvider } from './pointer'
 import { DebugDrawProvider } from './debug-draw'
 import { VertigoStateDeclaration } from '../../three/vertigo/state'
 import { VertigoCamera } from '../../three/vertigo/VertigoCamera'
+import { smartDigest } from '../../react/hooks'
 
 function solveCamera(camera: Camera | VertigoStateDeclaration | undefined): Camera | undefined {
   if (camera instanceof Camera) {
@@ -30,7 +31,10 @@ export function ContextCanvas({
   renderTickOrder: number
   camera: Camera | VertigoStateDeclaration
 }>) {
-  const solvedCamera = useMemo(() => solveCamera(camera), [camera])
+  const solvedCamera = useMemo(() => {
+    return solveCamera(camera)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [smartDigest([camera])])
   return (
     <Canvas
       flat
