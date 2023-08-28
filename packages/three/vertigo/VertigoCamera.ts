@@ -7,7 +7,7 @@ export class VertigoCamera extends PerspectiveCamera {
   vertigo: VertigoState = { ...defaultVertigoState }
 
   setVertigo(vertigoProps: VertigoStateDeclaration): this {
-    Object.assign(this.vertigo, solveVertigoStateDeclaration(vertigoProps))
+    Object.assign(this.vertigo, solveVertigoStateDeclaration(vertigoProps, this.vertigo))
     return this
   }
 

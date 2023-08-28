@@ -48,7 +48,7 @@ type VertigoStateDeclaration = Partial<VertigoState & {
   useDegree: boolean
 }>
 
-function solveVertigoStateDeclaration(arg: VertigoStateDeclaration): VertigoState {
+function solveVertigoStateDeclaration(arg: VertigoStateDeclaration, _defaultVertigoState: VertigoState = defaultVertigoState): VertigoState {
   const {
     focus,
     rotation,
@@ -56,11 +56,11 @@ function solveVertigoStateDeclaration(arg: VertigoStateDeclaration): VertigoStat
     yaw,
     pitch,
     roll,
-    useDegree = true,
+    useDegree = false,
     ...props
   } = arg
   const state = {
-    ...defaultVertigoState,
+    ..._defaultVertigoState,
     ...props
   }
   if (focus) {
