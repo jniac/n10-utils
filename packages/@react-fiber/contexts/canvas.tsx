@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { Camera, LinearToneMapping } from 'three'
-import { Canvas, CanvasProps } from '@react-three/fiber'
+import { Canvas, CanvasProps, useThree } from '@react-three/fiber'
 
 import { ViewportProvider } from './viewport'
 import { PointerProvider } from './pointer'
@@ -21,15 +21,23 @@ function solveCamera(camera: Camera | VertigoStateDeclaration | undefined): Came
   return undefined
 }
 
+function Expose() {
+  const three = useThree()
+  Object.assign(window, { three })
+  return null
+}
+
 export function ContextCanvas({
   renderTickOrder = 1000, 
   gl, 
   children,
   camera,
+  expose,
   ...props
 }: Omit<CanvasProps, 'camera'> & Partial<{
   renderTickOrder: number
   camera: Camera | VertigoStateDeclaration
+  expose: boolean
 }>) {
   const solvedCamera = useMemo(() => {
     return solveCamera(camera)
@@ -46,6 +54,9 @@ export function ContextCanvas({
       <ViewportProvider tickOrder={renderTickOrder}>
         <PointerProvider>
           <DebugDrawProvider>
+            {expose && (
+              <Expose />
+            )}
             {children}
           </DebugDrawProvider>
         </PointerProvider>
