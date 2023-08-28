@@ -14,6 +14,7 @@ type Callback = (info: DragInfo) => void
 
 const defaultParams = {
 	dragDistanceThreshold: 10,
+	dragPreventDefault: false,
 }
 
 const callbackNames = [
@@ -39,6 +40,7 @@ function hasDragCallback(params: Record<string, any>): boolean {
 function handleDrag(element: HTMLElement, params: Params): () => void {
 	const {
 		dragDistanceThreshold,
+		dragPreventDefault,
 		onDragStart,
 		onDragStop,
 		onDrag,
@@ -182,6 +184,9 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 	const onMouseMove = (event: MouseEvent) => {
 		pointer.x = event.clientX
 		pointer.y = event.clientY
+		if (drag && dragPreventDefault) {
+			event.preventDefault()
+		}
 	}
 
 	const onMouseUp = () => {
@@ -220,6 +225,9 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 		if (touch.identifier === firstTouch!.identifier) {
 			pointer.x = touch.clientX
 			pointer.y = touch.clientY
+			if (drag && dragPreventDefault) {
+				event.preventDefault()
+			}
 		}
 	}
 
