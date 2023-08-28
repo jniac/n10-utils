@@ -269,7 +269,6 @@ function PointerProvider({ children }: PropsWithChildren) {
   const viewportManager = useViewportManager()
   
   const pointerManager = useMemo(() => {
-    console.log(viewportManager.id)
     return new PointerManager(viewportManager, three.gl.domElement)
   }, [three.gl.domElement, viewportManager])
 
