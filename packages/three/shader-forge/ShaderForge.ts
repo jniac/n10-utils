@@ -1,5 +1,6 @@
 import { IUniform, Material, Shader } from 'three'
 import { MeshPhysicalMaterialFragmentTokens, MeshPhysicalMaterialVertexTokens, glTokens } from './Tokens'
+import { globalUniforms } from './uniforms'
 
 type Uniforms = Record<string, IUniform>
 
@@ -225,6 +226,7 @@ const vertex = new ShaderTool<MeshPhysicalMaterialVertexTokens>('vertexShader')
 type ShaderForgeType = {
   defines: typeof defines
   uniforms: typeof uniforms,
+  globalUniforms: typeof globalUniforms,
   varying: typeof varying,
   vertex: typeof vertex,
   fragment: typeof fragment,
@@ -244,6 +246,7 @@ type ShaderForgeType = {
 export const ShaderForge: ShaderForgeType = {
   defines,
   uniforms,
+  globalUniforms,
   varying,
   vertex,
   fragment,
