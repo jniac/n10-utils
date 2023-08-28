@@ -7,6 +7,7 @@ type DragInfo = {
 	position: DOMPoint
 	movement: DOMPoint
 	delta: DOMPoint
+	deltaTime: number
 }
 
 type Callback = (info: DragInfo) => void
@@ -65,6 +66,7 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 		position,
 		movement,
 		delta,
+		deltaTime: 1 / 60,
 	}
 
 	const frameStart = (x: number, y: number) => {
@@ -145,7 +147,11 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 		}
 	}
 
-	const dragFrame = () => {
+	let msOld = 0
+	const dragFrame = (ms: number) => {
+		info.deltaTime = (ms - msOld) / 1e3
+		msOld = ms
+
 		if (down) {
 			frameID = window.requestAnimationFrame(dragFrame)
 
