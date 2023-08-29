@@ -1,5 +1,6 @@
 import { Camera, EulerOrder, Matrix4, Vector2, Vector3 } from 'three'
 import { SIZE_MODE, VertigoState } from './state'
+import { applyMatrix4AsMatrix3 } from '../utils/geom/vector-3'
 
 const PERSPECTIVE_ONE = .8
 const EULER_ORDER: EulerOrder = 'YXZ'
@@ -87,7 +88,8 @@ export const updateVertigoCamera = (
   camera.rotation.set(rotationX, rotationY, rotationZ, EULER_ORDER)
   camera.quaternion.setFromEuler(camera.rotation)
   _matrix.makeRotationFromQuaternion(camera.quaternion)
-  _vector.set(0, 0, distance).applyMatrix4(_matrix)
+  _vector.set(0, 0, distance)
+  applyMatrix4AsMatrix3(_vector, _matrix)
   camera.position.set(
     _vector.x + focusX,
     _vector.y + focusY,
