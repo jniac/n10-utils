@@ -1,3 +1,4 @@
+import { PointerButton } from './type'
 
 type Direction = 'horizontal' | 'vertical'
 
@@ -15,6 +16,7 @@ type Callback = (info: DragInfo) => void
 const defaultParams = {
 	dragDistanceThreshold: 10,
 	dragPreventDefault: false,
+	dragButton: PointerButton.Main,
 }
 
 const callbackNames = [
@@ -41,6 +43,7 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 	const {
 		dragDistanceThreshold,
 		dragPreventDefault,
+		dragButton,
 		onDragStart,
 		onDragStop,
 		onDrag,
@@ -176,9 +179,11 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 	}
 
 	const onMouseDown = (event: MouseEvent) => {
-		window.addEventListener("mousemove", onMouseMove)
-		window.addEventListener("mouseup", onMouseUp)
-		frameStart(event.clientX, event.clientY)
+		if (event.button === dragButton) {
+			window.addEventListener("mousemove", onMouseMove)
+			window.addEventListener("mouseup", onMouseUp)
+			frameStart(event.clientX, event.clientY)
+		}
 	}
 
 	const onMouseMove = (event: MouseEvent) => {

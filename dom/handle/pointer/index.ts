@@ -34,3 +34,5 @@ export function handlePointer(target: HTMLElement, params: Params): () => void {
     }
   }
 }
+
+export { PointerButton } from './type'
