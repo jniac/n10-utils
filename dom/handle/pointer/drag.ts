@@ -179,8 +179,8 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 	}
 
 	const onMouseDown = (event: MouseEvent) => {
-		if (event.button === dragButton) {
-			window.addEventListener("mousemove", onMouseMove)
+		if (dragButton & (1 << event.button)) {
+			window.addEventListener("mousemove", onMouseMove, { passive: false })
 			window.addEventListener("mouseup", onMouseUp)
 			frameStart(event.clientX, event.clientY)
 		}
@@ -205,23 +205,25 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 
 	let firstTouch: Touch | null = null
 	const onTouchStart = (event: TouchEvent) => {
-		const touch = event.changedTouches[0]
-		if (firstTouch === null) {
-			firstTouch = touch
-			window.addEventListener("touchmove", onTouchMove)
-			window.addEventListener("touchend", onTouchEnd)
-			frameID = window.requestAnimationFrame(dragFrame)
-			down = true
-			delta.x = 0
-			delta.y = 0
-			movement.x = 0
-			movement.y = 0
-			startPosition.x = touch.clientX
-			startPosition.y = touch.clientY
-			position.x = touch.clientX
-			position.y = touch.clientY
-			pointer.x = touch.clientX
-			pointer.y = touch.clientY
+		if (dragButton & PointerButton.Main) {
+			const touch = event.changedTouches[0]
+			if (firstTouch === null) {
+				firstTouch = touch
+				window.addEventListener("touchmove", onTouchMove, { passive: false })
+				window.addEventListener("touchend", onTouchEnd)
+				frameID = window.requestAnimationFrame(dragFrame)
+				down = true
+				delta.x = 0
+				delta.y = 0
+				movement.x = 0
+				movement.y = 0
+				startPosition.x = touch.clientX
+				startPosition.y = touch.clientY
+				position.x = touch.clientX
+				position.y = touch.clientY
+				pointer.x = touch.clientX
+				pointer.y = touch.clientY
+			}
 		}
 	}
 
