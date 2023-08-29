@@ -1,5 +1,5 @@
-import { Matrix4, Camera, Vector3, EulerOrder } from 'three'
-import { VertigoState } from './state'
+import { Camera, EulerOrder, Matrix4, Vector2, Vector3 } from 'three'
+import { SIZE_MODE, VertigoState } from './state'
 
 const PERSPECTIVE_ONE = .8
 const EULER_ORDER: EulerOrder = 'YXZ'
@@ -7,10 +7,54 @@ const EULER_ORDER: EulerOrder = 'YXZ'
 const _vector = new Vector3()
 const _matrix = new Matrix4()
 
+/**
+ * Update the "vertigo size" according to its "size mode" and the current aspect
+ * of the viewport. Nothing more than a classic "cover / contain" concept.
+ */
+export const updateVertigoSize = (
+  size: Vector2,
+  aspect: number,
+  {
+    width,
+    height,
+    sizeMode,
+  }: VertigoState) => {
+  const vertigoAspect = width / height
+  switch (sizeMode) {
+    default:
+    case SIZE_MODE.CONTAIN: {
+      if (aspect >= vertigoAspect) {
+        // viewport is "larger" than the camera, base the size on height:
+        size.x = height * aspect
+        size.y = height
+      } else {
+        // viewport is "narrower" than the camera, base the size on width:
+        size.x = width
+        size.y = width / aspect
+      }
+      break
+    }
+    case SIZE_MODE.COVER: {
+      if (aspect >= vertigoAspect) {
+        // viewport is "larger" than the camera, base the size on width:
+        size.x = width
+        size.y = width / aspect
+      } else {
+        // viewport is "narrower" than the camera, base the size on height:
+        size.x = height * aspect
+        size.y = height
+      }
+    }
+  }
+}
 
+/**
+ * Compute the transform and projection matrices according to the current 
+ * "computed" size and the vertigo state.
+ */
 export const updateVertigoCamera = (
   camera: Camera,
-  aspect: number,
+  size: Vector2,
   {
     perspective,
     focusX,
@@ -19,9 +63,6 @@ export const updateVertigoCamera = (
     rotationX,
     rotationY,
     rotationZ,
-    width,
-    height,
-    sizeMode,
     rangeMin,
     rangeMax,
     nearMin,
@@ -30,9 +71,10 @@ export const updateVertigoCamera = (
   }: VertigoState,
 ) => {
 
-  if (aspect < 1) {
-    height /= aspect
-  }
+  const {
+    x: width,
+    y: height,
+  } = size
 
   // NOTE: In ThreeJS "fov" is in degree.
   const fov = perspective * PERSPECTIVE_ONE
@@ -57,6 +99,7 @@ export const updateVertigoCamera = (
   // 2. Near, far & projection.
   const near = Math.max(nearMin, distance + rangeMin)
   const far = Math.min(farMax, distance + rangeMax)
+  const aspect = width / height
   if (isPerspective) {
     // https://github.com/mrdoob/three.js/blob/master/src/cameras/PerspectiveCamera.js#L179
     const mHeight = height * near / distance * .5

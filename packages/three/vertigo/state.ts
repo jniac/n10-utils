@@ -3,7 +3,7 @@ import { Vector3Declaration, Vector2Declaration, solveVector3Declaration, solveV
 const PERSPECTIVE_ONE = .8
 
 enum SIZE_MODE {
-  CONTAIN = 1,
+  CONTAIN = 0,
   COVER = 1,
 }
 

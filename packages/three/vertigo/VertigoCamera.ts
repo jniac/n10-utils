@@ -1,9 +1,10 @@
-import { Object3D, PerspectiveCamera, Vector3 } from 'three'
+import { Object3D, PerspectiveCamera, Vector2, Vector3 } from 'three'
 import { Vector3Declaration, solveVector3Declaration } from '../declaration'
 import { VertigoState, VertigoStateDeclaration, copyVertigoState, defaultVertigoState, solveVertigoStateDeclaration } from './state'
-import { updateVertigoCamera } from './update'
+import { updateVertigoCamera, updateVertigoSize } from './update'
 
 export class VertigoCamera extends PerspectiveCamera {
+  vertigoSize: Vector2 = new Vector2()
   vertigo: VertigoState = { ...defaultVertigoState }
 
   setVertigo(vertigoProps: VertigoStateDeclaration): this {
@@ -40,7 +41,8 @@ export class VertigoCamera extends PerspectiveCamera {
   }
 
   updateVertigoCamera(aspect: number): this {
-    updateVertigoCamera(this, aspect, this.vertigo)
+    updateVertigoSize(this.vertigoSize, aspect, this.vertigo)
+    updateVertigoCamera(this, this.vertigoSize, this.vertigo)
     return this
   }
 }
