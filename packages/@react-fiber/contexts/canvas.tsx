@@ -11,7 +11,10 @@ import { VertigoStateDeclaration } from '../../three/vertigo/state'
 import { VertigoCamera } from '../../three/vertigo/VertigoCamera'
 import { smartDigest } from '../../react/hooks'
 
-function solveCamera(camera: Camera | VertigoStateDeclaration | undefined): Camera | undefined {
+function solveCamera(camera: Camera | VertigoStateDeclaration | 'vertigo' | undefined): Camera | undefined {
+  if (camera === 'vertigo') {
+    return new VertigoCamera()
+  }
   if (camera instanceof Camera) {
     return camera
   }
@@ -36,7 +39,7 @@ export function ContextCanvas({
   ...props
 }: Omit<CanvasProps, 'camera'> & Partial<{
   renderTickOrder: number
-  camera: Camera | VertigoStateDeclaration
+  camera: Camera | VertigoStateDeclaration | 'vertigo'
   expose: boolean
 }>) {
   const solvedCamera = useMemo(() => {
