@@ -42,6 +42,4 @@ export class PRNG {
     const [min, max, distribution] = PRNG.solveRangeParameters(args)
     return min + (max - min) * distribution(PRNG.random())
   }
-
-  static integer(max: number): number
 }
