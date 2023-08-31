@@ -1,5 +1,6 @@
 import { HandleBasicPointerParams, handleBasicPointer, hasBasicPointerCallback } from './basic'
 import { HandleDragParams, handleDrag, hasDragCallback } from './drag'
+import { HandleFocusParams, handleFocus, hasFocusCallback } from './focus'
 import { HandlePressParams, handlePress, hasPressCallback } from './press'
 import { HandleTapParams, handleTap, hasTapCallback } from './tap'
 import { HandleWheelParams, handleWheel, hasWheelCallback } from './wheel'
@@ -7,6 +8,7 @@ import { HandleWheelParams, handleWheel, hasWheelCallback } from './wheel'
 type Params = 
   & HandleBasicPointerParams
   & HandleDragParams
+  & HandleFocusParams
   & HandlePressParams
   & HandleTapParams
   & HandleWheelParams
@@ -18,6 +20,9 @@ export function handlePointer(target: HTMLElement, params: Params): () => void {
   }
   if (hasDragCallback(params)) {
     destroyCallbacks.push(handleDrag(target, params))
+  }
+  if (hasFocusCallback(params)) {
+    destroyCallbacks.push(handleFocus(target, params))
   }
   if (hasPressCallback(params)) {
     destroyCallbacks.push(handlePress(target, params))
