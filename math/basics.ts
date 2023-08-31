@@ -23,6 +23,18 @@ export const inverseLerpUnclamped = (a: number, b: number, x: number) => {
 	return (b - x) / (b - a)
 }
 
+export const round = (x: number, base = 1) => {
+	return Math.round(x / base) * base
+}
+
+export const floor = (x: number, base = 1) => {
+	return Math.floor(x / base) * base
+}
+
+export const ceil = (x: number, base = 1) => {
+	return Math.ceil(x / base) * base
+}
+
 export const toff = (x: number) => {
 	return clamp(Math.floor(0x100 * x), 0, 0xff)
 }
