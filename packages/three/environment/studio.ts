@@ -58,14 +58,19 @@ function createMandarine({
   return new Mesh(geometry, material)
 }
 
-const defaultSceneProps = {
+const defaultStudioEnvProps = {
+  // randomSeed: 580853521,
+  // randomSeed: 1112670572,
+  // randomSeed: 955841903,
+  randomSeed: 1166253372,
   lightIntensity: 1,
 }
 
-function createScene(props: Partial<typeof defaultSceneProps> = {}): Scene {
+function createScene(props: Partial<typeof defaultStudioEnvProps> = {}): Scene {
   const {
+    randomSeed,
     lightIntensity,
-  } = { ...defaultSceneProps, ...props }
+  } = { ...defaultStudioEnvProps, ...props }
 
   const scene = new Scene()
 
@@ -93,7 +98,7 @@ function createScene(props: Partial<typeof defaultSceneProps> = {}): Scene {
   mandarine2.lookAt(0, 0, 0)
   scene.add(mandarine2)
 
-  PRNG.init(23765478)
+  PRNG.init(randomSeed)
   for (let i = 0; i < 20; i++) {
     const x = PRNG.random()
     const y = PRNG.random()
@@ -111,7 +116,7 @@ function createScene(props: Partial<typeof defaultSceneProps> = {}): Scene {
   return scene
 }
 
-type Props = Partial<typeof defaultSceneProps>
+type Props = Partial<typeof defaultStudioEnvProps>
 
 function createStudioEnvTexture(renderer: WebGLRenderer, props: Props = {}): Texture {
   const pmremGenerator = new PMREMGenerator(renderer)
@@ -128,5 +133,6 @@ export type {
 }
 
 export {
+  defaultStudioEnvProps,
   createStudioEnvTexture,
 }
