@@ -17,7 +17,7 @@ type UseEffectsOptions = Partial<{
 
 export function useEffects<T = undefined>(
 	callback: (value: T) => Generator<void | Destroyable, void, unknown>,
-	deps: DependencyList,
+	deps: DependencyList | 'always',
 	{
 		moment = 'effect',
 		useSmartDigest = true,
@@ -47,7 +47,7 @@ export function useEffects<T = undefined>(
 			}
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, deps)
+	}, deps === 'always' ? undefined : deps)
 
 	// Unmount:
 	useEffect(() => {
@@ -63,13 +63,13 @@ export function useEffects<T = undefined>(
 			}
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, deps)
+	}, deps === 'always' ? undefined : deps)
 	return { ref }
 }
 
 export function useLayoutEffects<T = undefined>(
 	callback: (value: T) => Generator<void | Destroyable, void, unknown>,
-	deps: DependencyList,
+	deps: DependencyList | 'always',
 	options: Omit<UseEffectsOptions, 'moment'>
 ): UseEffectsReturn<T> {
 	return useEffects(callback, deps, { ...options, moment: 'layoutEffect' })
@@ -161,7 +161,11 @@ export function smartDigest(...propsArray: any[]): number {
 	return digest.result()
 }
 
-export function useMutations<T>(target: T, mutations: Partial<T> | (() => Partial<T>), deps: DependencyList, options?: UseEffectsOptions) {
+export function useMutations<T>(
+	target: T, 
+	mutations: Partial<T> | (() => Partial<T>), 
+	deps: DependencyList, 
+	options?: UseEffectsOptions) {
 	return useEffects(function* () {
 		yield handleMutations(target,
 			typeof mutations !== 'function'
