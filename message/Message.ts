@@ -71,6 +71,8 @@ function removeListener(id: number, listener: MessageCallback): boolean {
  * ```
  */
 class Message<T = any> {
+  static send = send
+  static on = on
   private static count = 0
   readonly id = Message.count++
   readonly targetId: number
@@ -85,8 +87,6 @@ class Message<T = any> {
       callback(this)
     }
   }
-  static send = send
-  static on = on
 }
 
 function on<T = any>(target: any, callback: (message: Message<T>) => void): DestroyableObject {
