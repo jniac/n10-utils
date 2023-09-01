@@ -1,4 +1,4 @@
-import { BackSide, BoxGeometry, CircleGeometry, DoubleSide, Mesh, MeshLambertMaterial, PMREMGenerator, PointLight, Scene, Texture, WebGLRenderer } from 'three'
+import { BackSide, BoxGeometry, CircleGeometry, DoubleSide, Mesh, MeshLambertMaterial, PMREMGenerator, PointLight, Scene, WebGLRenderTarget, WebGLRenderer } from 'three'
 import { PRNG } from '../../../math/random'
 import { lerp } from '../../../math/basics'
 import { ShaderForge } from '../shader-forge'
@@ -118,14 +118,21 @@ function createScene(props: Partial<typeof defaultStudioEnvProps> = {}): Scene {
 
 type Props = Partial<typeof defaultStudioEnvProps>
 
-function createStudioEnvTexture(renderer: WebGLRenderer, props: Props = {}): Texture {
+function createStudioEnvironment(renderer: WebGLRenderer, props: Props = {}): {
+  renderTarget: WebGLRenderTarget
+  scene: Scene
+} {
   const pmremGenerator = new PMREMGenerator(renderer)
   pmremGenerator.compileCubemapShader()
 
   const scene = createScene(props)
 
-  const generatedCubeRenderTarget = pmremGenerator.fromScene(scene, 1)
-  return generatedCubeRenderTarget.texture
+  const renderTarget = pmremGenerator.fromScene(scene, 0)
+
+  return {
+    renderTarget,
+    scene,
+  }
 }
 
 export type {
@@ -134,5 +141,5 @@ export type {
 
 export {
   defaultStudioEnvProps,
-  createStudioEnvTexture,
+  createStudioEnvironment as createStudioEnvTexture,
 }
