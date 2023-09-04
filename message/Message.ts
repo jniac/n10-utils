@@ -164,5 +164,8 @@ function send<P extends object = any>(...args: any[]): Message<P> {
   return new Message(target, type, payload)
 }
 
-export type { Listener as MessageListener }
+export type {
+  Listener as MessageListener,
+  Callback as MessageCallback,
+}
 export { Message }
