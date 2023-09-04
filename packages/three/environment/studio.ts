@@ -103,7 +103,7 @@ function createBox({ lightIntensity = 1 } = {}) {
   const geometry = new BoxGeometry(10, 10, 10)
   const material = new MeshLambertMaterial({
     side: BackSide,
-    color: '#bbb',
+    color: '#ffffff',
   })
   material.onBeforeCompile = shader => ShaderForge.with(shader)
     .uniforms({
@@ -161,7 +161,7 @@ function createScene(props: Partial<typeof defaultStudioEnvironmentProps> = {}):
 
   const scene = new Scene()
 
-  const pointLight = new PointLight(16777215, 1.4, 12, 2)
+  const pointLight = new PointLight(0xffffff, 10)
   pointLight.position.set(0, 0, 1)
   scene.add(pointLight)
 
@@ -233,12 +233,6 @@ function createStudioEnvironment(
 
   const renderTarget = pmremGenerator.fromScene(scene, 0)
   
-  window.setTimeout(() => {
-    const renderTarget2 = pmremGenerator.fromScene(scene, 0)
-    renderTarget.texture.copy(renderTarget2.texture)
-    renderTarget.texture.needsPMREMUpdate = true
-  }, 1000)
-
   return {
     renderTarget,
     scene,
