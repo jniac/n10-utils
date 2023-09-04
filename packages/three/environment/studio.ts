@@ -1,9 +1,103 @@
-import { BackSide, BoxGeometry, CircleGeometry, DoubleSide, Mesh, MeshLambertMaterial, PMREMGenerator, PointLight, Scene, WebGLRenderTarget, WebGLRenderer } from 'three'
+import { BackSide, BoxGeometry, CircleGeometry, DoubleSide, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial, PMREMGenerator, PointLight, Scene, ShapeGeometry, WebGLRenderTarget, WebGLRenderer } from 'three'
 import { PRNG } from '../../../math/random'
 import { lerp } from '../../../math/basics'
 import { ShaderForge } from '../shader-forge'
 import { glsl_easings } from '../../../glsl/easings'
 import { glsl_utils } from '../../../glsl/utils'
+
+function createDebugTexts() {
+  const texts = new Group()
+  const dash = (parent: Group, quarter: number, length: number, color: string) => {
+    const mesh = new Mesh(
+      new BoxGeometry(length, .04, .04),
+      new MeshBasicMaterial({ color }),
+    )
+    mesh.rotation.z = Math.PI / 2 * quarter
+    parent.add(mesh)
+    return mesh
+  }
+  const dot = (parent: Group, color: string) => {
+    const mesh = new Mesh(
+      new CircleGeometry(.03),
+      new MeshBasicMaterial({ color }),
+    )
+    parent.add(mesh)
+    return mesh
+  }
+  
+  const px = new Group()
+  px.position.set(1, 0, 0)
+  px.rotation.set(0, -Math.PI / 2, 0)
+  texts.add(px)
+  dash(px, 0, .2, 'red').position.set(-.1, 0, 0)
+  dash(px, 1, .2, 'red').position.set(-.1, 0, 0)
+  dash(px, .5, .3, 'red').position.set(.1, 0, 0)
+  dash(px, -.5, .3, 'red').position.set(.1, 0, 0)
+  dot(px, 'red').position.set(0, -.25, 0)
+
+  const nx = new Group()
+  nx.position.set(-1, 0, 0)
+  nx.rotation.set(0, Math.PI / 2, 0)
+  texts.add(nx)
+  dash(nx, 0, .2, 'red').position.set(-.1, 0, 0)
+  dash(nx, .5, .3, 'red').position.set(.1, 0, 0)
+  dash(nx, -.5, .3, 'red').position.set(.1, 0, 0)
+  dot(nx, 'red').position.set(0, -.25, 0)
+
+  const py = new Group()
+  py.position.set(0, 1, 0)
+  py.rotation.set(Math.PI / 2, 0, 0)
+  texts.add(py)
+  dash(py, 0, .2, 'green').position.set(-.1, 0, 0)
+  dash(py, 1, .2, 'green').position.set(-.1, 0, 0)
+  dash(py, .5, .15, 'green').position.set(.15, .066, 0)
+  dash(py, -.5, .15, 'green').position.set(.05, .066, 0)
+  dash(py, 1, .15, 'green').position.set(.1, -.05, 0)
+  dot(py, 'green').position.set(0, -.25, 0)
+  
+  const ny = new Group()
+  ny.position.set(0, -1, 0)
+  ny.rotation.set(-Math.PI / 2, 0, 0)
+  texts.add(ny)
+  dash(ny, 0, .2, 'green').position.set(-.1, 0, 0)
+  dash(ny, .5, .15, 'green').position.set(.15, .066, 0)
+  dash(ny, -.5, .15, 'green').position.set(.05, .066, 0)
+  dash(ny, 1, .15, 'green').position.set(.1, -.05, 0)
+  dot(ny, 'green').position.set(0, -.25, 0)
+
+  const pz = new Group()
+  pz.position.set(0, 0, 1)
+  pz.rotation.set(0, Math.PI, 0)
+  texts.add(pz)
+  dash(pz, 0, .2, 'blue').position.set(-.1, 0, 0)
+  dash(pz, 1, .2, 'blue').position.set(-.1, 0, 0)
+  dash(pz, 0, .2, 'blue').position.set(.1, .1, 0)
+  dash(pz, 0, .2, 'blue').position.set(.1, -.1, 0)
+  dash(pz, .5, .24, 'blue').position.set(.1, 0, 0)
+  dot(pz, 'blue').position.set(0, -.25, 0)
+
+  const nz = new Group()
+  nz.position.set(0, 0, -1)
+  texts.add(nz)
+  dash(nz, 0, .2, 'blue').position.set(-.1, 0, 0)
+  dash(nz, 0, .2, 'blue').position.set(.1, .1, 0)
+  dash(nz, 0, .2, 'blue').position.set(.1, -.1, 0)
+  dash(nz, .5, .24, 'blue').position.set(.1, 0, 0)
+  dot(nz, 'blue').position.set(0, -.25, 0)
+
+  // const fontLoader = new FontLoader()
+  // fontLoader.load(config.publicAssets('misc/helvetiker_bold.typeface.json'), font => {
+  //   const shapes = font.generateShapes('+X', 1)
+  //   const geometry = new ShapeGeometry(shapes)
+  //   geometry.computeBoundingBox()
+  //   console.log(geometry.boundingBox)
+  //   const material = new MeshBasicMaterial({ color: 'red' })
+  //   const mesh = new Mesh(geometry, material)
+  //   mesh.position.set(0, 0, -2)
+  //   texts.add(mesh)
+  // })
+  return texts
+}
 
 function createBox({ lightIntensity = 1 } = {}) {
   const geometry = new BoxGeometry(10, 10, 10)
@@ -58,19 +152,12 @@ function createMandarine({
   return new Mesh(geometry, material)
 }
 
-const defaultStudioEnvProps = {
-  // randomSeed: 580853521,
-  // randomSeed: 1112670572,
-  // randomSeed: 955841903,
-  randomSeed: 1166253372,
-  lightIntensity: 1,
-}
-
-function createScene(props: Partial<typeof defaultStudioEnvProps> = {}): Scene {
+function createScene(props: Partial<typeof defaultStudioEnvironmentProps> = {}): Scene {
   const {
     randomSeed,
     lightIntensity,
-  } = { ...defaultStudioEnvProps, ...props }
+    debugText,
+  } = { ...defaultStudioEnvironmentProps, ...props }
 
   const scene = new Scene()
 
@@ -113,12 +200,29 @@ function createScene(props: Partial<typeof defaultStudioEnvProps> = {}): Scene {
     scene.add(mandarine)
   }
 
+  if (debugText) {
+    const texts = createDebugTexts()
+    scene.add(texts)
+  }
+
   return scene
 }
 
-type Props = Partial<typeof defaultStudioEnvProps>
+const defaultStudioEnvironmentProps = {
+  // randomSeed: 580853521,
+  // randomSeed: 1112670572,
+  // randomSeed: 955841903,
+  randomSeed: 1166253372,
+  lightIntensity: 1,
+  debugText: false,
+}
 
-function createStudioEnvironment(renderer: WebGLRenderer, props: Props = {}): {
+type Props = Partial<typeof defaultStudioEnvironmentProps>
+
+function createStudioEnvironment(
+  renderer: WebGLRenderer, 
+  props: Props = {},
+): {
   renderTarget: WebGLRenderTarget
   scene: Scene
 } {
@@ -128,6 +232,12 @@ function createStudioEnvironment(renderer: WebGLRenderer, props: Props = {}): {
   const scene = createScene(props)
 
   const renderTarget = pmremGenerator.fromScene(scene, 0)
+  
+  window.setTimeout(() => {
+    const renderTarget2 = pmremGenerator.fromScene(scene, 0)
+    renderTarget.texture.copy(renderTarget2.texture)
+    renderTarget.texture.needsPMREMUpdate = true
+  }, 1000)
 
   return {
     renderTarget,
@@ -140,6 +250,6 @@ export type {
 }
 
 export {
-  defaultStudioEnvProps,
-  createStudioEnvironment as createStudioEnvTexture,
+  defaultStudioEnvironmentProps as defaultStudioEnvProps,
+  createStudioEnvironment,
 }

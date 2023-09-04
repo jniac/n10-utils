@@ -155,11 +155,11 @@ function solveSendArgs<P extends object = any>(args: any[]): [target: any, type?
   return [target]
 }
 
-function send<P extends object = any>(target: any): Message
-function send<P extends object = any>(target: any, type: string): Message
-function send<P extends object = any>(target: any, payload: P): Message
-function send<P extends object = any>(target: any, type: string, payload: P): Message
-function send<P extends object = any>(...args: any[]): Message {
+function send<P extends object = any>(target: any): Message<P>
+function send<P extends object = any>(target: any, type: string): Message<P>
+function send<P extends object = any>(target: any, payload: P): Message<P>
+function send<P extends object = any>(target: any, type: string, payload: P): Message<P>
+function send<P extends object = any>(...args: any[]): Message<P> {
   const [target, type, payload] = solveSendArgs<P>(args)
   return new Message(target, type, payload)
 }
