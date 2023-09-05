@@ -1,8 +1,8 @@
-import { IUniform, Material, Shader } from 'three'
-import { MeshPhysicalMaterialFragmentTokens, MeshPhysicalMaterialVertexTokens, glTokens } from './Tokens'
-import { globalUniforms } from './uniforms'
+import { Material, Shader } from 'three'
 
-type Uniforms = Record<string, IUniform>
+import { Uniforms, getGlType, solveUniformDeclaration } from './types'
+import { MeshPhysicalMaterialFragmentTokens, MeshPhysicalMaterialVertexTokens, glTokens } from './Tokens'
+import { globalUniforms } from './global-uniforms'
 
 let current: Shader = null!
 
@@ -31,36 +31,6 @@ const cleanWrappedCode = (code: string) => {
   const pattern = String.raw`${f(END)}\s*${f(START)}`
   const re = new RegExp(pattern, 'g')
   return code.replaceAll(re, '')
-}
-
-const getGlType = (value: any) => {
-  if (typeof value === 'number') {
-    return 'float'
-  }
-  if (value.isVector2) {
-    return 'vec2'
-  }
-  if (value.isVector3 || value.isColor) {
-    return 'vec3'
-  }
-  if (value.isVector4 || value.isQuaternion) {
-    return 'vec4'
-  }
-  if (value.isMatrix3) {
-    return 'mat3'
-  }
-  if (value.isMatrix4) {
-    return 'mat4'
-  }
-  if (value.isTexture) {
-    if (value.isCubeTexture) {
-      return 'samplerCube'
-    } else {
-      return 'sampler2D'
-    }
-  }
-  console.log(`unhandled value:`, value)
-  throw new Error(`unhandled value: "${value?.constructor.name}"`)
 }
 
 class ShaderTool<T> {
@@ -146,7 +116,8 @@ class ShaderTool<T> {
 
   uniforms(uniforms: Uniforms) {
     const declaration: string[] = []
-    for (const [key, uniform] of Object.entries(uniforms)) {
+    for (const [key, uniformDeclaration] of Object.entries(uniforms)) {
+      const uniform = solveUniformDeclaration(uniformDeclaration)
       declaration.push(`uniform ${getGlType(uniform.value)} ${key};`)
     }
     this.top(declaration.join('\n'))
@@ -169,7 +140,8 @@ const defines = (defines: Record<string, string | number>) => {
 }
 
 const mergeUniforms = (uniforms: Uniforms) => {
-  for (const [key, uniform] of Object.entries(uniforms)) {
+  for (const [key, uniformDeclaration] of Object.entries(uniforms)) {
+    const uniform = solveUniformDeclaration(uniformDeclaration)
     if (key in current.uniforms) {
       if (uniform.value !== current.uniforms[key].value) {
         throw new Error(`Shader redefinition! (Uniform values are not equal)`)
