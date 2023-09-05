@@ -51,6 +51,7 @@ export function ContextCanvas({
       gl={{ 
         outputColorSpace: 'srgb', 
         toneMapping: ACESFilmicToneMapping,
+        preserveDrawingBuffer: true,
         ...gl,
       }}
       {...props}
