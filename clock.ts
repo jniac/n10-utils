@@ -157,5 +157,5 @@ export type {
 
 export {
 	Clock,
-	clock as windowClock,
+	clock,
 }

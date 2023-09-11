@@ -5,7 +5,7 @@ import { useThree } from '@react-three/fiber'
 
 import { DestroyableObject } from '../../../types'
 import { useEffects } from '../../react/hooks'
-import { windowClock } from '../../../clock'
+import { clock } from '../../../clock'
 import { VertigoCamera } from '../../three/vertigo/VertigoCamera'
 import { clamp01 } from '@/n10-utils/math/basics'
 
@@ -189,7 +189,7 @@ export function ViewportProvider({
     renderer.autoClear = false
 
     const size = new Vector2()
-    yield windowClock().onTick(tickOrder, () => {
+    yield clock().onTick(tickOrder, () => {
       renderer.clear(true, true, true)
       renderer.resetState()
       renderer.getSize(size)

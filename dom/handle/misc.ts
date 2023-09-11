@@ -1,5 +1,5 @@
-import { DestroyableObject } from "../../types"
-import { ClockState, windowClock } from "../../clock"
+import { DestroyableObject } from '../../types'
+import { ClockState, clock } from '../../clock'
 
 export function handleInterval(interval: number, callback: () => void) {
 	const id = window.setInterval(() => {
@@ -14,7 +14,7 @@ export function handleInterval(interval: number, callback: () => void) {
 export function handleTimeout(delay: number | `${number}s`, callback: () => void) {
 	const id = window.setTimeout(() => {
 		callback()
-	}, typeof delay === "number" ? delay : (Number.parseFloat(delay) * (delay.endsWith("s") ? 1000 : 1)))
+	}, typeof delay === 'number' ? delay : (Number.parseFloat(delay) * (delay.endsWith('s') ? 1000 : 1)))
 	const destroy = () => {
 		window.clearInterval(id)
 	}
@@ -22,7 +22,7 @@ export function handleTimeout(delay: number | `${number}s`, callback: () => void
 }
 
 export function handleTick(callback: (state: ClockState) => void): DestroyableObject {
-	return windowClock().onTick(callback)
+	return clock().onTick(callback)
 }
 
 export function handleNextFrame(callback: () => void): DestroyableObject

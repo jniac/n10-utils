@@ -3,7 +3,7 @@ import { Vector3Declaration, solveVector3Declaration } from '../../three/declara
 import { getUniqueId } from '@/n10-utils/misc/getUniqueId'
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
 import { useEffects } from '../../react/hooks'
-import { windowClock } from '@/n10-utils/clock'
+import { clock } from '@/n10-utils/clock'
 
 const debugDrawGroups: DebugDrawGroup[] = []
 /** 
@@ -132,7 +132,7 @@ function useDebugDraw(): DebugDrawGroup {
 function DebugDrawProvider({ children }: PropsWithChildren) {
   const debugDraw = useMemo(() => new DebugDrawGroup(), [])
   useEffects(function* () {
-    yield windowClock().onTick(() => {
+    yield clock().onTick(() => {
       debugDraw.update()
     })
     yield debugDraw
