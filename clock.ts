@@ -134,6 +134,10 @@ class Clock {
 		this._requestAnimationFrame = true
 	}
 
+	/**
+	 * Set the "update" duration (in seconds). During this interval, the clock will
+	 * update constantly.
+	 */
 	setUpdateDuration(value: number) {
 		this._state = Object.freeze({
 			...this._state,
@@ -142,7 +146,7 @@ class Clock {
 	}
 }
 
-const windowClock = (() => {
+const clock = (() => {
 	let clock: Clock
 	return () => clock ?? (clock = new Clock())
 })()
@@ -153,5 +157,5 @@ export type {
 
 export {
 	Clock,
-	windowClock,
+	clock as windowClock,
 }
