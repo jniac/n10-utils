@@ -7,6 +7,10 @@ export const clamp01 = (x: number) => {
 	return x < 0 ? 0 : x > 1 ? 1 : x
 }
 
+export const signedClamp = (x: number, max: number) => {
+	return x < -max ? -max : x > max ? max : x
+} 
+
 export const lerp = (a: number, b: number, x: number) => {
 	return a + (b - a) * clamp01(x)
 }
