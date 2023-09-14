@@ -142,12 +142,18 @@ function stopAnimationLoop() {
 // --------------[ During ]--------------- //
 
 type DuringArg = {
+  /** duration in seconds */
   duration: number
+  /** delay in seconds */
   delay?: number
   target?: any
 }
 
 function during(arg: DuringArg): AnimationInstance
+/**
+ * 
+ * @param duration duration in seconds
+ */
 function during(duration: number): AnimationInstance
 function during(arg: any) {
   const [duration, delay, target] = (typeof arg === 'number'
