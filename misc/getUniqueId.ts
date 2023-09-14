@@ -15,7 +15,7 @@ const init = lazy(() => {
       for (let i = 0; i < step; i++) {
         digest.next(counter++)
       }
-      const id = digest.resultAsInt()
+      const id = digest.result()
       map.set(value, id)
       return id
     }

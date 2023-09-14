@@ -28,7 +28,7 @@ const init = () => {
  * digest.init().next(68719476737).result() // 0.4999999995343387
  * ```
  */
-const next = (x: number, scalar = 1e14) => {
+const next = (x: number, scalar = x < 4294967296 ? 1e14 : 1) => {
 	state += (x * scalar) & 0x7fffffff
 	state = Math.imul(state, 48271)
 	state = (state & 0x7fffffff) + (state >> 31)
@@ -36,18 +36,18 @@ const next = (x: number, scalar = 1e14) => {
 }
 
 /**
- * Returns the result of all previous digested numbers.
+ * Returns the result of all previous digested numbers (as an int).
  */
 const result = () => {
-	return (state & 0x7fffffff) / 0x80000000
+	const obfuscation = 0b1100000101010011110111011001111
+	return (state & 0x7fffffff) ^ obfuscation
 }
 
 /**
- * Returns the result of all previous digested numbers.
+ * Returns the result of all previous digested numbers scaled to a float between 0 & 1.
  */
-const resultAsInt = () => {
-	const obfuscation = 0b1100000101010011110111011001111
-	return (state & 0x7fffffff) ^ obfuscation
+const resultAsFloat = () => {
+	return (state & 0x7fffffff) / 0x80000000
 }
 
 /**
@@ -179,7 +179,7 @@ type Digest = {
 	init: typeof init
 	next: typeof next
 	result: typeof result
-	resultAsInt: typeof resultAsInt
+	resultAsFloat: typeof resultAsFloat
 
 	// specific functions:
 	number: typeof number
@@ -195,7 +195,7 @@ Object.assign(digest, {
 	init,
 	next,
 	result,
-	resultAsInt,
+	resultAsFloat,
 
 	// specific functions:
 	number,

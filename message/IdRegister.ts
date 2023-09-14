@@ -46,7 +46,7 @@ export class IdRegister {
     for (const item of value.flat(16)) {
       digest.next(this.requireId(item))
     }
-    return digest.resultAsInt()
+    return digest.result()
   }
   requireId(value: any): number {
     return (isPrimitive(value)
