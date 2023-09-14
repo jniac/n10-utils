@@ -25,7 +25,7 @@ export function useEffects<T = undefined>(
 ): UseEffectsReturn<T> {
 	if (useSmartDigest) {
 		// Pack deps into one predictible number
-		deps = [smartDigest(deps)]		
+		deps = [smartDigest(deps)]
 	}
 
 	const ref = useRef<T>(null) as MutableRefObject<T>
@@ -103,31 +103,38 @@ export function handleMutations<T>(target: T, mutations: Partial<T>) {
  * (ex observables))
  */
 export function smartDigest(...propsArray: any[]): number {
+	let state = 0
+	const nextState = (x: number) => {
+		state = digest
+			.init()
+			.next(state, 1) // use a small scalar, since state is already a quite big int
+			.next(x)
+			.result()
+	}
 	const queue: any[] = [...propsArray]
-	digest.init()
-	while (queue.length) {
+	while (queue.length > 0) {
 		const current = queue.shift()!
 		if (current === null || current === undefined) {
-			digest.next(123456)
+			nextState(123456)
 			continue
 		}
 		const type = typeof current
-		switch(type) {
+		switch (type) {
 			case 'boolean': {
-				digest.next(current ? 0 : 1)
+				nextState(37842398 + (current ? 0 : 1))
 				break
 			}
 			case 'function': {
-				digest.next((current as Function).length)
-				digest.string((current as Function).name)
+				nextState(digest.string((current as Function).name))
+				nextState((current as Function).length)
 				break
 			}
 			case 'string': {
-				digest.string(current)
+				nextState(digest.string(current))
 				break
 			}
 			case 'number': {
-				digest.next(current)
+				nextState(current)
 				break
 			}
 			case 'object': {
@@ -138,11 +145,11 @@ export function smartDigest(...propsArray: any[]): number {
 				}
 				// If object has id, the id is enough to deduce identity, ignore everything else.
 				if ('uuid' in current) {
-					digest.string(current.uuid)
+					nextState(digest.string(current.uuid))
 					break
 				}
 				if ('id' in current) {
-					digest.string(current.id)
+					nextState(digest.string(current.id))
 					break
 				}
 
@@ -150,7 +157,7 @@ export function smartDigest(...propsArray: any[]): number {
 					queue.push(...current)
 				} else {
 					for (const [key, value] of Object.entries(current)) {
-						digest.string(key)
+						nextState(digest.string(key))
 						queue.push(value)
 					}
 				}
@@ -158,13 +165,13 @@ export function smartDigest(...propsArray: any[]): number {
 			}
 		}
 	}
-	return digest.result()
+	return state
 }
 
 export function useMutations<T>(
-	target: T, 
-	mutations: Partial<T> | (() => Partial<T>), 
-	deps: DependencyList, 
+	target: T,
+	mutations: Partial<T> | (() => Partial<T>),
+	deps: DependencyList,
 	options?: UseEffectsOptions) {
 	return useEffects(function* () {
 		yield handleMutations(target,
