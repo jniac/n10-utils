@@ -25,7 +25,7 @@ export function useEffects<T = undefined>(
 ): UseEffectsReturn<T> {
 	if (useSmartDigest) {
 		// Pack deps into one predictible number
-		deps = [smartDigest(deps)]
+		deps = [digestProps(deps)]
 	}
 
 	const ref = useRef<T>(null) as MutableRefObject<T>
@@ -102,7 +102,7 @@ export function handleMutations<T>(target: T, mutations: Partial<T>) {
  * else being ignored (the object is considered as a wrapper around a value 
  * (ex observables))
  */
-export function smartDigest(...propsArray: any[]): number {
+export function digestProps(...propsArray: any[]): number {
 	let state = 0
 	const nextState = (x: number) => {
 		state = digest
