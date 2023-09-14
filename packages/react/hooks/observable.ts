@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
+
 import { Observable } from '../../../observables'
-import { useForceUpdate } from './force-update'
+import { useRender } from './render'
 
 export function useObservable<T>(observable: Observable<T>): T {
-	const forceUpdate = useForceUpdate()
+	const render = useRender()
 	useEffect(() => {
-		const { destroy } = observable.onChange(() => forceUpdate())
+		const { destroy } = observable.onChange(() => render())
 		return destroy
-	}, [forceUpdate, observable])
+	}, [render, observable])
 	return observable.value
 }
