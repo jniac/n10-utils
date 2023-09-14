@@ -4,7 +4,10 @@ type ValueMapper<T> =
 	(incomingValue: T, observable: Observable<T>) => T
 
 type ConstructorOptions<T> = Partial<{
+	/** A value mapper to authorize, clamp, rewrite and other fancy effects. */
 	valueMapper: ValueMapper<T>
+	/** A first optional listener (that could not be destroyed). */
+	onChange: Callback<T>
 }>
 
 type Callback<T> =
@@ -65,8 +68,12 @@ class Observable<T> {
 		if (options) {
 			const {
 				valueMapper,
+				onChange,
 			} = options
 			this._valueMapper = valueMapper ?? null
+			if (onChange) {
+				this.onChange(onChange)
+			}
 		}
 	}
 
