@@ -19,7 +19,7 @@ type CallbackName = (typeof callbackNames)[number]
 type Params = Partial<typeof defaultParams & Record<CallbackName, Callback>>
 
 function hasWheelCallback(params: Record<string, any>): boolean {
-	return callbackNames.some(name => name in params)
+  return callbackNames.some(name => name in params)
 }
 
 function getDeltaScalar(deltaMode: number): number {
