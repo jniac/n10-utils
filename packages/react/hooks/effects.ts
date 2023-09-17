@@ -8,11 +8,11 @@ type UseEffectsReturn<T> = {
 type UseEffectsOptions = Partial<{
 	moment: 'effect' | 'layoutEffect' | 'memo'
 	/**
-	 * Use "smart digest" for deps hashing.
+	 * Use a "smart digest props" heuristic for deps hashing.
 	 * 
 	 * Defaults to true.
 	 */
-	useSmartDigest: boolean
+	useDigestProps: boolean
 }>
 
 export function useEffects<T = undefined>(
@@ -20,10 +20,10 @@ export function useEffects<T = undefined>(
 	deps: DependencyList | 'always',
 	{
 		moment = 'effect',
-		useSmartDigest = true,
+		useDigestProps = true,
 	}: UseEffectsOptions = {}
 ): UseEffectsReturn<T> {
-	if (useSmartDigest) {
+	if (useDigestProps) {
 		// Pack deps into one predictible number
 		deps = [digestProps(deps)]
 	}
