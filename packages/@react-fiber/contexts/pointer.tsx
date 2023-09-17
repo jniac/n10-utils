@@ -120,7 +120,7 @@ class PointerManager {
 
   private m = {
     onDestroyCallbacks: new Set<() => void>(),
-    onMoveCallbacks: new CallbackStack<BasicInfo>,
+    onChangeCallbacks: new CallbackStack<BasicInfo>,
     onTapCallbacks: new CallbackStack<TapInfo>,
   }
 
@@ -163,9 +163,9 @@ class PointerManager {
     }
 
     const destroyHandler = handlePointer(this.canvas, {
-      onMove: info => {
+      onChange: info => {
         this.update(info.position.x, info.position.y)
-        this.m.onMoveCallbacks.invoke({ pointer: this })
+        this.m.onChangeCallbacks.invoke({ pointer: this })
       },
       // onDown: () => {
       //   const hit = this.raycast()
@@ -243,9 +243,9 @@ class PointerManager {
     return out
   }
 
-  onMove(callback: (info: BasicInfo) => void): () => void {
-    this.m.onMoveCallbacks.add(callback)
-    return () => this.m.onMoveCallbacks.remove(callback)
+  onChange(callback: (info: BasicInfo) => void): () => void {
+    this.m.onChangeCallbacks.add(callback)
+    return () => this.m.onChangeCallbacks.remove(callback)
   }
 
   onTap(callback: OnTapCallback): () => void
