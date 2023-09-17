@@ -54,10 +54,20 @@ function handleBasicPointer(element: HTMLElement, params: Params): () => void {
     info.position.y = event.clientY
     params.onMove?.(info)
   }
+  const onTouchStart = (event: TouchEvent) => {
+    // Because when the touch start the position is not the same as the previous touch.
+    if (event.touches.length === 1) { // ignore multi-touch
+      info.position.x = event.touches[0].clientX
+      info.position.y = event.touches[0].clientY
+      params.onMove?.(info)
+    }
+  }
   const onTouchMove = (event: TouchEvent) => {
-    info.position.x = event.touches[0].clientX
-    info.position.y = event.touches[0].clientY
-    params.onMove?.(info)
+    if (event.touches.length === 1) { // ignore multi-touch
+      info.position.x = event.touches[0].clientX
+      info.position.y = event.touches[0].clientY
+      params.onMove?.(info)
+    }
   }
 
   const onMouseOver = () => {
@@ -95,14 +105,16 @@ function handleBasicPointer(element: HTMLElement, params: Params): () => void {
   element.addEventListener('pointerdown', onPointerDown)
   element.addEventListener('pointerup', onPointerUp)
   element.addEventListener('mousemove', onMouseMove)
+  element.addEventListener('touchstart', onTouchStart)
   element.addEventListener('touchmove', onTouchMove)
-
+  
   return () => {
     element.removeEventListener('mouseover', onMouseOver)
     element.removeEventListener('mouseout', onMouseOut)
     element.removeEventListener('pointerdown', onPointerDown)
     element.removeEventListener('pointerup', onPointerUp)
     element.removeEventListener('mousemove', onMouseMove)
+    element.removeEventListener('touchstart', onTouchStart)
     element.removeEventListener('touchmove', onTouchMove)
     document.body.removeEventListener('mouseup', onBodyMouseUp)
   }
