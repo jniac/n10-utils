@@ -73,7 +73,7 @@ export function areEquivalent(a: any, b: any) {
 export function isEquivalentSubsetOf(subsetCandidate: any, parent: any): boolean {
   if (subsetCandidate && typeof subsetCandidate === 'object') {
     for (const key of Object.keys(subsetCandidate)) {
-      if (areEquivalent(subsetCandidate[key], parent[key])) {
+      if (areEquivalent(subsetCandidate[key], parent[key]) === false) {
         return false
       }
     }
