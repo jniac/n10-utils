@@ -121,6 +121,21 @@ export class ObservableNumber extends Observable<number> {
 		return null
 	}
 
+	/**
+	 * Same as `onChange` but with a callback that will be called less often since
+	 * a step is applied to the value first.
+	 */
+	onStepChange(step: number, callback: Callback<number>): DestroyableObject {
+		let stepValue = Math.round(this.value / step) * step
+		return this.onChange(() => {
+			let newStepValue = Math.round(this.value / step) * step
+			if (stepValue !== newStepValue) {
+				stepValue = newStepValue
+				callback(stepValue, this)
+			}
+		})
+	}
+
 	onPass(mode: PassMode, threshold: number, callback: Callback<number>): DestroyableObject {
 		return this.onChange(() => {
 			if (this.passed(mode, threshold)) {
