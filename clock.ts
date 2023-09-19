@@ -144,6 +144,44 @@ class Clock {
 			updateDuration: Math.max(0, value),
 		})
 	}
+	
+	/**
+	 * Returns a promise that will be resolved at the next frame. The promise's 
+	 * inner value is the current frame.
+	 */
+	waitNextFrame(): Promise<number> {
+		this.requestUpdate()
+		return new Promise<number>(resolve => {
+			const callback = () => {
+				this.listeners.remove(callback)
+				resolve(this.frame)
+			}
+			this.listeners.add(0, callback)
+		})
+	}
+
+	/**
+	 * Returns a promise that will be resolved at after a given amount of frames. 
+	 * The promise's inner value is the current frame.
+	 */
+	waitFrames(frameCount: number): number | Promise<number> {
+		frameCount = Math.round(frameCount)
+		if (frameCount <= 0) {
+			return this.frame
+		}
+		let count = 0
+		return new Promise<number>(resolve => {
+			const callback = () => {
+				count++
+				this.requestUpdate()
+				if (count === frameCount) {
+					this.listeners.remove(callback)
+					resolve(this.frame)
+				}
+			}
+			this.listeners.add(0, callback)
+		})
+	}
 }
 
 const clock = (() => {
