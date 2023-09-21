@@ -3,18 +3,22 @@ import { useEffect, useMemo } from 'react'
 import { Observable, ObservableNumber } from '../../../observables'
 import { useRender } from './render'
 
-export function useObservable<T>(arg: Observable<T> | T | (() => Observable<T>)): Observable<T> {
+/**
+ * Very similar in usage as `useState` but with an observable returned instead of
+ * the value.
+ */
+export function useObservable<T>(initialValue: Observable<T> | T | (() => Observable<T>)): Observable<T> {
 	const observable = useMemo(() => {
-		if (arg instanceof Observable) {
-			return arg
+		if (initialValue instanceof Observable) {
+			return initialValue
 		}
-		if (typeof arg === 'function') {
-			return (arg as Function)()
+		if (typeof initialValue === 'function') {
+			return (initialValue as Function)()
 		}
-		return new Observable(arg)
-		// useCallback() is painful, neh?
+		return new Observable(initialValue)
+		// Never update from the initial value.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, typeof arg !== 'function' ? [arg] : [])
+	}, [])
 
 	const render = useRender()
 	useEffect(() => {
