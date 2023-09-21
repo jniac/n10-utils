@@ -212,8 +212,9 @@ class PointerManager {
   }
 
   update(clientX: number, clientY: number): void {
-    const relativeX = clientX / this.canvas.clientWidth
-    const relativeY = clientY / this.canvas.clientHeight
+    const rect = this.canvas.getBoundingClientRect()
+    const relativeX = (clientX - rect.x) / rect.width
+    const relativeY = (clientY - rect.y) / rect.height
     this.currentViewport = this.viewportManager.getViewportAt(relativeX, relativeY)
     this.currentViewport.toNdcCoords(relativeX, relativeY, this.ndcCoords)
     this.raycaster.setFromCamera(this.ndcCoords, this.currentViewport.camera)
