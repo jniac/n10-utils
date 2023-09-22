@@ -3,6 +3,8 @@ import { Vector3Declaration, solveVector3Declaration } from '../declaration'
 import { VertigoState, VertigoStateDeclaration, copyVertigoState, defaultVertigoState, solveVertigoStateDeclaration } from './state'
 import { updateVertigoCamera, updateVertigoSize } from './update'
 
+import { Rectangle } from '../../../math/geom/Rectangle'
+
 export class VertigoCamera extends PerspectiveCamera {
   vertigoSize: Vector2 = new Vector2()
   vertigo: VertigoState = { ...defaultVertigoState }
@@ -44,5 +46,16 @@ export class VertigoCamera extends PerspectiveCamera {
     updateVertigoSize(this.vertigoSize, aspect, this.vertigo)
     updateVertigoCamera(this, this.vertigoSize, this.vertigo)
     return this
+  }
+
+  getVertigoRect(element: Element, canvas: Element): Rectangle {
+    const elementRect = element.getBoundingClientRect()
+    const canvasRect = canvas.getBoundingClientRect()
+    const [vertigoWidth, vertigoHeight] = this.vertigoSize
+    const width = vertigoWidth * elementRect.width / canvasRect.width
+    const height = vertigoHeight * elementRect.height / canvasRect.height
+    const x = vertigoWidth * ((elementRect.x - canvasRect.x) / canvasRect.width - .5)
+    const y = vertigoHeight * (-((elementRect.y + elementRect.height) - canvasRect.y) / canvasRect.height + .5)
+    return new Rectangle(x, y, width, height)
   }
 }
