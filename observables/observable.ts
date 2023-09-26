@@ -1,27 +1,27 @@
 import { DestroyableObject } from "../types"
 
 type ValueMapper<T> =
-	(incomingValue: T, observable: Observable<T>) => T
+  (incomingValue: T, observable: Observable<T>) => T
 
 type ConstructorOptions<T> = Partial<{
-	/** A value mapper to authorize, clamp, rewrite and other fancy effects. */
-	valueMapper: ValueMapper<T>
-	/** A first optional listener (that could not be destroyed). */
-	onChange: Callback<T>
+  /** A value mapper to authorize, clamp, rewrite and other fancy effects. */
+  valueMapper: ValueMapper<T>
+  /** A first optional listener (that could not be destroyed). */
+  onChange: Callback<T>
 }>
 
 type Callback<T> =
-	(value: T, observable: Observable<T>) => void
+  (value: T, observable: Observable<T>) => void
 
 type DerivativeCallback<T, D> =
-	(derivative: D, derivativeOld: D, value: T, observable: Observable<T>) => void
+  (derivative: D, derivativeOld: D, value: T, observable: Observable<T>) => void
 
 type VerifyCallback<T> =
-	(verify: boolean, value: T, observable: Observable<T>) => void
+  (verify: boolean, value: T, observable: Observable<T>) => void
 
 
 type OnChangeOptions = Partial<{
-	executeImmediately: boolean
+  executeImmediately: boolean
 }>
 
 let observableCount = 0
@@ -45,163 +45,163 @@ let observableCount = 0
  * 
  * Usage:
  * ``` 
- * const statusObs = new Observable<"none" | "pending" | "ready">("none");
+ * const statusObs = new Observable<"none" | "pending" | "ready">("none")
  * statusObs.onChange(status => {
  *   if (value === "ready") {
- *     doFancyThings();
+ *     doFancyThings()
  *   }
- * });
- * statusObs.value = "ready";
+ * })
+ * statusObs.value = "ready"
  * ``` 
  */
 class Observable<T> {
-	protected _observableId = observableCount++
-	protected _value: T
-	protected _valueOld: T
-	protected _valueMapper: ValueMapper<T> | null = null;
-	protected _listeners: Set<Callback<T>> = new Set();
-	protected _hasChanged: boolean = false;
+  protected _observableId = observableCount++
+  protected _value: T
+  protected _valueOld: T
+  protected _valueMapper: ValueMapper<T> | null = null
+  protected _listeners: Set<Callback<T>> = new Set()
+  protected _hasChanged: boolean = false
 
-	constructor(intialValue: T, options?: ConstructorOptions<T>) {
-		this._value = intialValue
-		this._valueOld = intialValue
-		if (options) {
-			const {
-				valueMapper,
-				onChange,
-			} = options
-			this._valueMapper = valueMapper ?? null
-			if (onChange) {
-				this.onChange(onChange)
-			}
-		}
-	}
+  constructor(intialValue: T, options?: ConstructorOptions<T>) {
+    this._value = intialValue
+    this._valueOld = intialValue
+    if (options) {
+      const {
+        valueMapper,
+        onChange,
+      } = options
+      this._valueMapper = valueMapper ?? null
+      if (onChange) {
+        this.onChange(onChange)
+      }
+    }
+  }
 
-	protected _invokeListeners(): void {
-		const it = this._listeners[Symbol.iterator]()
-		while (true) {
-			const { value, done } = it.next()
-			if (done) break
-			value(this._value, this)
-		}
-	}
+  protected _invokeListeners(): void {
+    const it = this._listeners[Symbol.iterator]()
+    while (true) {
+      const { value, done } = it.next()
+      if (done) break
+      value(this._value, this)
+    }
+  }
 
-	/**
-	 * `setValue` makes several things:
-	 * 	 - Firts it remap the incoming value (eg: by applying min, max bounds).
-	 * 	 - It compares the incoming value with the inner one.
-	 * 	 - If the value are identical, it returns false (meaning: nothing happened)
-	 * 	 - Otherwise it changes the inner value, call all the listeners and returns true (meaning: something happened).
-	 * @param incomingValue
-	 * @returns
-	 */
-	setValue(incomingValue: T): boolean {
-		if (this._valueMapper) {
-			incomingValue = this._valueMapper(incomingValue, this)
-		}
-		if (incomingValue === this._value) {
-			this._hasChanged = false
-			return false
-		}
-		this._valueOld = this._value
-		this._value = incomingValue
-		this._invokeListeners()
-		this._hasChanged = true
-		return true
-	}
+  /**
+   * `setValue` makes several things:
+   * 	 - Firts it remap the incoming value (eg: by applying min, max bounds).
+   * 	 - It compares the incoming value with the inner one.
+   * 	 - If the value are identical, it returns false (meaning: nothing happened)
+   * 	 - Otherwise it changes the inner value, call all the listeners and returns true (meaning: something happened).
+   * @param incomingValue
+   * @returns
+   */
+  setValue(incomingValue: T): boolean {
+    if (this._valueMapper) {
+      incomingValue = this._valueMapper(incomingValue, this)
+    }
+    if (incomingValue === this._value) {
+      this._hasChanged = false
+      return false
+    }
+    this._valueOld = this._value
+    this._value = incomingValue
+    this._invokeListeners()
+    this._hasChanged = true
+    return true
+  }
 
-	/**
-	 * Since the valueMapper can change the inner value, defining a new value mapper
-	 * with a non-null value internally invokes setValue() and returns the result.
-	 * @param valueMapper 
-	 * @returns 
-	 */
-	setValueMapper(valueMapper: ValueMapper<T> | null): boolean {
-		this._valueMapper = valueMapper
-		return valueMapper
-			? this.setValue(valueMapper(this._value, this))
-			: false
-	}
+  /**
+   * Since the valueMapper can change the inner value, defining a new value mapper
+   * with a non-null value internally invokes setValue() and returns the result.
+   * @param valueMapper 
+   * @returns 
+   */
+  setValueMapper(valueMapper: ValueMapper<T> | null): boolean {
+    this._valueMapper = valueMapper
+    return valueMapper
+      ? this.setValue(valueMapper(this._value, this))
+      : false
+  }
 
-	onChange(callback: Callback<T>): DestroyableObject
-	onChange(options: OnChangeOptions, callback: Callback<T>): DestroyableObject
-	onChange(...args: any[]): DestroyableObject {
-		const [{
-			executeImmediately = false,
-		}, callback] = (args.length === 2 ? args : [{}, args[0]]) as
-			[OnChangeOptions, Callback<T>]
-		this._listeners.add(callback)
-		const destroy = () => this._listeners.delete(callback)
-		if (executeImmediately) {
-			callback(this._value, this)
-		}
-		return { destroy }
-	}
+  onChange(callback: Callback<T>): DestroyableObject
+  onChange(options: OnChangeOptions, callback: Callback<T>): DestroyableObject
+  onChange(...args: any[]): DestroyableObject {
+    const [{
+      executeImmediately = false,
+    }, callback] = (args.length === 2 ? args : [{}, args[0]]) as
+      [OnChangeOptions, Callback<T>]
+    this._listeners.add(callback)
+    const destroy = () => this._listeners.delete(callback)
+    if (executeImmediately) {
+      callback(this._value, this)
+    }
+    return { destroy }
+  }
 
-	onDerivativeChange<D>(derivativeExtractor: (value: T) => D, callback: DerivativeCallback<T, D>): DestroyableObject
-	onDerivativeChange<D>(derivativeExtractor: (value: T) => D, options: OnChangeOptions, callback: DerivativeCallback<T, D>): DestroyableObject
-	onDerivativeChange<D>(derivativeExtractor: (value: T) => D, ...args: any[]): DestroyableObject {
-		let derivative = derivativeExtractor(this._value)
-		const [{
-			executeImmediately = false,
-		}, callback] = (args.length === 2 ? args : [{}, args[0]]) as
-			[OnChangeOptions, DerivativeCallback<T, D>]
-		if (executeImmediately) {
-			callback(derivative, derivative, this._value, this)
-		}
-		return this.onChange(value => {
-			const derivativeOld = derivative
-			derivative = derivativeExtractor(value)
-			if (derivative !== derivativeOld) {
-				callback(derivative, derivativeOld, value, this)
-			}
-		})
-	}
+  onDerivativeChange<D>(derivativeExtractor: (value: T) => D, callback: DerivativeCallback<T, D>): DestroyableObject
+  onDerivativeChange<D>(derivativeExtractor: (value: T) => D, options: OnChangeOptions, callback: DerivativeCallback<T, D>): DestroyableObject
+  onDerivativeChange<D>(derivativeExtractor: (value: T) => D, ...args: any[]): DestroyableObject {
+    let derivative = derivativeExtractor(this._value)
+    const [{
+      executeImmediately = false,
+    }, callback] = (args.length === 2 ? args : [{}, args[0]]) as
+      [OnChangeOptions, DerivativeCallback<T, D>]
+    if (executeImmediately) {
+      callback(derivative, derivative, this._value, this)
+    }
+    return this.onChange(value => {
+      const derivativeOld = derivative
+      derivative = derivativeExtractor(value)
+      if (derivative !== derivativeOld) {
+        callback(derivative, derivativeOld, value, this)
+      }
+    })
+  }
 
-	onVerify(predicate: (value: T) => boolean, callback: VerifyCallback<T>): DestroyableObject
-	onVerify(options: OnChangeOptions, predicate: (value: T) => boolean, callback: VerifyCallback<T>): DestroyableObject
-	onVerify(...args: any[]): DestroyableObject {
-		// Solve args:
-		const [options, predicate, callback] = (args.length === 3
-			? args
-			: [{}, ...args]
-		) as [options: OnChangeOptions, predicate: (value: T) => boolean, callback: VerifyCallback<T>]
-		
-		// Go on:
-		let verify = predicate(this._value)
-		if (options.executeImmediately) {
-			callback(verify, this._value, this)
-		}
-		return this.onChange(value => {
-			const newVerify = predicate(value)
-			if (newVerify !== verify) {
-				verify = newVerify
-				callback(verify, value, this)
-			}
-		})
-	}
+  onVerify(predicate: (value: T) => boolean, callback: VerifyCallback<T>): DestroyableObject
+  onVerify(options: OnChangeOptions, predicate: (value: T) => boolean, callback: VerifyCallback<T>): DestroyableObject
+  onVerify(...args: any[]): DestroyableObject {
+    // Solve args:
+    const [options, predicate, callback] = (args.length === 3
+      ? args
+      : [{}, ...args]
+    ) as [options: OnChangeOptions, predicate: (value: T) => boolean, callback: VerifyCallback<T>]
+    
+    // Go on:
+    let verify = predicate(this._value)
+    if (options.executeImmediately) {
+      callback(verify, this._value, this)
+    }
+    return this.onChange(value => {
+      const newVerify = predicate(value)
+      if (newVerify !== verify) {
+        verify = newVerify
+        callback(verify, value, this)
+      }
+    })
+  }
 
-	// Sugar syntax:
-	get observableId() { return this._observableId }
-	get value() { return this._value }
-	set value(value) { this.setValue(value) }
-	get valueOld() { return this._valueOld }
+  // Sugar syntax:
+  get observableId() { return this._observableId }
+  get value() { return this._value }
+  set value(value) { this.setValue(value) }
+  get valueOld() { return this._valueOld }
 
-	// Debug
-	log(formatValue: (value: T) => string = (value: T) => `Obs#${this._observableId} value has changed: ${value}`): DestroyableObject {
-		return this.onChange(value => {
-			console.log(formatValue(value))
-		})
-	}
+  // Debug
+  log(formatValue: (value: T) => string = (value: T) => `Obs#${this._observableId} value has changed: ${value}`): DestroyableObject {
+    return this.onChange(value => {
+      console.log(formatValue(value))
+    })
+  }
 }
 
 export type {
-	ConstructorOptions,
-	Callback,
-	DerivativeCallback,
-	OnChangeOptions,
+  ConstructorOptions,
+  Callback,
+  DerivativeCallback,
+  OnChangeOptions,
 }
 
 export {
-	Observable,
+  Observable,
 }
