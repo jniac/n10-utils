@@ -1,5 +1,5 @@
 import { MultiKeyWeakMap } from '../collection/multi-key-map'
-import { digest } from '../digest'
+import { Hash } from '../hash'
 import { lazy } from '../lazy'
 
 const init = lazy(() => {
@@ -10,12 +10,12 @@ const init = lazy(() => {
     if (id !== undefined) {
       return id
     } else {
-      digest.init()
+      Hash.init()
       const step = Array.isArray(value) ? value.length : 1
       for (let i = 0; i < step; i++) {
-        digest.next(counter++)
+        Hash.update(counter++)
       }
-      const id = digest.result()
+      const id = Hash.getValueAsInt32()
       map.set(value, id)
       return id
     }
@@ -28,7 +28,7 @@ const init = lazy(() => {
  * array of values.
  * 
  * NOTE: 
- * - The id is an int between 0 and 2^31
+ * - The id is an "Int32"
  * - The id depends from the previous calls and may change from one session to 
  * another.
  * - For static, predictable id, use `digest()` instead which returns an unique

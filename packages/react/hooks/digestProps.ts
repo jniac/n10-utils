@@ -1,4 +1,4 @@
-import { digest } from '../../../digest'
+import { Hash } from '../../../hash'
 
 /**
  * Safe way to "digest" an object by avoiding common pitfalls (ex: circular references).
@@ -12,53 +12,46 @@ import { digest } from '../../../digest'
  * (ex observables))
  */
 export function digestProps(...propsArray: any[]): number {
-	let state = 0
-	const nextState = (x: number) => {
-		state = digest
-			.init()
-			.next(state, 1) // use a small scalar, since state is already a quite big int
-			.next(x)
-			.result()
-	}
+	Hash.init()
 	const queue: any[] = [...propsArray]
 	while (queue.length > 0) {
 		const current = queue.shift()!
 		if (current === null || current === undefined) {
-			nextState(123456)
+			Hash.update(123456)
 			continue
 		}
 		const type = typeof current
 		switch (type) {
 			case 'boolean': {
-				nextState(37842398 + (current ? 0 : 1))
+				Hash.update(37842398 + (current ? 0 : 1))
 				break
 			}
 			case 'function': {
-				nextState(digest.string((current as Function).name))
-				nextState((current as Function).length)
+				Hash.updateString((current as Function).name)
+				Hash.update((current as Function).length)
 				break
 			}
 			case 'string': {
-				nextState(digest.string(current))
+				Hash.updateString(current)
 				break
 			}
 			case 'number': {
-				nextState(current)
+				Hash.update(current)
 				break
 			}
 			case 'object': {
-				// If object has "value" key, object is a wrapper, ignore everything else the value.
+				// If object has "value" key, object is a wrapper, "value" is important, ignore everything else.
 				if ('value' in current) {
 					queue.push(current.value)
 					break
 				}
 				// If object has id, the id is enough to deduce identity, ignore everything else.
 				if ('uuid' in current) {
-					nextState(digest.string(current.uuid))
+					Hash.updateString(current.uuid)
 					break
 				}
 				if ('id' in current) {
-					nextState(digest.string(current.id))
+					Hash.updateString(String(current.id))
 					break
 				}
 
@@ -66,7 +59,7 @@ export function digestProps(...propsArray: any[]): number {
 					queue.push(...current)
 				} else {
 					for (const [key, value] of Object.entries(current)) {
-						nextState(digest.string(key))
+						Hash.updateString(key)
 						queue.push(value)
 					}
 				}
@@ -74,5 +67,5 @@ export function digestProps(...propsArray: any[]): number {
 			}
 		}
 	}
-	return state
+	return Hash.getValue()
 }

@@ -157,12 +157,12 @@ class MultiKeyWeakMap<K extends object = object, V = any> {
 
 // function testMultiKeyWeakMap() {
 //   const m = new MultiKeyWeakMap()
-//   const obj1 = { name: 'foo' }
-//   const obj2 = { name: 'bar' }
 //   m.set([1, 2], 'value-value')
 //   console.log(m.get([1, 2]))
 //   console.log(m.get([2, 1]))
 
+//   const obj1 = { name: 'foo' }
+//   const obj2 = { name: 'bar' }
 //   m.set([obj1, obj2], 'object-object')
 //   console.log(m.get([obj1, obj2]))
 //   console.log(m.get([obj2, obj1]))

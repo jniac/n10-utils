@@ -1,4 +1,4 @@
-import { digest } from '../digest'
+import { Hash } from '../hash'
 
 type Primitive = boolean | number | BigInt | string | Symbol
 
@@ -24,35 +24,40 @@ function isPrimitive(value: any): value is Primitive {
  * - a combination of the two (array)
  */
 export class IdRegister {
-  private count = 0;
-  private map = new Map<Primitive, number>();
-  private weakMap = new WeakMap<object, number>();
-  private registerObject(value: object): number {
-    this.weakMap.set(value, ++this.count)
-    return this.count
+  private _count = 0
+  private _map = new Map<Primitive, number>()
+  private _weakMap = new WeakMap<object, number>()
+  private _getId(): number {
+    return Hash.init().update(++this._count).getValue()
   }
-  private registerPrimitive(value: Primitive): number {
-    this.map.set(value, ++this.count)
-    return this.count
+  private _registerObject(value: object): number {
+    const id = this._getId()
+    this._weakMap.set(value, id)
+    return id
   }
-  private requirePrimitiveId(value: Primitive) {
-    return this.map.get(value) ?? this.registerPrimitive(value)
+  private _registerPrimitive(value: Primitive): number {
+    const id = this._getId()
+    this._map.set(value, id)
+    return id
   }
-  private requireObjectId(value: object) {
-    return this.weakMap.get(value) ?? this.registerObject(value)
+  private _requirePrimitiveId(value: Primitive) {
+    return this._map.get(value) ?? this._registerPrimitive(value)
   }
-  private requireArrayId(value: any[]) {
-    digest.init()
+  private _requireObjectId(value: object) {
+    return this._weakMap.get(value) ?? this._registerObject(value)
+  }
+  private _requireArrayId(value: any[]) {
+    Hash.init()
     for (const item of value.flat(16)) {
-      digest.next(this.requireId(item))
+      Hash.update(this.requireId(item))
     }
-    return digest.result()
+    return Hash.getValue()
   }
   requireId(value: any): number {
     return (isPrimitive(value)
-      ? this.requirePrimitiveId(value)
+      ? this._requirePrimitiveId(value)
       : Array.isArray(value)
-        ? this.requireArrayId(value)
-        : this.requireObjectId(value))
+        ? this._requireArrayId(value)
+        : this._requireObjectId(value))
   }
 }
