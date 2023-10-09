@@ -7,5 +7,5 @@ Compilation of typescript utils, essentially for front-end concerns, essentially
 Used as a submodule for now, could be turned to a NPM package.
 
 ```
-git submodule add https://github.com/jniac/n10-utils.git src/n10-utils
+git submodule add https://github.com/jniac/n10-utils.git src/some-utilz
 ```
