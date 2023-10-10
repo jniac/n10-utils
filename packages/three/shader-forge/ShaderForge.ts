@@ -66,7 +66,7 @@ class ShaderTool<T> {
   
   injectTokenComments() {
     for (const token of glTokens) {
-      const { type, pattern } = this.#getPattern(token as T, { throwError: false })
+      const { type, pattern } = this.#getPattern(token as any, { throwError: false })
       current[type] = current[type].replace(pattern, `
         ${pattern}
         // ShaderForge TOKEN: ${token}

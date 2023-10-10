@@ -24,7 +24,7 @@ export class VertigoCamera extends PerspectiveCamera {
       this.vertigo.focusZ = focusZ
     } else {
       const [arg] = args as [Vector3 | Object3D]
-      const [x, y, z] = solveVector3Declaration(arg instanceof Object3D ? arg.position : arg)
+      const [x, y, z] = solveVector3Declaration('position' in arg ? arg.position : arg)
       this.vertigo.focusX = x
       this.vertigo.focusY = y
       this.vertigo.focusZ = z
