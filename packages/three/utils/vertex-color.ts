@@ -1,5 +1,5 @@
-import { clamp } from '@/n10-utils/math/basics'
 import { BufferAttribute, BufferGeometry, Color, ColorRepresentation } from 'three'
+import { clamp } from '../../../math/basics'
 
 export const setVertexColor = (geometry: BufferGeometry, color: ColorRepresentation, range: [startIndex: number, endIndex: number] = [0, -1]) => {
   const count = geometry.attributes.position.count

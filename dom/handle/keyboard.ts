@@ -1,5 +1,5 @@
-import { Destroyable, StringFilter } from '@/n10-utils/types'
-import { applyStringFilter } from '@/n10-utils/string'
+import { Destroyable, StringFilter } from '../../types'
+import { applyStringFilter } from '../../string'
 
 type Info = {
   event: KeyboardEvent

@@ -1,9 +1,10 @@
-import { BufferAttribute, BufferGeometry, Color, ColorRepresentation, Group, LineBasicMaterial, LineSegments, Vector3 } from 'three'
-import { Vector3Declaration, solveVector3Declaration } from '../../three/declaration'
-import { getUniqueId } from '@/n10-utils/misc/getUniqueId'
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
+import { BufferAttribute, BufferGeometry, Color, ColorRepresentation, Group, LineBasicMaterial, LineSegments, Vector3 } from 'three'
+
+import { Vector3Declaration, solveVector3Declaration } from '../../three/declaration'
+import { getUniqueId } from '../../../misc/getUniqueId'
 import { useEffects } from '../../react/hooks'
-import { clock } from '@/n10-utils/clock'
+import { clock } from '../../../clock'
 
 const debugDrawGroups: DebugDrawGroup[] = []
 /** 

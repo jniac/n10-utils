@@ -7,7 +7,7 @@ import { DestroyableObject } from '../../../types'
 import { useEffects } from '../../react/hooks'
 import { clock } from '../../../clock'
 import { VertigoCamera } from '../../three/vertigo/VertigoCamera'
-import { clamp01 } from '@/n10-utils/math/basics'
+import { clamp01 } from '../../../math/basics'
 
 const defaultViewportProps = {
   main: false,
