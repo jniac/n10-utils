@@ -18,7 +18,7 @@ function update(newTime: number) {
 }
 
 if (typeof window !== undefined) {
-  function frame(ms: number) {
+  const frame = (ms: number) => {
     window.requestAnimationFrame(frame)
     const time = ms / 1e3
     update(time)
