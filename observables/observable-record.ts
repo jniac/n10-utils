@@ -1,5 +1,5 @@
-import { digest } from "../digest"
-import { Observable, ConstructorOptions } from "./observable"
+import { digest } from '../digest'
+import { Observable, ConstructorOptions } from './observable'
 
 /**
  * NOTE: Status WIP.

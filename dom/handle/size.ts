@@ -1,5 +1,5 @@
-import { lazy } from "../../lazy"
-import { DestroyableObject } from "../../types"
+import { lazy } from '../../lazy'
+import { DestroyableObject } from '../../types'
 
 const init = lazy(() => {
   const resizeObserverMap = new WeakMap<Element, any>()
@@ -50,10 +50,10 @@ export function handleSize<T extends (HTMLElement | SVGElement | Window)>(
       size.y = window.innerHeight
       onSize({ element, size })
     }
-    element.addEventListener("resize", _onResize)
+    element.addEventListener('resize', _onResize)
     _onResize()
     const destroy = () => {
-      element.removeEventListener("resize", _onResize)
+      element.removeEventListener('resize', _onResize)
     }
     return { destroy }
   } else {

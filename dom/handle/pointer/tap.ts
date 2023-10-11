@@ -50,10 +50,10 @@ function handleTap(element: HTMLElement, params: Params): () => void {
     info.downTarget = event.target as HTMLElement
     info.downPosition.x = event.clientX
     info.downPosition.y = event.clientY
-    window.addEventListener("pointerup", onPointerUp)
+    window.addEventListener('pointerup', onPointerUp)
   }
   const onPointerUp = (event: PointerEvent) => {
-    window.removeEventListener("pointerup", onPointerUp)
+    window.removeEventListener('pointerup', onPointerUp)
     const duration = (Date.now() - info.timestamp) / 1e3
     const x = event.clientX - info.downPosition.x
     const y = event.clientY - info.downPosition.y
@@ -63,11 +63,11 @@ function handleTap(element: HTMLElement, params: Params): () => void {
     }
   }
 
-  element.addEventListener("pointerdown", onPointerDown)
+  element.addEventListener('pointerdown', onPointerDown)
 
   return () => {
-    element.removeEventListener("pointerdown", onPointerDown)
-    window.removeEventListener("pointerup", onPointerUp)
+    element.removeEventListener('pointerdown', onPointerDown)
+    window.removeEventListener('pointerup', onPointerUp)
   }
 }
 

@@ -57,13 +57,13 @@ let observableCount = 0
  * 
  * Usage:
  * ``` 
- * const statusObs = new Observable<"none" | "pending" | "ready">("none")
+ * const statusObs = new Observable<'none' | 'pending' | 'ready'>('none')
  * statusObs.onChange(status => {
- *   if (value === "ready") {
+ *   if (value === 'ready') {
  *     doFancyThings()
  *   }
  * })
- * statusObs.value = "ready"
+ * statusObs.value = 'ready'
  * ``` 
  */
 class Observable<T> {

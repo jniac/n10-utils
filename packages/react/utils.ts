@@ -1,4 +1,4 @@
-import { ForwardedRef } from "react"
+import { ForwardedRef } from 'react'
 
 /**
  * Simplifies the declaration of className.
@@ -6,8 +6,8 @@ import { ForwardedRef } from "react"
 export function className(...args: any[]) {
 	return args
 		.flat(Infinity)
-		.filter(item => typeof item === "string" && item.length > 0)
-		.join(" ")
+		.filter(item => typeof item === 'string' && item.length > 0)
+		.join(' ')
 }
 
 /**
@@ -29,7 +29,7 @@ export function className(...args: any[]) {
  */
 export function bindRef<T>(ref: ForwardedRef<T> | null | undefined, value: T) {
 	if (ref) {
-		if (typeof ref === "function") {
+		if (typeof ref === 'function') {
 			ref(value)
 		} else {
 			ref.current = value

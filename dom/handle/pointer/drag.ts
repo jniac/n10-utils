@@ -180,8 +180,8 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 
   const onMouseDown = (event: MouseEvent) => {
     if (dragButton & (1 << event.button)) {
-      window.addEventListener("mousemove", onMouseMove, { passive: false })
-      window.addEventListener("mouseup", onMouseUp)
+      window.addEventListener('mousemove', onMouseMove, { passive: false })
+      window.addEventListener('mouseup', onMouseUp)
       frameStart(event.clientX, event.clientY)
     }
   }
@@ -195,8 +195,8 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
   }
 
   const onMouseUp = () => {
-    window.removeEventListener("mousemove", onMouseMove)
-    window.addEventListener("mouseup", onMouseUp)
+    window.removeEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
     if (drag) {
       dragStop()
     }
@@ -209,8 +209,8 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
       const touch = event.changedTouches[0]
       if (firstTouch === null) {
         firstTouch = touch
-        window.addEventListener("touchmove", onTouchMove, { passive: false })
-        window.addEventListener("touchend", onTouchEnd)
+        window.addEventListener('touchmove', onTouchMove, { passive: false })
+        window.addEventListener('touchend', onTouchEnd)
         frameID = window.requestAnimationFrame(dragFrame)
         down = true
         delta.x = 0
@@ -241,8 +241,8 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
   const onTouchEnd = (event: TouchEvent) => {
     const touch = event.changedTouches[0]
     if (touch.identifier === firstTouch!.identifier) {
-      window.removeEventListener("touchmove", onTouchMove)
-      window.removeEventListener("touchend", onTouchEnd)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
       if (drag) {
         dragStop()
       }
@@ -251,17 +251,17 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
     }
   }
 
-  element.addEventListener("mousedown", onMouseDown)
-  element.addEventListener("touchstart", onTouchStart)
+  element.addEventListener('mousedown', onMouseDown)
+  element.addEventListener('touchstart', onTouchStart)
 
   return () => {
-    element.removeEventListener("mousedown", onMouseDown)
-    element.removeEventListener("touchstart", onTouchStart)
+    element.removeEventListener('mousedown', onMouseDown)
+    element.removeEventListener('touchstart', onTouchStart)
 
-    window.removeEventListener("mousemove", onMouseMove)
-    window.removeEventListener("mouseup", onMouseUp)
-    window.removeEventListener("touchmove", onTouchMove)
-    window.removeEventListener("touchend", onTouchEnd)
+    window.removeEventListener('mousemove', onMouseMove)
+    window.removeEventListener('mouseup', onMouseUp)
+    window.removeEventListener('touchmove', onTouchMove)
+    window.removeEventListener('touchend', onTouchEnd)
 
     window.cancelAnimationFrame(frameID)
   }

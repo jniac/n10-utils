@@ -1,5 +1,5 @@
 export function parseFloatRGB(str: string): [r: number, g: number, b: number] {
-	if (str.startsWith("#")) {
+	if (str.startsWith('#')) {
 		str = str.substring(1)
 		if (str.length === 6) {
 			return [
