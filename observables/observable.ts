@@ -1,4 +1,5 @@
-import { DestroyableObject } from "../types"
+import { DestroyableObject } from '../types'
+import { Delay, clearDelay, withDelay } from './delay'
 
 type ValueMapper<T> =
   (incomingValue: T, observable: Observable<T>) => T
@@ -10,6 +11,18 @@ type ConstructorOptions<T> = Partial<{
   onChange: Callback<T>
 }>
 
+type SetValueOptions = Partial<{
+  /**
+   * A delay before applying the change. 
+   * 
+   * That option is tricky and has huge side effects. Use with caution. 
+   * 
+   * NOTE: Very opionated design: Any update in the mean time, delayed OR NOT, 
+   * that changes OR NOT the inner value, will cancel the delayed change.
+   */
+  delay: Delay
+}>
+
 type Callback<T> =
   (value: T, observable: Observable<T>) => void
 
@@ -18,7 +31,6 @@ type DerivativeCallback<T, D> =
 
 type VerifyCallback<T> =
   (verify: boolean, value: T, observable: Observable<T>) => void
-
 
 type OnChangeOptions = Partial<{
   executeImmediately: boolean
@@ -61,6 +73,7 @@ class Observable<T> {
   protected _valueMapper: ValueMapper<T> | null = null
   protected _listeners: Set<Callback<T>> = new Set()
   protected _hasChanged: boolean = false
+  protected _delayed: boolean = false
 
   constructor(intialValue: T, options?: ConstructorOptions<T>) {
     this._value = intialValue
@@ -87,15 +100,42 @@ class Observable<T> {
   }
 
   /**
+   * Handle the delay internally. Returns true if the observable is delayed, false otherwise.
+   */
+  protected _handleDelay(incomingValue: T, options?: SetValueOptions): boolean {
+    if (options?.delay !== undefined) {
+      const { delay, ...optionsWithoutDelay } = options
+      withDelay(this, delay, () => {
+        this.setValue(incomingValue, optionsWithoutDelay)
+      })
+      this._delayed = true
+      return true
+    } else {
+      if (this._delayed) {
+        clearDelay(this)
+      }
+      this._delayed = false
+      return false
+    }
+  }
+
+  /**
    * `setValue` makes several things:
-   * 	 - Firts it remap the incoming value (eg: by applying min, max bounds).
-   * 	 - It compares the incoming value with the inner one.
-   * 	 - If the value are identical, it returns false (meaning: nothing happened)
+   *   - First if a delay is defined, handle the delay.
+   * 	 - Then the incoming value is remapped (eg: by applying min, max bounds).
+   * 	 - Then the remapped value is compared with the inner one.
+   * 	 - If the values are identical, it returns false (meaning: nothing happened)
    * 	 - Otherwise it changes the inner value, call all the listeners and returns true (meaning: something happened).
    * @param incomingValue
    * @returns
    */
-  setValue(incomingValue: T): boolean {
+  setValue(incomingValue: T, options?: SetValueOptions): boolean {
+    // Delay special case:
+    if (this._handleDelay(incomingValue, options)) {
+      return false
+    }
+
+    // No more delay, regular case:
     if (this._valueMapper) {
       incomingValue = this._valueMapper(incomingValue, this)
     }
@@ -105,8 +145,8 @@ class Observable<T> {
     }
     this._valueOld = this._value
     this._value = incomingValue
-    this._invokeListeners()
     this._hasChanged = true
+    this._invokeListeners()
     return true
   }
 
@@ -166,7 +206,7 @@ class Observable<T> {
       ? args
       : [{}, ...args]
     ) as [options: OnChangeOptions, predicate: (value: T) => boolean, callback: VerifyCallback<T>]
-    
+
     // Go on:
     let verify = predicate(this._value)
     if (options.executeImmediately) {
@@ -197,6 +237,7 @@ class Observable<T> {
 
 export type {
   ConstructorOptions,
+  SetValueOptions,
   Callback,
   DerivativeCallback,
   OnChangeOptions,
