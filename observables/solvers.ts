@@ -4,17 +4,18 @@ import { ConstructorOptions, Observable } from './observable'
 type Source = Record<string, Observable<any>>
 type Values<S extends Source> = { [Property in keyof S]: S[Property]['value'] }
 type Callback<S extends Source, T> = (values: Values<S>) => T
-type Delay = `${number}frames` | `${number}ms` | `${number}s`
+type UpdateMode = 'immediate' | 'never' | `${number}frames` | `${number}ms` | `${number}s`
 
 const defaultOptions = {
   /** 
-   * `null` is intended for "immediate" execution, other values will delay the update
-   * at least until the next frame, which can help save significant calculations 
-   * if the observable sources are likely to change very often.
+   * `"immediate"` means "immediate" execution, `"never"` means that the solver 
+   * will never update (you have to call update() yourself), other values will 
+   * delay the update at least until the next frame, which can help save significant
+   * calculations if the observable sources are likely to change very often.
    * 
-   * Defaults to `null`.
+   * Defaults to `"immediate"`.
    */
-  delay: <null | Delay>null,
+  update: <UpdateMode>'immediate',
 
   /**
    * When using a delayed Solver with a "frame" delay, a custom pair of 
@@ -50,9 +51,9 @@ type Options<T> = Partial<typeof defaultOptions> & ConstructorOptions<T>
  * value. This helps reduce unwanted/unnecessary updates.
  * 
  * The delay, if specified (`null` by default), can be of two types: 
- * - "frame" (client side, depends on client frame rate and requires 
+ * - 'frame' (client side, depends on client frame rate and requires 
  * requestAnimationFrame/cancelAnimationFrame) 
- * - "time" (seconds or milliseconds, requires setInterval/clearInterval).
+ * - 'time' (seconds or milliseconds, requires setInterval/clearInterval).
  * 
  * Usage:
  * ```
@@ -73,12 +74,13 @@ type Options<T> = Partial<typeof defaultOptions> & ConstructorOptions<T>
 class Solver<T, S extends Source> extends Observable<T> implements DestroyableObject {
   readonly observables: Readonly<S>
 
+  update: () => void
   destroy: () => void
 
   constructor(sources: S, solve: Callback<S, T>, options: Options<T>) {
     const values = Object.fromEntries(Object.entries(sources).map(([key, obs]) => [key, obs.value])) as Values<S>
     const {
-      delay,
+      update: updateArg,
       animationFrame,
       interval,
       ...superOptions
@@ -95,20 +97,21 @@ class Solver<T, S extends Source> extends Observable<T> implements DestroyableOb
       }
     }
 
-    const update = () => {
+    this.update = () => {
       this.setValue(solve(values))
     }
 
-    if (delay === null) {
-      // Immediate update
-      initImmediate(sources, values, update, onDestroy)
-    } else if (delay.endsWith('frames')) {
-      // Delayed update  
-      initAnimationFrame(sources, values, update, onDestroy, delay, animationFrame)
-    } else if (delay.endsWith('ms') || delay.endsWith('s')) {
-      initInterval(sources, values, update, onDestroy, delay, interval)
+    if (updateArg === 'immediate') {
+      // Immediate update:
+      initImmediate(sources, values, this.update, onDestroy)
+    } else if (updateArg.endsWith('frames')) {
+      // Delayed update based on animation frame (client side only):
+      initAnimationFrame(sources, values, this.update, onDestroy, updateArg, animationFrame)
+    } else if (updateArg.endsWith('ms') || updateArg.endsWith('s')) {
+      // Delayed update based on setInterval (do not rely on 'window'):
+      initInterval(sources, values, this.update, onDestroy, updateArg, interval)
     } else {
-      throw new Error(`Invalid delay argument.`)
+      // no delay...
     }
   }
 }
@@ -133,7 +136,7 @@ function initAnimationFrame<S extends Source>(
   values: Values<S>,
   update: () => void,
   onDestroy: Set<() => void>,
-  delay: string,
+  updateArg: string,
   animationFrame: Options<any>['animationFrame'],
 ): void {
   if (typeof window === 'undefined') {
@@ -157,7 +160,7 @@ function initAnimationFrame<S extends Source>(
     }
   }
   frameId = request(onFrame)
-  const frames = Number.parseFloat(delay.slice(0, -6))
+  const frames = Number.parseFloat(updateArg.slice(0, -6))
   for (const [key, observable] of Object.entries(sources)) {
     const { destroy } = observable.onChange(value => {
       (values as any)[key] = value
@@ -174,7 +177,7 @@ function initInterval<S extends Source>(
   values: Values<S>,
   update: () => void,
   onDestroy: Set<() => void>,
-  delay: string,
+  updateArg: string,
   interval: Options<any>['interval'],
 ): void {
   const [setInterval, clearInterval] = interval ?? [globalThis.setInterval, globalThis.clearInterval]
@@ -193,9 +196,9 @@ function initInterval<S extends Source>(
   onDestroy.add(() => {
     clearInterval(id)
   })
-  const duration = delay.endsWith('s')
-    ? Number.parseFloat(delay.slice(0, -1)) // "s"
-    : Number.parseFloat(delay.slice(0, -2)) / 1000 // "ms"
+  const duration = updateArg.endsWith('s')
+    ? Number.parseFloat(updateArg.slice(0, -1)) // "s"
+    : Number.parseFloat(updateArg.slice(0, -2)) / 1000 // "ms"
   for (const [key, observable] of Object.entries(sources)) {
     const { destroy } = observable.onChange(value => {
       (values as any)[key] = value
