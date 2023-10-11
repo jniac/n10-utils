@@ -15,3 +15,35 @@ Used as a submodule for now, could be turned to a NPM package.
 ```
 git submodule add https://github.com/jniac/n10-utils.git src/some-utilz
 ```
+
+## tsconfig
+
+### compilerOptions
+Actuellement, pour utiliser "some-utils" en tant que submodule dans un projet 
+typescript, il est nécessaire d'activer les réglages suivants : 
+```js
+{
+  "compilerOptions": {
+    "downlevelIteration": true,   // because iteration is cool (but low perf?)
+  }
+}
+```
+
+### exclude
+Certains utilitaires s'appuie sur des modules NPM qui peuvent être absent. 
+Il est alors nécessaire d'exclure les ressources concernées.
+```js
+{
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    // Exclusion générique
+    "src/some-utilz/packages",
+
+    // Exclusion spécifique
+    "src/some-utilz/packages/three",
+    "src/some-utilz/packages/@react-three"
+  ]
+}
+```
