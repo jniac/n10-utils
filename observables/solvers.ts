@@ -61,12 +61,14 @@ type Options<T> = Partial<typeof defaultOptions> & ConstructorOptions<T>
  *   bar: new Observable(false),
  *   foo: new Observable(3),
  * }
- * const solver = new Solver(observables, ({ bar, foo }) => {
- *   return bar && foo > .5
- * }, {
- *   update: '10frames',
- *   onChange: value => console.log(`new value is: ${value}`)
- * })
+ * const solver = new Solver(
+ *   observables, 
+ *   ({ bar, foo }) => bar && foo > .5, 
+ *   {
+ *     update: '10frames',
+ *     onChange: value => console.log(`new value is: ${value}`)
+ *   },
+ * )
  * observables.bar.setValue(true)
  * // "new value is: true" (after 10 frames)
  * ```
