@@ -64,11 +64,11 @@ type Options<T> = Partial<typeof defaultOptions> & ConstructorOptions<T>
  * const solver = new Solver(observables, ({ bar, foo }) => {
  *   return bar && foo > .5
  * }, {
- *   delay: '0.5s',
+ *   update: '10frames',
  *   onChange: value => console.log(`new value is: ${value}`)
  * })
  * observables.bar.setValue(true)
- * // "new value is: true" (after 0.5 seconds)
+ * // "new value is: true" (after 10 frames)
  * ```
  */
 class Solver<T, S extends Source> extends Observable<T> implements DestroyableObject {
