@@ -16,7 +16,7 @@ type UseEffectsOptions = Partial<{
 }>
 
 export function useEffects<T = undefined>(
-	callback: (value: T) => Generator<void | Destroyable, void, unknown>,
+	callback: (value: T) => void | Generator<void | Destroyable, void, unknown>,
 	deps: DependencyList | 'always',
 	{
 		moment = 'effect',
@@ -39,11 +39,13 @@ export function useEffects<T = undefined>(
 	}[moment]
 	use(() => {
 		const it = callback(ref.current!)
-		while (true) {
-			const { value, done } = it.next()
-			if (done) break
-			if (value) {
-				destroyables.push(value as Destroyable)
+		if (it) {
+			while (true) {
+				const { value, done } = it.next()
+				if (done) break
+				if (value) {
+					destroyables.push(value as Destroyable)
+				}
 			}
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +66,7 @@ export function useEffects<T = undefined>(
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, deps === 'always' ? undefined : deps)
-	
+
 	return { ref }
 }
 
@@ -75,6 +77,3 @@ export function useLayoutEffects<T = undefined>(
 ): UseEffectsReturn<T> {
 	return useEffects(callback, deps, { ...options, moment: 'layoutEffect' })
 }
-
-
-
