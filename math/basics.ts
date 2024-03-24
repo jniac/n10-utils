@@ -9,7 +9,7 @@ export const clamp01 = (x: number) => {
 
 export const signedClamp = (x: number, max: number) => {
 	return x < -max ? -max : x > max ? max : x
-} 
+}
 
 export const lerp = (a: number, b: number, x: number) => {
 	return a + (b - a) * clamp01(x)
@@ -64,13 +64,13 @@ export const positiveModulo = (x: number, base: number) => {
 
 /**
  * Clamps a value with progressive limit. Useful for user "drag" feedbacks.
- * https://www.desmos.com/calculator/rnsygpvpcb
+ * https://www.desmos.com/calculator/vssiyqze6q
  */
 export const limitedClamp = (x: number, min: number, minLimit: number, max: number, maxLimit: number) => {
 	let limit = 0, delta = 0
 	return (
 		x < min ? min + (limit = minLimit - min) * (delta = x - min) / (limit + delta) :
-		x > max ? max + (limit = maxLimit - max) * (delta = x - max) / (limit + delta) :
-		x
+			x > max ? max + (limit = maxLimit - max) * (delta = x - max) / (limit + delta) :
+				x
 	)
 }

@@ -17,3 +17,14 @@ export const psine = (x: number, p = 3) => {
   const r = 1 - Math.pow(1 - sign * s, p)
   return r * sign
 }
+
+/**
+ * Power Cosine
+ * https://jniac.github.io/some-curves/curves/psine/
+ */
+export const pcosine = (x: number, p = 3) => {
+  const s = Math.cos(x)
+  const sign = s < 0 ? -1 : 1
+  const r = 1 - Math.pow(1 - sign * s, p)
+  return r * sign
+}
