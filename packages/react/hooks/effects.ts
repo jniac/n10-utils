@@ -10,6 +10,14 @@ type UseEffectsReturn<T> = {
 }
 
 type UseEffectsOptions = Partial<{
+	/**
+	 * Choose the moment to initialize the effects. Defaults to 'effect'.
+	 * 
+	 * Reminder:
+	 * - 'memo': runs before the first render.
+	 * - 'effect': runs just after the first render and after the browser has painted.
+	 * - 'layoutEffect': runs just after the first render but before the browser has painted.
+	 */
 	moment: 'effect' | 'layoutEffect' | 'memo'
 	/**
 	 * Use a "smart digest props" heuristic for deps hashing.
