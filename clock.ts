@@ -1,6 +1,6 @@
-import { DestroyableObject } from './types'
 import { inverseLerp } from './math/basics'
 import { easeInOut2 } from './math/easing'
+import { DestroyableObject } from './types'
 
 type ClockState = Readonly<{
 	timeScale: number
@@ -71,9 +71,9 @@ class Clock implements DestroyableObject {
 	timeScale = 1
 	maxDeltaTime = .1
 	frame = 0
-	
+
 	destroy: () => void
-	
+
 	private _updateListeners = new Listeners()
 	private _freezeListeners = new Listeners()
 	private _unfreezeListeners = new Listeners()
@@ -102,7 +102,7 @@ class Clock implements DestroyableObject {
 		if (updateDuration !== undefined) {
 			this._state = { ...this._state, updateDuration }
 		}
-		
+
 		const update = (windowDeltaTime: number) => {
 			// Auto-pause handling:
 			let { updateDuration, updateFadeDuration, updateLastRequest } = this._state
@@ -136,7 +136,7 @@ class Clock implements DestroyableObject {
 			})
 			this._state = state
 
-			const freezed = 
+			const freezed =
 				deltaTime === 0 // Current delta time should be zero.
 				&& deltaTimeOld === 0 // But the old delta time also (this allows one "zero-delta-time" callback).
 				&& time === timeOld // Time should not have been update by any other ways.
@@ -159,6 +159,14 @@ class Clock implements DestroyableObject {
 		this.destroy = () => {
 			animationFrameCallbacks.delete(update)
 		}
+	}
+
+	/**
+	 * "Uniform" time, meant to be used in shaders.
+	 */
+	get uTime() {
+		const getTime = () => this._state.time
+		return { get value() { return getTime() } }
 	}
 
 	onTick(callback: (clock: ClockState) => void): DestroyableObject
@@ -234,11 +242,7 @@ const clock = (() => {
 	return () => clock ?? (clock = new Clock())
 })()
 
-export type {
-	ClockState,
-}
+export type { ClockState }
 
-export {
-	Clock,
-	clock,
-}
+export { Clock, clock }
+
