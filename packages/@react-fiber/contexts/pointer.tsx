@@ -1,10 +1,10 @@
-import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
-import { Intersection, Mesh, Object3D, Ray, Raycaster, Vector2, Vector3 } from 'three'
 import { useThree } from '@react-three/fiber'
+import React, { PropsWithChildren, createContext, useContext, useMemo } from 'react'
+import { Intersection, Mesh, Object3D, Ray, Raycaster, Vector2, Vector3 } from 'three'
 
-import { mapRecord } from '../../../object/map-record'
-import { CallbackStack } from '../../../misc/CallbackStack'
 import { handlePointer } from '../../../dom/handle/pointer'
+import { CallbackStack } from '../../../misc/CallbackStack'
+import { mapRecord } from '../../../object/map-record'
 import { useEffects } from '../../react/hooks'
 import { ViewportInstance, ViewportManager, useViewportManager } from './viewport'
 
@@ -20,7 +20,7 @@ type BasicInfo = {
 type TapInfo = {
   pointer: PointerManager
   hit: PointerHit | null
-}  
+}
 
 type DragInfo = {
   pointer: PointerManager
@@ -30,7 +30,7 @@ type DragInfo = {
   rayStart: Ray
   ray: Ray
   rayOld: Ray
-}  
+}
 
 type OnTapCallback = (info: TapInfo) => void
 type OnDragCallback = (info: DragInfo) => void
@@ -265,10 +265,10 @@ function usePointerManager() {
   return useContext(PointerContext)
 }
 
-function PointerProvider({ children }: PropsWithChildren) {
+function PointerProvider({ children }: PropsWithChildren<{}>) {
   const three = useThree()
   const viewportManager = useViewportManager()
-  
+
   const pointerManager = useMemo(() => {
     return new PointerManager(viewportManager, three.gl.domElement)
   }, [three.gl.domElement, viewportManager])
@@ -286,12 +286,9 @@ function PointerProvider({ children }: PropsWithChildren) {
 }
 
 export type {
-  PointerManager,
+  PointerManager
 }
 
 export {
-  onPointer,
-  PointerProvider,
-  usePointerManager,
-  Pointer,
+  Pointer, PointerProvider, onPointer, usePointerManager
 }

@@ -1,10 +1,20 @@
-import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
-import { BufferAttribute, BufferGeometry, Color, ColorRepresentation, Group, LineBasicMaterial, LineSegments, Vector3 } from 'three'
+import React, { createContext, useContext, useMemo } from 'react'
 
-import { Vector3Declaration, solveVector3Declaration } from '../../three/declaration'
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  ColorRepresentation,
+  Group,
+  LineBasicMaterial,
+  LineSegments,
+  Vector3,
+} from 'three'
+
+import { clock } from '../../../clock'
 import { getUniqueId } from '../../../misc/getUniqueId'
 import { useEffects } from '../../react/hooks'
-import { clock } from '../../../clock'
+import { solveVector3Declaration, Vector3Declaration } from '../../three/declaration'
 
 const debugDrawGroups: DebugDrawGroup[] = []
 /** 
@@ -82,7 +92,7 @@ class DebugDrawGroup extends Group {
     const index = debugDrawGroups.indexOf(this)
     debugDrawGroups.splice(index, 1)
     this.destroyed = true
-    this.destroy = () => {}
+    this.destroy = () => { }
   }
 
   with(...args: any[]): this {
@@ -130,7 +140,7 @@ function useDebugDraw(): DebugDrawGroup {
   return useContext(DebugDrawContext)
 }
 
-function DebugDrawProvider({ children }: PropsWithChildren) {
+function DebugDrawProvider({ children }: { children?: React.ReactNode | React.ReactNode[] }) {
   const debugDraw = useMemo(() => new DebugDrawGroup(), [])
   useEffects(function* () {
     yield clock().onTick(() => {
@@ -146,12 +156,6 @@ function DebugDrawProvider({ children }: PropsWithChildren) {
   )
 }
 
-export type {
-  DebugDrawGroup,
-}
+export type { DebugDrawGroup }
 
-export {
-  DebugDrawProvider,
-  DebugDraw,
-  useDebugDraw,
-}
+export { DebugDraw, DebugDrawProvider, useDebugDraw }

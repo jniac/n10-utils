@@ -1,13 +1,13 @@
+import { useThree } from '@react-three/fiber'
 import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
 import { Camera, Object3D, PerspectiveCamera, Vector2, WebGLRenderer } from 'three'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
-import { useThree } from '@react-three/fiber'
+import { EffectComposer } from 'three/examples/jsm/Addons.js'
 
+import { clock } from '../../../clock'
+import { clamp01 } from '../../../math/basics'
 import { DestroyableObject } from '../../../types'
 import { useEffects } from '../../react/hooks'
-import { clock } from '../../../clock'
 import { VertigoCamera } from '../../three/vertigo/VertigoCamera'
-import { clamp01 } from '../../../math/basics'
 
 const defaultViewportProps = {
   main: false,
@@ -33,7 +33,7 @@ class ViewportInstance {
   isMainViewport = false
   camera: Camera
   scene: Object3D = null!
-  composer: EffectComposer = null! 
+  composer: EffectComposer = null!
   constructor(props: ViewportProps) {
     this.props = props
     this.camera = new PerspectiveCamera()
@@ -178,13 +178,13 @@ export function ViewportProvider({
   const manager = useMemo(() => {
     return new ViewportManager()
   }, [])
-  
+
   const {
     gl: renderer,
     camera: mainCamera,
     scene: mainScene,
   } = useThree()
-  
+
   useEffects(function* () {
     renderer.autoClear = false
 
@@ -271,12 +271,12 @@ function ViewportComponent(props: ViewportProps) {
 }
 
 export type {
-  ViewportProps,
-  ViewportManager,
+  ViewportManager, ViewportProps
 }
 
 export {
   ViewportComponent as Viewport,
   ViewportInstance,
-  useViewportManager,
+  useViewportManager
 }
+

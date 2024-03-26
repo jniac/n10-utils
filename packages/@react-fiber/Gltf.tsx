@@ -1,8 +1,8 @@
-import { BufferGeometry, Group, Mesh, Texture, Vector3Tuple } from 'three'
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { GroupProps } from '@react-three/fiber'
-import { useEffects } from '../react/hooks'
+import { BufferGeometry, Group, Mesh, Texture, Vector3Tuple } from 'three'
+import { GLTF, GLTFLoader } from 'three/examples/jsm/Addons.js'
 import { lazy } from '../../lazy'
+import { useEffects } from '../react/hooks'
 
 const local = lazy(() => {
   const loader = new GLTFLoader()
@@ -11,7 +11,7 @@ const local = lazy(() => {
   const register = (url: string, gltf: GLTF) => {
     const bundle = map.get(url)
     if (bundle) {
-      bundle.count++ 
+      bundle.count++
     } else {
       const bundle = {
         gltf,
@@ -30,14 +30,14 @@ const local = lazy(() => {
             for (const value of Object.values(child.material)) {
               if (value instanceof Texture) {
                 value.dispose()
-              }                
+              }
             }
             child.geometry.dispose()
             child.material.dispose()
           }
         })
       }
-    }      
+    }
   }
   return {
     loader,
@@ -95,7 +95,7 @@ export function Gltf({
 
       if (normalizeQuaternion) {
         gltf.scene.traverse(child => {
-          child.quaternion.normalize()      
+          child.quaternion.normalize()
         })
       }
 
