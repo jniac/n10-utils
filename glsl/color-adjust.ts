@@ -5,7 +5,7 @@ float contrast(float mValue, float mScale, float mMidPoint) {
 }
 
 float contrast(float mValue, float mScale) {
-	return contrast(mValue,  mScale, .5);
+	return contrast(mValue, mScale, 0.5);
 }
 
 vec3 contrast(vec3 mValue, float mScale, float mMidPoint) {
@@ -13,7 +13,7 @@ vec3 contrast(vec3 mValue, float mScale, float mMidPoint) {
 }
 
 vec3 contrast(vec3 mValue, float mScale) {
-	return contrast(mValue, mScale, .5);
+	return contrast(mValue, mScale, 0.5);
 }
 
 float greyscaleFloat(vec3 color) {

@@ -31,12 +31,24 @@ export const round = (x: number, base = 1) => {
 	return Math.round(x / base) * base
 }
 
+export const roundPowerOfTwo = (x: number) => {
+	return Math.pow(2, Math.round(Math.log2(x)))
+}
+
 export const floor = (x: number, base = 1) => {
 	return Math.floor(x / base) * base
 }
 
+export const floorPowerOfTwo = (x: number) => {
+	return Math.pow(2, Math.floor(Math.log2(x)))
+}
+
 export const ceil = (x: number, base = 1) => {
 	return Math.ceil(x / base) * base
+}
+
+export const ceilPowerOfTwo = (x: number) => {
+	return Math.pow(2, Math.ceil(Math.log2(x)))
 }
 
 export const toff = (x: number) => {
