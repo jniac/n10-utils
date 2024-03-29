@@ -273,7 +273,7 @@ const appClock = (() => {
   return () => appClock ?? (appClock = new Clock({ updateDuration: Infinity }))
 })()
 
-function clockRequestUpdateOnUserInteraction(element: HTMLElement, updateDuration?: number): DestroyableObject {
+function clockRequestUpdateOnUserInteraction(element: HTMLElement, { updateDuration } = {} as { updateDuration?: number }): DestroyableObject {
   const onInteraction = () => {
     clock().requestUpdate(updateDuration)
   }
