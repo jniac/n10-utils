@@ -1,7 +1,7 @@
 import { DestroyableObject, StringFilter } from '../types'
 import { IdRegister } from './IdRegister'
 
-type Callback<P extends object = any> = {
+type Callback<P = any> = {
   (message: Message<P>): void
 }
 
@@ -46,22 +46,33 @@ function removeListener(id: number, listener: Listener): boolean {
   return false
 }
 /**
+ * ### 1. The easy way:
+ * 
  * Send a message:
  * ```
- * Message.send(myTarget, 'hello')
+ * Message.send(myTarget, { payload: 'hello' })
  * ```
  * Subscribe to a message:
  * ```
- * Message.on<string>(myTarget, m => {
- *   console.log(m.payload) // "hello" from the previous message
+ * Message.on<string>(myTarget, message => {
+ *   console.log(message.payload) // "hello" from the previous message
  * })
  * ```
- * Ok, but what is "myTarget" here?
+ * 
+ * ### 2. With a "type":
+ * ```
+ * Message.on<string>(myTarget, 'HELLO', message => {
+ *   console.log(message.type, message.payload)
+ * })
+ * Message.send(myTarget, 'HELLO', { payload: 'world' })
+ * ```
+ * 
+ * ### 3. Ok, but what is "myTarget" here?
  * # Absolutely everything!
  * It could be:
  * - a primitive (1, "FOO", Symbol() etc.)
  * - a object
- * - any combination of the two
+ * - any combination of the two (via an array, order-sensitive)
  * ```
  * const secretKey = Symbol('secret')
  * 
@@ -79,37 +90,49 @@ function removeListener(id: number, listener: Listener): boolean {
  *   }
  * })
  * 
- * Message.send<UserAuth>([window, 'USER_AUTH', secretKey],
- *   { ok: true, info: 'The user has logged in.' })
+ * Message.send<UserAuth>([window, 'USER_AUTH', secretKey], {
+ *   payload: { ok: true, info: 'The user has logged in.' },
+ * })
  * 
- * Message.send<UserAuth>([window, 'USER_AUTH', secretKey], 
- *   { ok: false, info: 'The user failed to log in.' })
+ * Message.send<UserAuth>([window, 'USER_AUTH', secretKey], {
+ *   payload: { ok: false, info: 'The user failed to log in.' },
+ * })
  * ```
  */
-class Message<P extends object = any> {
+class Message<P = any> {
   static send = send
   static on = on
-  private static count = 0
-  readonly id = Message.count++
+  static debug = { listenerMap, idRegister }
+
+  private static nextId = 0
+  readonly id = Message.nextId++
   readonly targetId: number
+
   target: any
   type: string
   payload?: P
+
+  debug = { currentListenerIndex: -1, listenerCount: 0 }
+
   constructor(target: any, type?: string, payload?: P) {
     this.targetId = idRegister.requireId(target)
     this.target = target
     this.type = type ?? 'message'
     this.payload = payload
 
-    for (const listener of listenerMap.get(this.targetId) ?? []) {
-      if (listener.match(this.type)) {
-        listener.callback(this)
-      }
+    const listeners = (listenerMap.get(this.targetId) ?? [])
+      .filter(listener => listener.match(this.type))
+
+    this.debug.listenerCount = listeners.length
+
+    for (const listener of listeners) {
+      this.debug.currentListenerIndex++
+      listener.callback(this)
     }
   }
 }
 
-function solveOnArgs<P extends object = any>(args: any[]): [target: any, filter: StringFilter, callback: Callback<P>] {
+function solveOnArgs<P = any>(args: any[]): [target: any, filter: StringFilter, callback: Callback<P>] {
   if (args.length === 2) {
     const [target, callback] = args
     return [target, '*', callback]
@@ -130,9 +153,9 @@ function solveOnArgs<P extends object = any>(args: any[]): [target: any, filter:
  * })
  * ```
  */
-function on<P extends object = any>(target: any, callback: (message: Message<P>) => void): DestroyableObject
-function on<P extends object = any>(target: any, filter: StringFilter, callback: (message: Message<P>) => void): DestroyableObject
-function on<P extends object = any>(...args: any): DestroyableObject {
+function on<P = any>(target: any, callback: (message: Message<P>) => void): DestroyableObject
+function on<P = any>(target: any, filter: StringFilter, callback: (message: Message<P>) => void): DestroyableObject
+function on<P = any>(...args: any): DestroyableObject {
   const [target, filter, callback] = solveOnArgs<P>(args)
   const targetId = idRegister.requireId(target)
   const listener = new Listener(filter, callback)
@@ -143,29 +166,31 @@ function on<P extends object = any>(...args: any): DestroyableObject {
   return { destroy }
 }
 
-function solveSendArgs<P extends object = any>(args: any[]): [target: any, type?: string, payload?: P] {
+function solveSendArgs<P = any>(args: any[]): [target: any, type?: string, payload?: P] {
   const [target, ...rest] = args
   if (rest.length === 2) {
-    return args as any
+    const [type, { payload }] = rest
+    return [target, type, payload]
   }
   if (rest.length === 1) {
     const [arg2] = rest
-    return typeof arg2 === 'string' ? [target, arg2] : [target, undefined, arg2]
+    return typeof arg2 === 'string' ? [target, arg2] : [target, undefined, arg2.payload]
   }
   return [target]
 }
 
-function send<P extends object = any>(target: any): Message<P>
-function send<P extends object = any>(target: any, type: string): Message<P>
-function send<P extends object = any>(target: any, payload: P): Message<P>
-function send<P extends object = any>(target: any, type: string, payload: P): Message<P>
-function send<P extends object = any>(...args: any[]): Message<P> {
+function send<P = any>(target: any): Message<P>
+function send<P = any>(target: any, type: string): Message<P>
+function send<P = any>(target: any, options: { payload: P }): Message<P>
+function send<P = any>(target: any, type: string, options: { payload: P }): Message<P>
+function send<P = any>(...args: any[]): Message<P> {
   const [target, type, payload] = solveSendArgs<P>(args)
   return new Message(target, type, payload)
 }
 
-export type {
-  Listener as MessageListener,
-  Callback as MessageCallback,
-}
 export { Message }
+export type {
+  Callback as MessageCallback,
+  Listener as MessageListener
+}
+

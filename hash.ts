@@ -82,7 +82,7 @@ export class Hash {
     const { _i32, _f64 } = this
     return numbers => {
       const max = numbers.length
-      for (let i = 0; i < max; i++) {        
+      for (let i = 0; i < max; i++) {
         _f64[1] = numbers[i]
         _i32[0] = shiftLeft(_i32[0]) ^ _i32[2]
         _i32[1] = shiftLeft(_i32[1]) ^ _i32[3]
@@ -96,7 +96,7 @@ export class Hash {
     return str => {
       str = String(str) // Force cast.
       const max = str.length
-      for (let i = 0; i < max; i++) {        
+      for (let i = 0; i < max; i++) {
         _f64[1] = str.charCodeAt(i)
         _i32[0] = shiftLeft(_i32[0]) ^ _i32[2]
         _i32[1] = shiftLeft(_i32[1]) ^ _i32[3]
