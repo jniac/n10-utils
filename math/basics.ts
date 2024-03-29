@@ -75,6 +75,19 @@ export const positiveModulo = (x: number, base: number) => {
 }
 
 /**
+ * Return an half-positive-half-negative-modulo, eg:
+ * ```
+ * middleModulo(190, 360) // -> -170
+ * middleModulo(-190, 360) // -> 170
+ * middleModulo(370, 360) // -> 10
+ * ```
+ */
+export const middleModulo = (x: number, modulo: number) => {
+	x %= modulo
+	return x < -modulo / 2 ? x + modulo : x > modulo / 2 ? x - modulo : x
+}
+
+/**
  * Clamps a value with progressive limit. Useful for user "drag" feedbacks.
  * https://www.desmos.com/calculator/vssiyqze6q
  */
