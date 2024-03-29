@@ -24,11 +24,13 @@ function isPrimitive(value: any): value is Primitive {
  * - a combination of the two (array)
  */
 export class IdRegister {
-  private _count = 0
+  private static _idHash = new Hash()
+  private static _arrayHash = new Hash()
+  private _count = 1
   private _map = new Map<Primitive, number>()
   private _weakMap = new WeakMap<object, number>()
   private _getId(): number {
-    return Hash.init().update(++this._count).getValue()
+    return IdRegister._idHash.init().update(++this._count).getValue()
   }
   private _registerObject(value: object): number {
     const id = this._getId()
@@ -47,11 +49,12 @@ export class IdRegister {
     return this._weakMap.get(value) ?? this._registerObject(value)
   }
   private _requireArrayId(value: any[]) {
-    Hash.init()
+    const { _arrayHash } = IdRegister
+    _arrayHash.init()
     for (const item of value.flat(16)) {
-      Hash.update(this.requireId(item))
+      _arrayHash.update(this.requireId(item))
     }
-    return Hash.getValue()
+    return _arrayHash.getValue()
   }
   requireId(value: any): number {
     return (isPrimitive(value)
