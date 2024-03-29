@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 
 import { Observable, ObservableNumber } from '../../../observables'
-import { useRender } from './render'
+import { useTriggerRender } from './misc'
 
 /**
  * Very similar in usage as `useState` but with an observable returned instead of
@@ -20,11 +20,11 @@ export function useObservable<T>(initialValue: Observable<T> | T | (() => Observ
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	const render = useRender()
+	const triggerRender = useTriggerRender()
 	useEffect(() => {
-		const { destroy } = observable.onChange(() => render())
+		const { destroy } = observable.onChange(() => triggerRender())
 		return destroy
-	}, [render, observable])
+	}, [triggerRender, observable])
 
 	return observable
 }
@@ -42,7 +42,7 @@ export function useObservableNumber(arg: ObservableNumber | number | (() => Obse
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, typeof arg !== 'function' ? [arg] : [])
 
-	const render = useRender()
+	const render = useTriggerRender()
 	useEffect(() => {
 		const { destroy } = observable.onChange(() => render())
 		return destroy

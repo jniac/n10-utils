@@ -55,7 +55,7 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
 		useDigestProps = true,
 	} = options
 
-	const deps = useDigestProps
+	const deps = useDigestProps && propsDeps.length > 0
 		? [digestProps(propsDeps)]
 		: propsDeps
 
@@ -111,5 +111,6 @@ function useLayoutEffects<T = undefined>(
 
 export {
 	useEffects,
-	useLayoutEffects,
+	useLayoutEffects
 }
+
