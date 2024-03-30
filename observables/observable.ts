@@ -66,7 +66,7 @@ let observableCount = 0
  * statusObs.value = 'ready'
  * ``` 
  */
-class Observable<T> {
+class Observable<T = any> {
   protected _observableId = observableCount++
   protected _value: T
   protected _valueOld: T
@@ -236,13 +236,14 @@ class Observable<T> {
 }
 
 export type {
-  ConstructorOptions,
-  SetValueOptions,
   Callback,
+  ConstructorOptions,
   DerivativeCallback,
   OnChangeOptions,
+  SetValueOptions
 }
 
 export {
-  Observable,
+  Observable
 }
+
