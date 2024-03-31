@@ -9,6 +9,8 @@ type ConstructorOptions<T> = Partial<{
   valueMapper: ValueMapper<T>
   /** A first optional listener (that could not be destroyed). */
   onChange: Callback<T>
+  /** A user data object to store any kind of data. */
+  userData: Record<string, any>
 }>
 
 type SetValueOptions = Partial<{
@@ -75,18 +77,23 @@ class Observable<T = any> {
   protected _hasChanged: boolean = false
   protected _delayed: boolean = false
 
+  userData: Record<string, any>
+
   constructor(intialValue: T, options?: ConstructorOptions<T>) {
     this._value = intialValue
     this._valueOld = intialValue
-    if (options) {
-      const {
-        valueMapper,
-        onChange,
-      } = options
-      this._valueMapper = valueMapper ?? null
-      if (onChange) {
-        this.onChange(onChange)
-      }
+
+    const {
+      valueMapper = null,
+      onChange,
+      userData = {},
+    } = options ?? {}
+
+    this._valueMapper = valueMapper
+    this.userData = userData
+
+    if (onChange) {
+      this.onChange(onChange)
     }
   }
 

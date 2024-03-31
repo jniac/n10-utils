@@ -1,20 +1,20 @@
-import { Observable } from './observable'
+import { ConstructorOptions, Observable } from './observable'
 
 /**
  * An observable that can switch between a set of values.
  * 
  * NOTE: still WIP
  */
-class ObservableSwitch<T extends V[] = any[], V = T[number]> extends Observable<V> {
-  private _options: T
+class ObservableSwitch<Choices extends Choice[] = any[], Choice = Choices[number]> extends Observable<Choice> {
+  private _choices: Choices
 
-  get options() {
-    return this._options
+  get choices() {
+    return this._choices
   }
 
-  constructor(options: T, initialValue: V = options[0]) {
-    super(initialValue)
-    this._options = options
+  constructor(choices: Choices, initialValue: Choice = choices[0], options?: ConstructorOptions<Choice>) {
+    super(initialValue, options)
+    this._choices = choices
   }
 }
 
