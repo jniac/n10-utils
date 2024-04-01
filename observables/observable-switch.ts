@@ -5,7 +5,7 @@ import { ConstructorOptions, Observable } from './observable'
  * 
  * NOTE: still WIP
  */
-class ObservableSwitch<Choices extends Choice[] = any[], Choice = Choices[number]> extends Observable<Choice> {
+class ObservableSwitch<Choices extends readonly Choice[] = any[], Choice = Choices[number]> extends Observable<Choice> {
   private _choices: Choices
 
   get choices() {
