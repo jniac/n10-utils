@@ -3,7 +3,7 @@ import { Destroyable } from '../../../types'
 import { digestProps } from './digestProps'
 
 type UseEffectsCallback<T> =
-	(value: T) => void | Generator<void | Destroyable, void, unknown>
+	(value: T) => void | Generator<void | Destroyable | Destroyable[], void, unknown>
 
 type UseEffectsReturn<T> = {
 	ref: MutableRefObject<T>
@@ -75,7 +75,11 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
 				const { value, done } = it.next()
 				if (done) break
 				if (value) {
-					destroyables.push(value as Destroyable)
+					if (Array.isArray(value)) {
+						destroyables.push(...value as Destroyable[])
+					} else {
+						destroyables.push(value as Destroyable)
+					}
 				}
 			}
 		}
