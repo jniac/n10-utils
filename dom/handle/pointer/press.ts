@@ -1,3 +1,4 @@
+import { PointerTarget } from './type'
 
 type PressInfo = { position: DOMPoint }
 
@@ -17,7 +18,7 @@ function hasPressCallback(params: Record<string, any>): boolean {
   return callbackNames.some(name => name in params)
 }
 
-function handlePress(element: HTMLElement, params: Params) {
+function handlePress(element: PointerTarget, params: Params) {
   const {
     onPressStart,
     onPressStop,
@@ -118,10 +119,11 @@ function handlePress(element: HTMLElement, params: Params) {
 
 export type {
   Params as HandlePressParams,
-  PressInfo,
+  PressInfo
 }
 
 export {
   handlePress,
-  hasPressCallback,
+  hasPressCallback
 }
+

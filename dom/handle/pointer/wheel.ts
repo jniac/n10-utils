@@ -1,3 +1,4 @@
+import { PointerTarget } from './type'
 
 const wheelPhases = [
   'start',
@@ -47,7 +48,7 @@ function getDeltaScalar(deltaMode: number): number {
   }
 }
 
-function handleWheel(element: HTMLElement, params: Params): () => void {
+function handleWheel(element: PointerTarget, params: Params): () => void {
   const {
     preventDefault,
     onWheel,
@@ -117,10 +118,10 @@ function handleWheel(element: HTMLElement, params: Params): () => void {
 
 export type {
   Params as HandleWheelParams,
-  WheelInfo,
+  WheelInfo
 }
 
 export {
-  hasWheelCallback,
-  handleWheel,
+  handleWheel, hasWheelCallback
 }
+

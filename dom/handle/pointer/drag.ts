@@ -1,4 +1,4 @@
-import { PointerButton } from './type'
+import { PointerButton, PointerTarget } from './type'
 
 type Direction = 'horizontal' | 'vertical'
 
@@ -39,7 +39,7 @@ function hasDragCallback(params: Record<string, any>): boolean {
   return callbackNames.some(name => name in params)
 }
 
-function handleDrag(element: HTMLElement, params: Params): () => void {
+function handleDrag(element: PointerTarget, params: Params): () => void {
   const {
     dragDistanceThreshold,
     dragPreventDefault,
@@ -268,11 +268,11 @@ function handleDrag(element: HTMLElement, params: Params): () => void {
 }
 
 export type {
-  Params as HandleDragParams,
-  DragInfo,
+  DragInfo, Params as HandleDragParams
 }
 
 export {
   handleDrag,
-  hasDragCallback,
+  hasDragCallback
 }
+

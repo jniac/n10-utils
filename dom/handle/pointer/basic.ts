@@ -1,3 +1,4 @@
+import { PointerTarget } from './type'
 
 type BasicPointerInfo = {
   entered: boolean
@@ -44,7 +45,7 @@ function hasBasicPointerCallback(params: Record<string, any>): boolean {
  *   so this requires to use the "mousedown" & "touchstart" and not "pointer" 
  *   since ("pointer" are fired first, "touchstart" will necesseray be late).
  */
-function handleBasicPointer(element: HTMLElement, params: Params): () => void {
+function handleBasicPointer(element: PointerTarget, params: Params): () => void {
   const info: BasicPointerInfo = {
     pressed: false,
     entered: false,
@@ -86,7 +87,7 @@ function handleBasicPointer(element: HTMLElement, params: Params): () => void {
   const onMouseUp = (event: MouseEvent) => {
     updateUp(event.clientX, event.clientY)
   }
-  
+
   const onMouseMove = (event: MouseEvent) => {
     update(event.clientX, event.clientY)
   }
@@ -129,7 +130,7 @@ function handleBasicPointer(element: HTMLElement, params: Params): () => void {
       updateDown(event.touches[0].clientX, event.touches[0].clientY)
     }
   }
-  
+
   const onTouchEnd = (event: TouchEvent) => {
     if (event.touches.length === 0) { // ignore multi-touch
       updateUp(event.changedTouches[0].clientX, event.changedTouches[0].clientY)
@@ -152,14 +153,14 @@ function handleBasicPointer(element: HTMLElement, params: Params): () => void {
   element.addEventListener('touchstart', onTouchStart)
   element.addEventListener('touchend', onTouchEnd)
   element.addEventListener('touchmove', onTouchMove)
-  
+
   return () => {
     element.removeEventListener('mouseover', onMouseOver)
     element.removeEventListener('mouseout', onMouseOut)
     element.removeEventListener('mousedown', onMouseDown)
     element.removeEventListener('mouseup', onMouseUp)
     element.removeEventListener('mousemove', onMouseMove)
-    
+
     element.removeEventListener('touchstart', onTouchStart)
     element.removeEventListener('touchend', onTouchEnd)
     element.removeEventListener('touchmove', onTouchMove)
@@ -169,11 +170,10 @@ function handleBasicPointer(element: HTMLElement, params: Params): () => void {
 }
 
 export type {
-  Params as HandleBasicPointerParams,
-  BasicPointerInfo,
+  BasicPointerInfo, Params as HandleBasicPointerParams
 }
 
 export {
   handleBasicPointer,
-  hasBasicPointerCallback,
+  hasBasicPointerCallback
 }

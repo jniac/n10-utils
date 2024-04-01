@@ -1,3 +1,4 @@
+import { PointerTarget } from './type'
 
 type FocusInfo = {
 }
@@ -17,10 +18,10 @@ type CallbackName = (typeof callbackNames)[number]
 type Params = Partial<typeof defaultParams & Record<CallbackName, Callback>>
 
 function hasFocusCallback(params: Record<string, any>): boolean {
-	return callbackNames.some(name => name in params)
+  return callbackNames.some(name => name in params)
 }
 
-function handleFocus(element: HTMLElement, params: Params): () => void {
+function handleFocus(element: PointerTarget, params: Params): () => void {
   const {
     onFocusEnter,
     onFocusLeave,
@@ -45,11 +46,10 @@ function handleFocus(element: HTMLElement, params: Params): () => void {
 }
 
 export type {
-  Params as HandleFocusParams,
-  FocusInfo,
+  FocusInfo, Params as HandleFocusParams
 }
 
 export {
-  hasFocusCallback,
-  handleFocus,
+  handleFocus, hasFocusCallback
 }
+

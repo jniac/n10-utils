@@ -1,10 +1,36 @@
+import { PointerTarget } from './type'
 
-type TapInfo = {
-  timestamp: number
-  downTarget: HTMLElement
-  downPosition: DOMPoint
-  clientX: number
-  clientY: number
+class TapInfo {
+  constructor(
+    readonly timestamp: number,
+    readonly tapTarget: HTMLElement | SVGElement,
+    readonly downTarget: HTMLElement | SVGElement,
+    readonly downPosition: DOMPoint,
+    readonly orignalDownEvent: PointerEvent,
+  ) { }
+
+  get localDownPosition(): DOMPoint {
+    const rect = this.tapTarget.getBoundingClientRect()
+    const { x, y } = this.downPosition
+    return new DOMPoint(
+      x - rect.x,
+      y - rect.y,
+    )
+  }
+
+  get relativeLocalDownPosition(): DOMPoint {
+    const rect = this.tapTarget.getBoundingClientRect()
+    const { x, y } = this.downPosition
+    return new DOMPoint(
+      (x - rect.x) / rect.width,
+      (y - rect.y) / rect.height,
+    )
+  }
+
+  // Still here for compatibility.
+  get clientX() { return this.orignalDownEvent.clientX }
+  get clientY() { return this.orignalDownEvent.clientX }
+
 }
 
 type Callback = (info: TapInfo) => void
@@ -25,31 +51,26 @@ type CallbackName = (typeof callbackNames)[number]
 type Params = Partial<typeof defaultParams & Record<CallbackName, Callback>>
 
 function hasTapCallback(params: Record<string, any>): boolean {
-	return callbackNames.some(name => name in params)
+  return callbackNames.some(name => name in params)
 }
 
-function handleTap(element: HTMLElement, params: Params): () => void {
+function handleTap(element: PointerTarget, params: Params): () => void {
   const {
     maxDistance,
     maxDuration,
     onTap,
   } = { ...defaultParams, ...params }
 
-  const info: TapInfo = {
-    timestamp: -1,
-    downTarget: null!,
-    downPosition: new DOMPoint(),
-    clientX: 0,
-    clientY: 0,
-  }
+  let info: TapInfo = null!
 
   const onPointerDown = (event: PointerEvent) => {
-    info.timestamp = Date.now()
-    info.clientX = event.clientX
-    info.clientY = event.clientY
-    info.downTarget = event.target as HTMLElement
-    info.downPosition.x = event.clientX
-    info.downPosition.y = event.clientY
+    info = new TapInfo(
+      Date.now(),
+      element,
+      event.target as HTMLElement,
+      new DOMPoint(event.clientX, event.clientY),
+      event,
+    )
     window.addEventListener('pointerup', onPointerUp)
   }
   const onPointerUp = (event: PointerEvent) => {
@@ -73,10 +94,10 @@ function handleTap(element: HTMLElement, params: Params): () => void {
 
 export type {
   Params as HandleTapParams,
-  TapInfo,
+  TapInfo
 }
 
 export {
-  hasTapCallback,
-  handleTap,
+  handleTap, hasTapCallback
 }
+
