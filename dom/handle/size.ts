@@ -14,9 +14,15 @@ const init = lazy(() => {
   }
 })
 
-type Info<T> = {
-  element: T
-  size: DOMPoint
+class Info<T> {
+  constructor(
+    public readonly element: T,
+    public readonly size: DOMPoint,
+  ) { }
+
+  get aspect() {
+    return this.size.x / this.size.y
+  }
 }
 
 type Callback<T> = (info: Info<T>) => void
@@ -31,7 +37,7 @@ function solveParams<T>(params: Params<T>): Required<Options<T>> {
   if (typeof params === 'function') {
     return { onSize: params }
   }
-  const { onSize = () => {} } = params ?? {}
+  const { onSize = () => { } } = params ?? {}
   return { onSize }
 }
 
@@ -39,7 +45,7 @@ function solveParams<T>(params: Params<T>): Required<Options<T>> {
  * One common way to handle the size of dom elements (and the window).
  */
 export function handleSize<T extends (HTMLElement | SVGElement | Window)>(
-  element: T, 
+  element: T,
   params?: Params<T>,
 ): DestroyableObject {
   const { onSize } = solveParams(params)
@@ -48,7 +54,7 @@ export function handleSize<T extends (HTMLElement | SVGElement | Window)>(
     const _onResize = () => {
       size.x = window.innerWidth
       size.y = window.innerHeight
-      onSize({ element, size })
+      onSize(new Info(element, size))
     }
     element.addEventListener('resize', _onResize)
     _onResize()
@@ -65,7 +71,7 @@ export function handleSize<T extends (HTMLElement | SVGElement | Window)>(
     resizeObserverMap.set(element, (entry: ResizeObserverEntry) => {
       size.x = entry.contentRect.width
       size.y = entry.contentRect.height
-      onSize({ element, size })
+      onSize(new Info(element, size))
     })
     const destroy = () => resizeObserver.unobserve(element)
     return { destroy }
