@@ -6,6 +6,7 @@ export type {
 } from './observable'
 
 export { Observable } from './observable'
+export { ObservableFlags } from './observable-flags'
 export { ObservableNumber } from './observable-number'
 export { ObservableRecord } from './observable-record'
 export { ObservableSwitch } from './observable-switch'
