@@ -29,7 +29,9 @@ export const midInverse = (x: number, m: number): number => {
  * - `100.689...` for `t = 0.1`
  * - `102.5` for `t = 0.25`
  * 
- * etc
+ * etc.
+ * 
+ * For reverse operation see {@link inverseInterpolateWithMidPoint}.
  */
 export const interpolateWithMidPoint = (min: number, max: number, midValue: number, t: number) => {
   const d = max - min
