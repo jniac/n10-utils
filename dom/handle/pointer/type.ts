@@ -11,4 +11,7 @@ export enum PointerButton {
   DoubleTouch = 1 << 5,
 }
 
-export type PointerTarget = HTMLElement | SVGElement | any
+export type PointerTarget =
+  | HTMLElement
+  | SVGElement
+  | any // any because of NodeList & compilation subtleties
