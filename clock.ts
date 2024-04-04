@@ -9,8 +9,11 @@ type ClockState = Readonly<{
   frame: number
   deltaTime: number
   deltaTimeOld: number
+  unscaledDeltaTime: number
+  unscaledDeltaTimeOld: number
   windowDeltaTime: number
   maxDeltaTime: number
+  paused: boolean
 
   /**
    * Duration of the "update" phase (in seconds). During this interval, the clock 
@@ -103,7 +106,10 @@ class Clock implements DestroyableObject {
     maxDeltaTime: .1,
     deltaTime: 0,
     deltaTimeOld: 0,
+    unscaledDeltaTime: 0,
+    unscaledDeltaTimeOld: 0,
     windowDeltaTime: 0,
+    paused: false,
 
     updateDuration: 3,
     updateFadeDuration: 1,
@@ -126,21 +132,32 @@ class Clock implements DestroyableObject {
         this._requestAnimationFrame = false
         updateLastRequest = windowTime
       }
-      const updateTime1 = updateLastRequest + updateDuration
-      const updateTime2 = updateTime1 + updateFadeDuration
-      const updateTimeScale = easeInOut2(1 - inverseLerp(updateTime1, updateTime2, windowTime))
+
+      const getUpdateTimeScale = () => {
+        if (Number.isFinite(updateDuration)) {
+          const updateTime1 = updateLastRequest + updateDuration
+          const updateTime2 = updateTime1 + updateFadeDuration
+          return easeInOut2(1 - inverseLerp(updateTime1, updateTime2, windowTime))
+        }
+        return 1
+      }
+      const updateTimeScale = getUpdateTimeScale()
 
       // Time handling:
       const { timeScale, maxDeltaTime } = this
       const deltaTimeOld = this._state.deltaTime
-      const deltaTime = Math.min(maxDeltaTime, windowDeltaTime) * timeScale * updateTimeScale
+      const unscaledDeltaTime = Math.min(maxDeltaTime, windowDeltaTime) * timeScale
+      const deltaTime = unscaledDeltaTime * updateTimeScale
       const timeOld = this._state.time
       const time = timeOld + deltaTime
       const state = Object.freeze({
         timeScale,
         deltaTimeOld,
         deltaTime,
+        unscaledDeltaTimeOld: this._state.unscaledDeltaTime,
+        unscaledDeltaTime,
         windowDeltaTime,
+        paused: updateTimeScale === 0,
         time,
         timeOld,
         maxDeltaTime,
@@ -200,22 +217,24 @@ class Clock implements DestroyableObject {
     return { destroy }
   }
 
-  requestUpdate(updateDuration?: number) {
+  requestUpdate(updateDuration?: number): this {
     if (updateDuration !== undefined) {
       this.setUpdateDuration(updateDuration)
     }
     this._requestAnimationFrame = true
+    return this
   }
 
   /**
    * Set the "update" duration (in seconds). During this interval, the clock will
    * update constantly.
    */
-  setUpdateDuration(value: number) {
+  setUpdateDuration(value: number): this {
     this._state = Object.freeze({
       ...this._state,
       updateDuration: Math.max(0, value),
     })
+    return this
   }
 
   /**
