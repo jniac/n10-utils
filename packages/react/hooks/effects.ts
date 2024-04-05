@@ -2,119 +2,153 @@ import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, 
 import { Destroyable } from '../../../types'
 import { digestProps } from './digestProps'
 
+type Yieldable = void | null | Destroyable | Destroyable[]
+
 type UseEffectsCallback<T> =
-	(value: T) => void | Generator<void | Destroyable | Destroyable[], void, unknown>
+  (value: T) => void | Generator<Yieldable, void, unknown> | AsyncGenerator<Yieldable, void, unknown>
 
 type UseEffectsReturn<T> = {
-	ref: MutableRefObject<T>
+  ref: MutableRefObject<T>
 }
 
 type UseEffectsOptions = Partial<{
-	/**
-	 * Choose the moment to initialize the effects. Defaults to 'effect'.
-	 * 
-	 * Reminder:
-	 * - 'memo': runs before the first render.
-	 * - 'effect': runs just after the first render and after the browser has painted.
-	 * - 'layoutEffect': runs just after the first render but before the browser has painted.
-	 */
-	moment: 'effect' | 'layoutEffect' | 'memo'
-	/**
-	 * Use a "smart digest props" heuristic for deps hashing.
-	 * 
-	 * Defaults to true.
-	 */
-	useDigestProps: boolean
+  /**
+   * Choose the moment to initialize the effects. Defaults to 'effect'.
+   * 
+   * Reminder:
+   * - 'memo': runs before the first render.
+   * - 'effect': runs just after the first render and after the browser has painted.
+   * - 'layoutEffect': runs just after the first render but before the browser has painted.
+   */
+  moment: 'effect' | 'layoutEffect' | 'memo'
+  /**
+   * Use a "smart digest props" heuristic for deps hashing.
+   * 
+   * Defaults to true.
+   */
+  useDigestProps: boolean
 }>
 
 function parseArgs<T>(args: any[]): [UseEffectsCallback<T>, DependencyList | 'always', UseEffectsOptions] {
-	const [arg0, arg1, arg2] = args
-	if (typeof arg0 === 'object') {
-		return [arg1, arg2, arg0]
-	}
-	return [arg0, arg1, arg2 ?? {}]
+  const [arg0, arg1, arg2] = args
+  if (typeof arg0 === 'object') {
+    return [arg1, arg2, arg0]
+  }
+  return [arg0, arg1, arg2 ?? {}]
 }
 
 function useEffects<T = undefined>(
-	options: UseEffectsOptions,
-	callback: UseEffectsCallback<T>,
-	deps: DependencyList | 'always',
+  options: UseEffectsOptions,
+  callback: UseEffectsCallback<T>,
+  deps: DependencyList | 'always',
 ): UseEffectsReturn<T>
 
 function useEffects<T = undefined>(
-	callback: UseEffectsCallback<T>,
-	deps: DependencyList | 'always',
-	options?: UseEffectsOptions,
+  callback: UseEffectsCallback<T>,
+  deps: DependencyList | 'always',
+  options?: UseEffectsOptions,
 ): UseEffectsReturn<T>
 
 function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
-	const [callback, propsDeps, options] = parseArgs<T>(args)
+  const [callback, propsDeps, options] = parseArgs<T>(args)
 
-	const {
-		moment = 'effect',
-		useDigestProps = true,
-	} = options
+  const {
+    moment = 'effect',
+    useDigestProps = true,
+  } = options
 
-	const deps = useDigestProps && propsDeps.length > 0
-		? [digestProps(propsDeps)]
-		: propsDeps
+  const deps = useDigestProps && propsDeps.length > 0
+    ? [digestProps(propsDeps)]
+    : propsDeps
 
-	const ref = useRef<T>(null) as MutableRefObject<T>
-	const destroyables = useMemo((): Destroyable[] => [], [])
+  const ref = useRef<T>(null) as MutableRefObject<T>
 
-	// Mount:
-	const use = {
-		'effect': useEffect,
-		'layoutEffect': useLayoutEffect,
-		'memo': useMemo,
-	}[moment]
-	use(() => {
-		const it = callback(ref.current!)
-		if (it) {
-			while (true) {
-				const { value, done } = it.next()
-				if (done) break
-				if (value) {
-					if (Array.isArray(value)) {
-						destroyables.push(...value as Destroyable[])
-					} else {
-						destroyables.push(value as Destroyable)
-					}
-				}
-			}
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, deps === 'always' ? undefined : deps)
+  const { state, destroyables } = useMemo(() => {
+    return {
+      state: { mounted: true },
+      destroyables: <Destroyable[]>[],
+    }
+  }, [])
 
-	// Unmount:
-	useEffect(() => {
-		return () => {
-			for (const destroyable of destroyables) {
-				if (destroyable) {
-					if (typeof destroyable === 'object') {
-						destroyable.destroy()
-					} else {
-						destroyable()
-					}
-				}
-			}
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, deps === 'always' ? undefined : deps)
+  useEffect(() => {
+    // NOTE: Because of react strict mode, where a same component can be mounted 
+    // twice, but sharing the same references through hooks (useMemo, useRef, etc),
+    // we need to set "mounted" back to true, otherwise the first unmount will 
+    // affect the second component. 
+    state.mounted = true
+    return () => {
+      state.mounted = false
+    }
+  }, [])
 
-	return { ref }
+  // Mount:
+  const use = {
+    'effect': useEffect,
+    'layoutEffect': useLayoutEffect,
+    'memo': useMemo,
+  }[moment]
+  use(() => {
+    const it = callback(ref.current)
+    if (it) {
+      const handleResult = (result: IteratorResult<Yieldable, void>) => {
+        const { value, done } = result
+        if (state.mounted && done === false) {
+          if (value) {
+            if (Array.isArray(value)) {
+              destroyables.push(...value as Destroyable[])
+            } else {
+              destroyables.push(value as Destroyable)
+            }
+          }
+          nextResult()
+        }
+      }
+
+      const nextResult = () => {
+        const result = it.next()
+        if (result instanceof Promise) {
+          result.then(awaitedResult => {
+            handleResult(awaitedResult)
+          })
+        } else {
+          handleResult(result)
+        }
+      }
+
+      nextResult()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps === 'always' ? undefined : deps)
+
+  // Unmount:
+  useEffect(() => {
+    return () => {
+      for (const destroyable of destroyables) {
+        if (destroyable) {
+          if (typeof destroyable === 'object') {
+            destroyable.destroy()
+          } else {
+            destroyable()
+          }
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps === 'always' ? undefined : deps)
+
+  return { ref }
 }
 
 function useLayoutEffects<T = undefined>(
-	callback: (value: T) => Generator<void | Destroyable, void, unknown>,
-	deps: DependencyList | 'always',
-	options: Omit<UseEffectsOptions, 'moment'>
+  callback: (value: T) => Generator<void | Destroyable, void, unknown>,
+  deps: DependencyList | 'always',
+  options: Omit<UseEffectsOptions, 'moment'>
 ): UseEffectsReturn<T> {
-	return useEffects(callback, deps, { ...options, moment: 'layoutEffect' })
+  return useEffects(callback, deps, { ...options, moment: 'layoutEffect' })
 }
 
 export {
-	useEffects,
-	useLayoutEffects
+  useEffects,
+  useLayoutEffects
 }
 
