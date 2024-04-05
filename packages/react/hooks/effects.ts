@@ -2,10 +2,10 @@ import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, 
 import { Destroyable } from '../../../types'
 import { digestProps } from './digestProps'
 
-type Yieldable = void | null | Destroyable | Destroyable[]
+type UseEffectsDestroyable = void | null | Destroyable | Destroyable[]
 
-type UseEffectsCallback<T> =
-  (value: T) => void | Generator<Yieldable, void, unknown> | AsyncGenerator<Yieldable, void, unknown>
+type UseEffectsCallback<T, V = void> =
+  (value: T) => void | Generator<UseEffectsDestroyable | V, void, unknown> | AsyncGenerator<UseEffectsDestroyable | V, void, unknown>
 
 type UseEffectsReturn<T> = {
   ref: MutableRefObject<T>
@@ -90,7 +90,7 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
   use(() => {
     const it = callback(ref.current)
     if (it) {
-      const handleResult = (result: IteratorResult<Yieldable, void>) => {
+      const handleResult = (result: IteratorResult<UseEffectsDestroyable, void>) => {
         const { value, done } = result
         if (state.mounted && done === false) {
           if (value) {
@@ -145,6 +145,13 @@ function useLayoutEffects<T = undefined>(
   options: Omit<UseEffectsOptions, 'moment'>
 ): UseEffectsReturn<T> {
   return useEffects(callback, deps, { ...options, moment: 'layoutEffect' })
+}
+
+export type {
+  UseEffectsCallback,
+  UseEffectsOptions,
+  UseEffectsReturn,
+  UseEffectsDestroyable as UseEffectsYieldable
 }
 
 export {
