@@ -17,6 +17,7 @@ const defaultParams = {
   dragDistanceThreshold: 10,
   dragPreventDefault: false,
   dragButton: PointerButton.Main,
+  dragEaseFactor: 1,
 }
 
 const callbackNames = [
@@ -44,6 +45,7 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
     dragDistanceThreshold,
     dragPreventDefault,
     dragButton,
+    dragEaseFactor,
     onDragStart,
     onDragStop,
     onDrag,
@@ -124,8 +126,8 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
   const updatePosition = (x: number, y: number) => {
     positionOld.x = position.x
     positionOld.y = position.y
-    position.x += (x - position.x) * .2
-    position.y += (y - position.y) * .2
+    position.x += (x - position.x) * dragEaseFactor
+    position.y += (y - position.y) * dragEaseFactor
     delta.x = position.x - positionOld.x
     delta.y = position.y - positionOld.y
     movement.x = position.x - startPosition.x
