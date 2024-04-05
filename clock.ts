@@ -318,12 +318,15 @@ function clockRequestUpdateOnUserInteraction(element: HTMLElement, { updateDurat
   return { destroy }
 }
 
+const onTick = clock().onTick.bind(clock())
+
 export type { ClockState }
 
 export {
   Clock,
   appClock,
   clock,
-  clockRequestUpdateOnUserInteraction
+  clockRequestUpdateOnUserInteraction,
+  onTick
 }
 
