@@ -1,4 +1,4 @@
-import { ForwardedRef } from 'react'
+import { ForwardedRef, MutableRefObject, Ref } from 'react'
 
 /**
  * Simplifies the declaration of className.
@@ -11,11 +11,11 @@ export function className(...args: any[]) {
 }
 
 /**
- * Simplifies the binding of refs when using [forwardRef](https://react.dev/reference/react/forwardRef).
- *
- * Usage:
+ * Simplifies the binding of refs.
+ * 
+ * Usage with [forwardRef](https://react.dev/reference/react/forwardRef):
  * ```ts
- * const CartierLoader = forwardRef<Ref, Props>(function (props, outerRef) {
+ * const MyComponent = forwardRef<Ref, Props>(function (props, outerRef) {
  *   // ...
  *   const innerRef = useRef<Ref>(null);
  *   useEffect(() => {
@@ -27,12 +27,12 @@ export function className(...args: any[]) {
  * });
  * ```
  */
-export function bindRef<T>(ref: ForwardedRef<T> | null | undefined, value: T) {
+export function bindRef<T>(ref: ForwardedRef<T> | Ref<T> | null | undefined, value: T) {
 	if (ref) {
 		if (typeof ref === 'function') {
 			ref(value)
 		} else {
-			ref.current = value
+			(ref as MutableRefObject<T>).current = value
 		}
 	}
 }
