@@ -35,35 +35,72 @@ type ClockState = Readonly<{
   updateLastRequest: number
 }>
 
-type Listener = {
-  callback: (clock: ClockState) => void
+type ClockCallback = (state: ClockState) => void
+
+let listenerNextId = 0
+type Listener = Readonly<{
+  id: number
+  callback: ClockCallback
   order: number
-}
+}>
 
 class Listeners {
-  private _dirty = true
-  array: Listener[] = []
-  add(order: number, callback: (clock: ClockState) => void): void {
-    this.array.push({ order, callback })
-    this._dirty = true
+  private _sortDirty = true
+  private _countDirty = true
+  private readonly _listeners: Listener[] = []
+  private _loopListeners: Listener[] = []
+  add(order: number, callback: ClockCallback): Listener {
+    // NOTE: Optimization: we don't need to sort the listeners if the new listener
+    // can be appended at the end of the list.
+    // NOTE: If the sortDirty flag is already set, it means that the listeners are
+    // already not sorted, so we don't need to check the order. 
+    // So we have to use the "or assign" operator (||=) here.
+    this._sortDirty ||= this._listeners.length > 0
+      && order < this._listeners[this._listeners.length - 1].order
+
+    this._countDirty = true
+
+    const id = listenerNextId++
+    const listener = { id, order, callback }
+    this._listeners.push(listener)
+    return listener
   }
-  remove(callback: (clock: ClockState) => void): boolean {
-    const index = this.array.findIndex(listener => listener.callback === callback)
+  remove(callback: ClockCallback): boolean {
+    const index = this._listeners.findIndex(listener => listener.callback === callback)
     if (index !== - 1) {
-      this.array.splice(index, 1)
+      this._listeners.splice(index, 1)
+      this._countDirty = true
+      return true
+    } else {
+      return false
+    }
+  }
+  removeById(id: number): boolean {
+    const index = this._listeners.findIndex(listener => listener.id === id)
+    if (index !== - 1) {
+      this._listeners.splice(index, 1)
+      this._countDirty = true
       return true
     } else {
       return false
     }
   }
   call(state: ClockState) {
-    if (this._dirty) {
-      this.array.sort((A, B) => A.order - B.order)
-      this._dirty = false
+    if (this._sortDirty) {
+      this._listeners.sort((A, B) => A.order - B.order)
+      this._sortDirty = false
     }
-    for (const { callback } of this.array) {
+    if (this._countDirty) {
+      this._loopListeners = [...this._listeners]
+      this._countDirty = false
+    }
+    for (const { callback } of this._loopListeners) {
       callback(state)
     }
+  }
+  clear() {
+    this._listeners.length = 0
+    this._countDirty = true
   }
 }
 
@@ -89,6 +126,10 @@ class Clock implements DestroyableObject {
   timeScale = 1
   maxDeltaTime = .1
   frame = 0
+
+  suspended = false
+  suspend() { this.suspended = true }
+  resume() { this.suspended = false }
 
   destroy: () => void
 
@@ -126,6 +167,10 @@ class Clock implements DestroyableObject {
     }
 
     const update = (windowDeltaTime: number) => {
+      if (this.suspended) {
+        return
+      }
+
       // Auto-pause handling:
       let { updateDuration, updateFadeDuration, updateLastRequest } = this._state
       if (this._requestAnimationFrame) {
@@ -203,13 +248,13 @@ class Clock implements DestroyableObject {
     return { get value() { return getTime() } }
   }
 
-  onTick(callback: (clock: ClockState) => void): DestroyableObject
-  onTick(order: number, callback: (clock: ClockState) => void): DestroyableObject
+  onTick(callback: ClockCallback): DestroyableObject
+  onTick(order: number, callback: ClockCallback): DestroyableObject
   onTick(...args: any[]): DestroyableObject {
     if (args.length === 1) {
       return this.onTick(0, args[0])
     }
-    const [order, callback] = args as [number, (clock: ClockState) => void]
+    const [order, callback] = args as [number, ClockCallback]
     this._updateListeners.add(order, callback)
     const destroy = () => {
       this._updateListeners.remove(callback)
@@ -223,6 +268,33 @@ class Clock implements DestroyableObject {
     }
     this._requestAnimationFrame = true
     return this
+  }
+
+  /**
+   * Mock of window.requestAnimationFrame, with an order option.
+   * 
+   * It's intended to be used in the same way as window.requestAnimationFrame, 
+   * and helps to use the clock instead of window.requestAnimationFrame.
+   * 
+   * Since an order option is available, it's possible to insert the callback
+   * to a specific position among the other callbacks.
+   */
+  requestAnimationFrame(callback: (ms: number) => void, { order = 0 } = {}): number {
+    this.requestUpdate() // Request an update to ensure the callback is called.
+    const listener = this._updateListeners.add(order, state => {
+      this._updateListeners.removeById(listener.id)
+      callback(state.time * 1e3)
+    })
+    return listener.id
+  }
+
+  /**
+   * Mock of window.cancelAnimationFrame that works with the clock.
+   * 
+   * See {@link Clock.requestAnimationFrame}
+   */
+  cancelAnimationFrame(id: number): boolean {
+    return this._updateListeners.removeById(id)
   }
 
   /**
