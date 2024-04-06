@@ -1,3 +1,4 @@
+import { clock } from '@/some-utilz/clock'
 import { PointerButton, PointerTarget } from './type'
 
 type Direction = 'horizontal' | 'vertical'
@@ -18,6 +19,15 @@ const defaultParams = {
   dragPreventDefault: false,
   dragButton: PointerButton.Main,
   dragEaseFactor: 1,
+
+  /**
+   * The order in which the drag callback is called. 
+   * 
+   * If undefined, the drag callback is called by using requestAnimationFrame.
+   * Otherwise, the drag callback is called by using clock().requestAnimationFrame 
+   * with the given order.
+   */
+  dragTickOrder: <number | undefined>undefined,
 }
 
 const callbackNames = [
@@ -46,6 +56,7 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
     dragPreventDefault,
     dragButton,
     dragEaseFactor,
+    dragTickOrder,
     onDragStart,
     onDragStop,
     onDrag,
@@ -76,8 +87,26 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
     deltaTime: 1 / 60,
   }
 
+  /**
+   * Using a delegate function to request the next frame, since the order has to
+   * be handled differently for the drag tick order.
+   */
+  const requestDragFrame = () => {
+    frameID = dragTickOrder === undefined
+      ? window.requestAnimationFrame(dragFrame)
+      : clock().requestAnimationFrame(dragFrame, { order: dragTickOrder })
+  }
+
+  const cancelDragFrame = () => {
+    if (dragTickOrder === undefined) {
+      window.cancelAnimationFrame(frameID)
+    } else {
+      clock().cancelAnimationFrame(frameID)
+    }
+  }
+
   const frameStart = (x: number, y: number) => {
-    frameID = window.requestAnimationFrame(dragFrame)
+    requestDragFrame()
     down = true
     startPosition.x = x
     startPosition.y = y
@@ -160,7 +189,7 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
     msOld = ms
 
     if (down) {
-      frameID = window.requestAnimationFrame(dragFrame)
+      requestDragFrame()
 
       const dx = startPosition.x - pointer.x
       const dy = startPosition.y - pointer.y
@@ -213,7 +242,7 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
         firstTouch = touch
         window.addEventListener('touchmove', onTouchMove, { passive: false })
         window.addEventListener('touchend', onTouchEnd)
-        frameID = window.requestAnimationFrame(dragFrame)
+        requestDragFrame()
         down = true
         delta.x = 0
         delta.y = 0
@@ -265,7 +294,7 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
     window.removeEventListener('touchmove', onTouchMove)
     window.removeEventListener('touchend', onTouchEnd)
 
-    window.cancelAnimationFrame(frameID)
+    cancelDragFrame()
   }
 }
 
