@@ -35,7 +35,7 @@ type ClockState = Readonly<{
   updateLastRequest: number
 }>
 
-type ClockCallback = (state: ClockState) => void
+type ClockCallback = (state: ClockState) => void | 'stop'
 
 let listenerNextId = 0
 type Listener = Readonly<{
@@ -95,7 +95,10 @@ class Listeners {
       this._countDirty = false
     }
     for (const { callback } of this._loopListeners) {
-      callback(state)
+      const result = callback(state)
+      if (result === 'stop') {
+        this.remove(callback)
+      }
     }
   }
   clear() {
