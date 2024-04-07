@@ -37,6 +37,8 @@ function parseArgs<T>(args: any[]): [UseEffectsCallback<T>, DependencyList | 'al
   return [arg0, arg1, arg2 ?? {}]
 }
 
+let nextId = 0
+
 function useEffects<T = undefined>(
   options: UseEffectsOptions,
   callback: UseEffectsCallback<T>,
@@ -65,19 +67,8 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
 
   const { state, destroyables } = useMemo(() => {
     return {
-      state: { mounted: true },
+      state: { id: nextId++, mounted: true },
       destroyables: <Destroyable[]>[],
-    }
-  }, [])
-
-  useEffect(() => {
-    // NOTE: Because of react strict mode, where a same component can be mounted 
-    // twice, but sharing the same references through hooks (useMemo, useRef, etc),
-    // we need to set "mounted" back to true, otherwise the first unmount will 
-    // affect the second component. 
-    state.mounted = true
-    return () => {
-      state.mounted = false
     }
   }, [])
 
@@ -88,6 +79,12 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
     'memo': useMemo,
   }[moment]
   use(() => {
+    // NOTE: Because of react strict mode, where a same component can be mounted 
+    // twice, but sharing the same references through hooks (useMemo, useRef, etc),
+    // we need to set "mounted" back to true, otherwise the first unmount will 
+    // affect the second component. 
+    state.mounted = true
+
     const it = callback(ref.current)
     if (it) {
       const handleResult = (result: IteratorResult<UseEffectsDestroyable, void>) => {
@@ -123,6 +120,8 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
   // Unmount:
   useEffect(() => {
     return () => {
+      state.mounted = false
+
       for (const destroyable of destroyables) {
         if (destroyable) {
           if (typeof destroyable === 'object') {
