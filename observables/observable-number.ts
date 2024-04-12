@@ -1,6 +1,6 @@
 import { DestroyableObject } from '../types'
 import { Memorization } from './memorization'
-import { Callback, ConstructorOptions, Observable, SetValueOptions } from './observable'
+import { Callback, ConstructorOptions, Observable, OnChangeOptions, SetValueOptions } from './observable'
 
 const passModeValues = ['above', 'below', 'through'] as const
 type PassMode = (typeof passModeValues)[number]
@@ -164,11 +164,23 @@ export class ObservableNumber extends Observable<number> {
 
   /**
    * Same as `onChange` but with a callback that will be called less often since
-   * a step is applied to the value first.
+   * a step is applied to the value.
    */
-  onStepChange(step: number, callback: Callback<number>): DestroyableObject {
-    let stepValue = Math.round(this.value / step) * step
-    return this.onChange(() => {
+  onStepChange(step: number, callback: Callback<number>): DestroyableObject
+  onStepChange(step: number, options: OnChangeOptions, callback: Callback<number>): DestroyableObject
+  onStepChange(...args: any[]): DestroyableObject {
+    function solveArgs(args: any[]): [number, OnChangeOptions, Callback<number>] {
+      if (args.length === 3) {
+        return args as [number, OnChangeOptions, Callback<number>]
+      }
+      if (args.length === 2) {
+        return [args[0], {}, args[1]]
+      }
+      throw new Error(`Invalid arguments: (${args.join(', ')})`)
+    }
+    const [step, options, callback] = solveArgs(args)
+    let stepValue = NaN
+    return this.onChange(options, () => {
       let newStepValue = Math.round(this.value / step) * step
       if (stepValue !== newStepValue) {
         stepValue = newStepValue
