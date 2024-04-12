@@ -140,7 +140,7 @@ class Clock implements DestroyableObject {
   private _freezeListeners = new Listeners()
   private _unfreezeListeners = new Listeners()
   private _freezed = false
-  private _requestAnimationFrame = false
+  private _requestAnimationFrame = 0
 
   private _state: ClockState = {
     timeScale: 1,
@@ -176,8 +176,8 @@ class Clock implements DestroyableObject {
 
       // Auto-pause handling:
       let { updateDuration, updateFadeDuration, updateLastRequest } = this._state
-      if (this._requestAnimationFrame) {
-        this._requestAnimationFrame = false
+      if (this._requestAnimationFrame >= 0) {
+        this._requestAnimationFrame += -windowDeltaTime
         updateLastRequest = windowTime
       }
 
@@ -265,11 +265,15 @@ class Clock implements DestroyableObject {
     return { destroy }
   }
 
-  requestUpdate(updateDuration?: number): this {
-    if (updateDuration !== undefined) {
-      this.setUpdateDuration(updateDuration)
-    }
-    this._requestAnimationFrame = true
+  /**
+   * If a duration is provided, the clock will be updated constantly during this 
+   * interval, after which the updateDuration will apply again, before being 
+   * finally paused.
+   */
+  requestUpdate(duration?: number): this {
+    this._requestAnimationFrame = duration !== undefined
+      ? Math.max(0, this._requestAnimationFrame, duration)
+      : Math.max(0, this._requestAnimationFrame)
     return this
   }
 
