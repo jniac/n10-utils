@@ -130,6 +130,17 @@ class Message<P = any> {
       listener.callback(this)
     }
   }
+
+  /**
+   * Assign new payload props to the message. An optional "overwrite" parameter
+   * can be used to specify if the new props should overwrite the existing ones.
+   */
+  payloadAssign(payload: Partial<P>, { overwrite = true } = {}): this {
+    this.payload = (overwrite
+      ? { ...this.payload, ...payload }
+      : { ...payload, ...this.payload }) as P
+    return this
+  }
 }
 
 function solveOnArgs<P = any>(args: any[]): [target: any, filter: StringFilter, callback: Callback<P>] {
