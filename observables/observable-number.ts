@@ -162,6 +162,10 @@ export class ObservableNumber extends Observable<number> {
     return null
   }
 
+  stepValue(step: number): number {
+    return Math.round(this._value / step) * step
+  }
+
   /**
    * Same as `onChange` but with a callback that will be called less often since
    * a step is applied to the value.
@@ -181,7 +185,7 @@ export class ObservableNumber extends Observable<number> {
     const [step, options, callback] = solveArgs(args)
     let stepValue = NaN
     return this.onChange(options, () => {
-      let newStepValue = Math.round(this.value / step) * step
+      let newStepValue = this.stepValue(step)
       if (stepValue !== newStepValue) {
         stepValue = newStepValue
         callback(stepValue, this)
