@@ -141,7 +141,7 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
 function useLayoutEffects<T = undefined>(
   callback: (value: T) => Generator<void | Destroyable, void, unknown>,
   deps: DependencyList | 'always',
-  options: Omit<UseEffectsOptions, 'moment'>
+  options?: Omit<UseEffectsOptions, 'moment'>
 ): UseEffectsReturn<T> {
   return useEffects(callback, deps, { ...options, moment: 'layoutEffect' })
 }
