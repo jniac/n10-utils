@@ -13,18 +13,23 @@ export function className(...args: any[]) {
 /**
  * Simplifies the binding of refs.
  * 
+ * Usage:
+ * ```
+ * bindRef(ref, value)
+ * ```
+ * 
  * Usage with [forwardRef](https://react.dev/reference/react/forwardRef):
  * ```ts
- * const MyComponent = forwardRef<Ref, Props>(function (props, outerRef) {
+ * const MyComponent = forwardRef<R, Props>(function (props, outerRef) {
  *   // ...
- *   const innerRef = useRef<Ref>(null);
+ *   const innerRef = useRef<R>(null)
  *   useEffect(() => {
- *     bindRef(outerRef, innerRef)
- *   });
+ *     bindRef(outerRef, innerRef.current)
+ *   })
  *   return (
  *     // ...
- *   );
- * });
+ *   )
+ * })
  * ```
  */
 export function bindRef<T>(ref: ForwardedRef<T> | Ref<T> | null | undefined, value: T) {
