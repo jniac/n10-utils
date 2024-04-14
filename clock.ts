@@ -125,10 +125,9 @@ if (typeof window !== 'undefined') {
   window.requestAnimationFrame(animationFrame)
 }
 
-class Clock implements DestroyableObject {
+class Clock implements DestroyableObject, ClockState {
   timeScale = 1
   maxDeltaTime = .1
-  frame = 0
 
   suspended = false
   suspend() { this.suspended = true }
@@ -136,6 +135,7 @@ class Clock implements DestroyableObject {
 
   destroy: () => void
 
+  private _frame = 0
   private _updateListeners = new Listeners()
   private _freezeListeners = new Listeners()
   private _unfreezeListeners = new Listeners()
@@ -160,6 +160,21 @@ class Clock implements DestroyableObject {
     updateTimeScale: 1,
     updateLastRequest: 0,
   }
+
+  // Getters, ClockState implementation.
+  get time() { return this._state.time }
+  get timeOld() { return this._state.timeOld }
+  get frame() { return this._state.frame }
+  get deltaTime() { return this._state.deltaTime }
+  get deltaTimeOld() { return this._state.deltaTimeOld }
+  get unscaledDeltaTime() { return this._state.unscaledDeltaTime }
+  get unscaledDeltaTimeOld() { return this._state.unscaledDeltaTimeOld }
+  get windowDeltaTime() { return this._state.windowDeltaTime }
+  get paused() { return this._state.paused }
+  get updateDuration() { return this._state.updateDuration }
+  get updateFadeDuration() { return this._state.updateFadeDuration }
+  get updateTimeScale() { return this._state.updateTimeScale }
+  get updateLastRequest() { return this._state.updateLastRequest }
 
   get freezed() { return this._freezed }
   get state() { return this._state }
@@ -209,7 +224,7 @@ class Clock implements DestroyableObject {
         time,
         timeOld,
         maxDeltaTime,
-        frame: this.frame,
+        frame: this._frame,
 
         updateDuration,
         updateFadeDuration,
@@ -227,7 +242,7 @@ class Clock implements DestroyableObject {
           this._unfreezeListeners.call(state)
         }
         this._updateListeners.call(state)
-        this.frame++
+        this._frame++
       } else {
         if (this._freezed === false) {
           this._freezeListeners.call(state)
@@ -325,7 +340,7 @@ class Clock implements DestroyableObject {
     return new Promise<number>(resolve => {
       const callback = () => {
         this._updateListeners.remove(callback)
-        resolve(this.frame)
+        resolve(this._frame)
       }
       this._updateListeners.add(0, callback)
     })
@@ -338,7 +353,7 @@ class Clock implements DestroyableObject {
   waitFrames(frameCount: number): number | Promise<number> {
     frameCount = Math.round(frameCount)
     if (frameCount <= 0) {
-      return this.frame
+      return this._frame
     }
     let count = 0
     return new Promise<number>(resolve => {
@@ -347,7 +362,7 @@ class Clock implements DestroyableObject {
         this.requestUpdate()
         if (count === frameCount) {
           this._updateListeners.remove(callback)
-          resolve(this.frame)
+          resolve(this._frame)
         }
       }
       this._updateListeners.add(0, callback)
