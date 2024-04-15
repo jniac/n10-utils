@@ -1,8 +1,8 @@
 import { BufferGeometry, Color, ColorRepresentation, ConeGeometry, CylinderGeometry, SphereGeometry } from 'three'
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 import { lazy } from '../../../lazy'
-import { getGeometryTransformer } from '../tools/geometry-transformer'
+import { getGeometryTransformer } from '../tools/transform-geometry'
 import { setVertexColor } from '../utils/vertex-color'
 
 type Params = Partial<{
@@ -87,9 +87,9 @@ function createAxisGeometry(params: Params = {}): BufferGeometry {
 }
 
 export type {
-  Params as CreateAxisGeometryParams,
+  Params as CreateAxisGeometryParams
 }
 
 export {
-  createAxisGeometry,
+  createAxisGeometry
 }
