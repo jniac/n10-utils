@@ -125,6 +125,11 @@ if (typeof window !== 'undefined') {
   window.requestAnimationFrame(animationFrame)
 }
 
+type OnTickOptions = Partial<{
+  order: number
+  updateDuration: number
+}>
+
 class Clock implements DestroyableObject, ClockState {
   timeScale = 1
   maxDeltaTime = .1
@@ -268,11 +273,22 @@ class Clock implements DestroyableObject, ClockState {
 
   onTick(callback: ClockCallback): DestroyableObject
   onTick(order: number, callback: ClockCallback): DestroyableObject
+  onTick(options: OnTickOptions, callback: ClockCallback): DestroyableObject
   onTick(...args: any[]): DestroyableObject {
     if (args.length === 1) {
-      return this.onTick(0, args[0])
+      return this.onTick({ order: 0 }, args[0])
     }
-    const [order, callback] = args as [number, ClockCallback]
+    if (typeof args[0] === 'number') {
+      return this.onTick({ order: args[0] }, args[1])
+    }
+    const [options, callback] = args as [OnTickOptions, ClockCallback]
+    const {
+      order = 0,
+      updateDuration,
+    } = options
+    if (updateDuration !== undefined) {
+      this.setUpdateDuration(updateDuration)
+    }
     this._updateListeners.add(order, callback)
     const destroy = () => {
       this._updateListeners.remove(callback)
