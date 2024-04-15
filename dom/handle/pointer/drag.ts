@@ -23,7 +23,7 @@ const defaultParams = {
   /**
    * The order in which the drag callback is called. 
    * 
-   * If undefined, the drag callback is called by using requestAnimationFrame.
+   * If undefined, the drag callback is called by using window.requestAnimationFrame.
    * Otherwise, the drag callback is called by using clock().requestAnimationFrame 
    * with the given order.
    */

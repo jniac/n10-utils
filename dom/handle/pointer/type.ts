@@ -15,3 +15,11 @@ export type PointerTarget =
   | HTMLElement
   | SVGElement
   | any // any because of NodeList & compilation subtleties
+
+const eventPhases = [
+  'start',
+  'continue',
+  'end',
+] as const
+
+export type EventPhase = (typeof eventPhases)[number]

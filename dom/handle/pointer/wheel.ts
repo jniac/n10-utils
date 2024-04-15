@@ -1,18 +1,20 @@
-import { PointerTarget } from './type'
+import { clamp } from '../../../math/basics'
+import { InfoBase } from './info'
+import { EventPhase, PointerTarget } from './type'
 
-const wheelPhases = [
-  'start',
-  'continue',
-  'end',
-] as const
+class WheelInfo extends InfoBase {
+  /** The time of the event, in seconds. */
+  time = -1
 
-type WheelPhase = (typeof wheelPhases)[number]
+  /** The raw value of the delta time, based on the event timestamp, and not normalized. */
+  rawDeltaTime = -1
 
-type WheelInfo = {
-  time: number
-  deltaTime: number
-  delta: DOMPoint
-  phase: WheelPhase
+  /** The normalized value of the delta time, clamped between 1/120 and 1/30. */
+  deltaTime = -1
+
+  delta = new DOMPoint()
+
+  phase = <EventPhase>'start'
 }
 
 type Callback = (info: WheelInfo) => void
@@ -62,24 +64,19 @@ function handleWheel(element: PointerTarget, params: Params): () => void {
     time: -1,
   }
 
-  const info: WheelInfo = {
-    time: -1,
-    deltaTime: -1,
-    delta: new DOMPoint(),
-    phase: 'start',
-  }
+  const info = new WheelInfo()
 
   const _onWheel = (event: WheelEvent) => {
     if (preventDefault)
       event.preventDefault()
 
-    const time = event.timeStamp / 1e3
-    const deltaTime = time - state.time
-    state.time = time
-
-    const phase: WheelPhase = state.start === false
+    const phase: EventPhase = state.start === false
       ? 'start'
       : 'continue'
+
+    const time = event.timeStamp / 1e3
+    const rawDeltaTime = phase === 'start' ? 1 / 60 : time - state.time
+    state.time = time
 
     info.phase = phase
     info.time = time
@@ -89,12 +86,14 @@ function handleWheel(element: PointerTarget, params: Params): () => void {
     info.delta.y = event.deltaY * scalar
     info.delta.z = event.deltaZ * scalar
 
+    const deltaTime = clamp(rawDeltaTime, 1 / 240, 1 / 30)
+
+    info.rawDeltaTime = rawDeltaTime
+    info.deltaTime = deltaTime
     if (phase === 'start') {
       state.start = true
-      info.deltaTime = 0
       onWheelStart?.(info)
     }
-    info.deltaTime = deltaTime
     onWheel?.(info)
     window.clearTimeout(state.timeout)
     state.timeout = window.setTimeout(() => {
@@ -122,6 +121,7 @@ export type {
 }
 
 export {
-  handleWheel, hasWheelCallback
+  handleWheel,
+  hasWheelCallback
 }
 
