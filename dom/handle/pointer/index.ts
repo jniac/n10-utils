@@ -5,6 +5,7 @@ import { HandlePressParams, handlePress, hasPressCallback } from './press'
 import { HandleTapParams, handleTap, hasTapCallback } from './tap'
 import { PointerTarget } from './type'
 import { HandleWheelParams, handleWheel, hasWheelCallback } from './wheel'
+import { HandleWheelFrameParams, handleWheelFrame, hasWheelFrameCallback } from './wheel.frame'
 
 type Params =
   & HandleBasicPointerParams
@@ -13,6 +14,7 @@ type Params =
   & HandlePressParams
   & HandleTapParams
   & HandleWheelParams
+  & HandleWheelFrameParams
 
 export function handlePointer(target: PointerTarget | PointerTarget[] | NodeListOf<PointerTarget>, params: Params): () => void {
   const destroyCallbacks: (() => void)[] = []
@@ -37,6 +39,9 @@ export function handlePointer(target: PointerTarget | PointerTarget[] | NodeList
     if (hasWheelCallback(params)) {
       destroyCallbacks.push(handleWheel(target, params))
     }
+    if (hasWheelFrameCallback(params)) {
+      destroyCallbacks.push(handleWheelFrame(target, params))
+    }
   }
 
   return () => {
@@ -47,3 +52,4 @@ export function handlePointer(target: PointerTarget | PointerTarget[] | NodeList
 }
 
 export { PointerButton } from './type'
+
