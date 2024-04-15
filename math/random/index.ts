@@ -8,7 +8,10 @@ const identity = (x: number) => x
  * Pseudo Random Number Generator
  */
 export class PRNG {
-  static init(seed: number = 123546): PRNG {
+  static init(seed: number | string = 123546): typeof PRNG {
+    if (typeof seed === 'string') {
+      seed = seed.split('').reduce((acc, char) => acc * 7 + char.charCodeAt(0), 0)
+    }
     state = init(seed)
     return PRNG
   }
