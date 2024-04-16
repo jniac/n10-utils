@@ -1,18 +1,18 @@
-import { Material, Shader } from 'three'
+import { Material, WebGLProgramParametersWithUniforms } from 'three'
 
-import { Uniforms, getGlType, solveUniformDeclaration } from './types'
 import { MeshPhysicalMaterialFragmentTokens, MeshPhysicalMaterialVertexTokens, glTokens } from './Tokens'
 import { globalUniforms } from './global-uniforms'
+import { Uniforms, getGlType, solveUniformDeclaration } from './types'
 
-let current: Shader = null!
+let current: WebGLProgramParametersWithUniforms = null!
 
-const wrap = <T extends Material>(material: T, callback: (shader: Shader) => void): T => {
+const wrap = <T extends Material>(material: T, callback: (shader: WebGLProgramParametersWithUniforms) => void): T => {
   material.onBeforeCompile = shader => {
     current = shader
   }
   return material
 }
-const withShader = (shader: Shader) => {
+const withShader = (shader: WebGLProgramParametersWithUniforms) => {
   current = shader
   return ShaderForge
 }
@@ -34,14 +34,14 @@ const cleanWrappedCode = (code: string) => {
 }
 
 class ShaderTool<T> {
-  #type: 'vertexShader' | 'fragmentShader'
+  private type: 'vertexShader' | 'fragmentShader'
   constructor(type: 'vertexShader' | 'fragmentShader') {
-    this.#type = type
+    this.type = type
   }
 
-  #getPattern(token: T, { throwError = true } = {}) {
+  private getPattern(token: T, { throwError = true } = {}) {
     const pattern = `#include <${token}>`
-    const type = this.#type
+    const type = this.type
     if (throwError && current[type].includes(pattern) === false) {
       throw new Error(`"${pattern}" is not present in the shader template program.`)
     }
@@ -49,24 +49,24 @@ class ShaderTool<T> {
   }
 
   replace(token: T, code: string) {
-    const { type, pattern } = this.#getPattern(token)
+    const { type, pattern } = this.getPattern(token)
     const str = wrapCode(code)
     current[type] = current[type].replace(pattern, str)
     return ShaderForge
   }
 
   inject(position: 'before' | 'after', token: T, code: string) {
-    const { type, pattern } = this.#getPattern(token)
-    const str = position === 'after' 
-    ? `${pattern}\n${wrapCode(code)}`
-    : `${wrapCode(code)}\n${pattern}`
+    const { type, pattern } = this.getPattern(token)
+    const str = position === 'after'
+      ? `${pattern}\n${wrapCode(code)}`
+      : `${wrapCode(code)}\n${pattern}`
     current[type] = current[type].replace(pattern, str)
     return ShaderForge
   }
-  
+
   injectTokenComments() {
     for (const token of glTokens) {
-      const { type, pattern } = this.#getPattern(token as any, { throwError: false })
+      const { type, pattern } = this.getPattern(token as any, { throwError: false })
       current[type] = current[type].replace(pattern, `
         ${pattern}
         // ShaderForge TOKEN: ${token}
@@ -76,7 +76,7 @@ class ShaderTool<T> {
   }
 
   header(str: string) {
-    const type = this.#type
+    const type = this.type
     current[type] = `${str}\n${current[type]}`
     return ShaderForge
   }
@@ -92,7 +92,7 @@ class ShaderTool<T> {
   }
 
   top(...codes: string[]) {
-    current[this.#type] = current[this.#type].replace('void main() {', /* glsl */`
+    current[this.type] = current[this.type].replace('void main() {', /* glsl */`
       ${wrapCode(codes.join('\n\n'))}
       void main() {
     `)
@@ -100,14 +100,14 @@ class ShaderTool<T> {
   }
 
   mainBeforeAll(code: string) {
-    current[this.#type] = current[this.#type]
+    current[this.type] = current[this.type]
       .replace('void main() {', `void main() {
         ${wrapCode(code)}`)
     return ShaderForge
   }
 
   mainAfterAll(code: string) {
-    current[this.#type] = current[this.#type]
+    current[this.type] = current[this.type]
       .replace(/}\s*$/, `
       ${wrapCode(code)}
     }`)
@@ -125,7 +125,7 @@ class ShaderTool<T> {
   }
 
   clean() {
-    current[this.#type] = cleanWrappedCode(current[this.#type])
+    current[this.type] = cleanWrappedCode(current[this.type])
     return ShaderForge
   }
 }
@@ -229,5 +229,6 @@ export const ShaderForge: ShaderForgeType = {
 }
 
 export type {
-  Uniforms,
+  Uniforms
 }
+

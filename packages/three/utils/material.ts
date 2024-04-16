@@ -6,7 +6,7 @@ export function updateMaterial<T extends Material>(material: T, props: Partial<T
     const value = props[key]
     if (value !== undefined) {
       if (value !== material[key]) {
-        material[key] = value
+        (material as any)[key] = value
         needsUpdate = true
       }
     }
