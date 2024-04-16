@@ -1,4 +1,4 @@
-import { init, map, next } from './algorithm/parkmiller-c-iso'
+import { MAX, init, map, next } from './algorithm/parkmiller-c-iso'
 
 let state = 123456
 
@@ -8,6 +8,8 @@ const identity = (x: number) => x
  * Pseudo Random Number Generator
  */
 export class PRNG {
+  static seedMax = MAX
+
   static init(seed: number | string = 123546): typeof PRNG {
     if (typeof seed === 'string') {
       seed = seed.split('').reduce((acc, char) => acc * 7 + char.charCodeAt(0), 0)

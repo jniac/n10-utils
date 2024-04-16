@@ -1,20 +1,26 @@
+const MAX = 0x7fffffff
+
 const init = (seed: number = 123456) => {
-  if (seed > 1 && seed < 0x7fffffff) {
-    return seed & 0x7fffffff;
+  seed = seed % MAX
+  seed = seed < 0 ? seed + MAX : seed
+  if (seed > 1 && seed < MAX) {
+    return seed & MAX
   }
   return 123456
 }
 
 const next = (state: number) => {
   state = Math.imul(state, 48271)
-  state &= 0x7fffffff
+  state &= MAX
   return state
 }
 
-const map = (n: number) => (n - 1) / 0x7ffffffe
+const map = (n: number) => (n - 1) / (MAX - 1)
 
 export {
+  MAX,
   init,
-  next,
   map,
+  next
 }
+

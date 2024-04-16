@@ -8,6 +8,7 @@ type PassMode = (typeof passModeValues)[number]
 type ConstructorNumberOptions = ConstructorOptions<number> & Partial<{
   min: number
   max: number
+  integer: boolean
 }>
 
 function clamp(x: number, min: number, max: number): number {
@@ -18,6 +19,7 @@ export class ObservableNumber extends Observable<number> {
   private _memorization: Memorization | null = null
   private _min: number
   private _max: number
+  private _integer: boolean
 
   get min(): number {
     return this._min
@@ -50,11 +52,13 @@ export class ObservableNumber extends Observable<number> {
 
     this._min = min
     this._max = max
+    this._integer = options?.integer ?? false
   }
 
   override setValue(incomingValue: number, options?: SetValueOptions): boolean {
     // Before anything, clamp the incoming value:
     incomingValue = clamp(incomingValue, this._min, this._max)
+    incomingValue = this._integer ? Math.round(incomingValue) : incomingValue
 
     // Delay special case:
     if (this._handleDelay(incomingValue, options)) {
