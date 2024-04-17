@@ -18,10 +18,19 @@ function isPrimitive(value: any): value is Primitive {
 }
 
 /**
- * Returns a unique id (session based) for any given values, which could be 
+ * Returns a unique id (session based) for any given values, which could be:
  * - primitives
- * - object
+ * - (non-array) objects
  * - a combination of the two (array)
+ * 
+ * ```
+ * const idRegister = new IdRegister()
+ * const obj = { foo: 'bar' }
+ * idRegister.requireId([1, 'A', obj]) === idRegister.requireId([1, 'A', obj]) // true
+ * ```
+ * 
+ * - NOTE: This is not a hash function, it is a unique id generator.
+ * - NOTE: Objects are stored weakly, so they will not be retained in memory.
  */
 export class IdRegister {
   private static _idHash = new Hash()
