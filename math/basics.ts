@@ -99,3 +99,21 @@ export const limitedClamp = (x: number, min: number, minLimit: number, max: numb
 				x
 	)
 }
+
+/**
+ * Converts a 1D index to a 2D position.
+ */
+export const index2 = (index: number, width: number) => {
+	const y = Math.floor(index / width)
+	return [index - y * width, y]
+}
+
+/**
+ * Converts a 1D index to a 3D position.
+ */
+export const index3 = (index: number, width: number, height: number) => {
+	const z = Math.floor(index / (width * height))
+	const rest = index - z * width * height
+	const y = Math.floor(rest / width)
+	return [rest - y * width, y, z]
+}
