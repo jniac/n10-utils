@@ -1,12 +1,13 @@
 const MAX = 0x7fffffff
+const DEFAULT_SEED = 123456
 
-const init = (seed: number = 123456) => {
+const init = (seed: number = DEFAULT_SEED) => {
   seed = seed % MAX
   seed = seed < 0 ? seed + MAX : seed
   if (seed > 1 && seed < MAX) {
     return seed & MAX
   }
-  return 123456
+  return DEFAULT_SEED
 }
 
 const next = (state: number) => {
@@ -18,6 +19,7 @@ const next = (state: number) => {
 const map = (n: number) => (n - 1) / (MAX - 1)
 
 export {
+  DEFAULT_SEED,
   MAX,
   init,
   map,
