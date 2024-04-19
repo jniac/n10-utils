@@ -11,3 +11,10 @@ export type OneOrMany<T> = T | T[]
 export type Editable<T> = {
   -readonly [P in keyof T]: T[P]
 }
+
+export type RectangleLike = {
+  x: number
+  y: number
+  width: number
+  height: number
+}

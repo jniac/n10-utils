@@ -7,9 +7,9 @@ export type PaddingParams = {
   bottom?: number
   right?: number
   left?: number
-} 
+}
   | [top: number, right: number, bottom: number, left: number]
-  | [number, number, number]
+  // | [number, number, number] ???
   | [vertical: number, horizontal: number]
   | [number]
   | number
@@ -49,28 +49,27 @@ export class Padding {
         this.bottom = bottom
         this.left = left
       }
-    } else 
-    if (typeof params === 'number') {
-      this.top = params
-      this.right = params
-      this.bottom = params
-      this.left = params
-    } else 
-    {
-      const {
-        all = 0,
-        vertical = all,
-        horizontal = all,
-        top = vertical,
-        bottom = vertical,
-        left = horizontal,
-        right = horizontal,
-      } = params
-      this.top = top
-      this.right = right
-      this.bottom = bottom
-      this.left = left
-    }
+    } else
+      if (typeof params === 'number') {
+        this.top = params
+        this.right = params
+        this.bottom = params
+        this.left = params
+      } else {
+        const {
+          all = 0,
+          vertical = all,
+          horizontal = all,
+          top = vertical,
+          bottom = vertical,
+          left = horizontal,
+          right = horizontal,
+        } = params
+        this.top = top
+        this.right = right
+        this.bottom = bottom
+        this.left = left
+      }
   }
 
   isHomogeneous() {
@@ -115,7 +114,7 @@ export class Padding {
     const bottom = vertical || tokens.includes('bottom')
     const left = horizontal || tokens.includes('left')
     const right = horizontal || tokens.includes('right')
-    
+
     const baseKey = padding ? 'padding' : 'margin'
     const props = [] as [string, string][]
     if (top) props.push([baseKey + 'Top', `${this.top * scalar}px`])
@@ -128,7 +127,7 @@ export class Padding {
       paddingRight: string
       paddingBottom: string
       paddingLeft: string
-    } | {      
+    } | {
       marginTop: string
       marginRight: string
       marginBottom: string
