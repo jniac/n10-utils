@@ -1,5 +1,7 @@
 import { Color, CubeTexture, IUniform, Matrix3, Matrix4, Quaternion, Texture, Vector2, Vector3, Vector4 } from 'three'
 
+import { Observable } from '../../../observables'
+
 type UniformValueType =
   | number
   | Vector2
@@ -15,6 +17,12 @@ type UniformValueType =
 type UniformDeclaration = IUniform<UniformValueType> | UniformValueType
 
 export function solveUniformDeclaration(value: UniformDeclaration): IUniform<UniformValueType> {
+  if (value instanceof Observable) {
+    if (typeof value.value === 'number') {
+      return value
+    }
+    throw new Error(`Observable value must be a number`)
+  }
   if (typeof value === 'object' && value.constructor === Object && 'value' in value) {
     return value
   }
