@@ -12,4 +12,20 @@ export const glsl_uv_size = /* glsl */ `
     uv = (uv - align) / scale + align;
     return uv;
   }
+
+  vec2 applyUvSize(vec2 uv, float outerAspect, float innerAspect, float sizeMode, vec2 align, float scale) {
+    return applyUvSize(uv, outerAspect, innerAspect, sizeMode, align, vec2(scale));
+  }
+
+  vec2 applyUvSize(vec2 uv, float outerAspect, float innerAspect, float sizeMode, vec2 align) {
+    return applyUvSize(uv, outerAspect, innerAspect, sizeMode, align, vec2(1.0));
+  }
+
+  vec2 applyUvSize(vec2 uv, float outerAspect, float innerAspect, float sizeMode) {
+    return applyUvSize(uv, outerAspect, innerAspect, sizeMode, vec2(0.5));
+  }
+
+  vec2 applyUvSize(vec2 uv, float outerAspect, float innerAspect) {
+    return applyUvSize(uv, outerAspect, innerAspect, 1.0);
+  }
 `
