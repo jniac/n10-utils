@@ -128,6 +128,8 @@ if (typeof window !== 'undefined') {
 type OnTickOptions = Partial<{
   order: number
   updateDuration: number
+  timeInterval: number
+  frameInterval: number
 }>
 
 class Clock implements DestroyableObject, ClockState {
@@ -138,7 +140,9 @@ class Clock implements DestroyableObject, ClockState {
   suspend() { this.suspended = true }
   resume() { this.suspended = false }
 
+  // Destroyable implementation.
   destroy: () => void
+  value() { return this }
 
   private _frame = 0
   private _updateListeners = new Listeners()
@@ -275,17 +279,43 @@ class Clock implements DestroyableObject, ClockState {
   onTick(order: number, callback: ClockCallback): DestroyableObject
   onTick(options: OnTickOptions, callback: ClockCallback): DestroyableObject
   onTick(...args: any[]): DestroyableObject {
-    if (args.length === 1) {
-      return this.onTick({ order: 0 }, args[0])
+    function solveArgs(args: any[]): [OnTickOptions, ClockCallback] {
+      if (args.length === 1) {
+        return [{}, args[0]]
+      }
+      if (typeof args[0] === 'number') {
+        return [{ order: args[0] }, args[1]]
+      }
+      return args as any
     }
-    if (typeof args[0] === 'number') {
-      return this.onTick({ order: args[0] }, args[1])
-    }
-    const [options, callback] = args as [OnTickOptions, ClockCallback]
+
+    const [options, callback] = solveArgs(args)
     const {
       order = 0,
       updateDuration,
+      frameInterval = 0,
+      timeInterval = 0,
     } = options
+
+    if (frameInterval > 0) {
+      return this.onTick({ order, updateDuration }, state => {
+        if (state.frame % frameInterval === 0) {
+          return callback(state)
+        }
+      })
+    }
+
+    if (timeInterval > 0) {
+      let cumulativeTime = 0
+      return this.onTick({ order, updateDuration }, state => {
+        cumulativeTime += state.deltaTime
+        if (cumulativeTime >= timeInterval) {
+          cumulativeTime += -timeInterval
+          return callback(state)
+        }
+      })
+    }
+
     if (updateDuration !== undefined) {
       this.setUpdateDuration(updateDuration)
     }
@@ -293,7 +323,8 @@ class Clock implements DestroyableObject, ClockState {
     const destroy = () => {
       this._updateListeners.remove(callback)
     }
-    return { destroy }
+
+    return { destroy, value: this }
   }
 
   /**
