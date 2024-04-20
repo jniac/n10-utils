@@ -1,4 +1,4 @@
-export type DestroyableObject = { destroy: () => void }
+export type DestroyableObject<V = any> = { destroy: () => void, value?: V }
 export type Destroyable = DestroyableObject | (() => void)
 
 export type StringFilter = '*' | string | RegExp | ((str: string) => boolean)

@@ -5,7 +5,11 @@ import { digestProps } from './digestProps'
 type UseEffectsDestroyable = void | null | Destroyable | Destroyable[]
 
 type UseEffectsCallback<T, V = void> =
-  (value: T) => void | Generator<UseEffectsDestroyable | V, void, unknown> | AsyncGenerator<UseEffectsDestroyable | V, void, unknown>
+  (value: T) => (
+    | void
+    | Generator<UseEffectsDestroyable | V, void, any>
+    | AsyncGenerator<UseEffectsDestroyable | V, void, any>
+  )
 
 type UseEffectsReturn<T> = {
   ref: MutableRefObject<T>
@@ -87,8 +91,21 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
 
     const it = callback(ref.current)
     if (it) {
+      let previousValue: UseEffectsDestroyable = undefined
+      const extractDestroyableValue = (destroyable: Destroyable) => {
+        return typeof destroyable === 'object' ? destroyable.value : undefined
+      }
+      const extractPreviousValue = () => {
+        if (!previousValue) return undefined
+        if (Array.isArray(previousValue)) {
+          return previousValue.map(extractDestroyableValue)
+        }
+        return extractDestroyableValue(previousValue)
+      }
+
       const handleResult = (result: IteratorResult<UseEffectsDestroyable, void>) => {
         const { value, done } = result
+        previousValue = value
         if (state.mounted && done === false) {
           if (value) {
             if (Array.isArray(value)) {
@@ -102,7 +119,8 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
       }
 
       const nextResult = () => {
-        const result = it.next()
+
+        const result = it.next(extractPreviousValue())
         if (result instanceof Promise) {
           result.then(awaitedResult => {
             handleResult(awaitedResult)
