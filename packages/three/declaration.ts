@@ -1,7 +1,16 @@
 import { Vector2, Vector3 } from 'three'
 
-export type Vector3Declaration = number | [x: number, y: number, z: number] | { x: number; y: number; z: number}  | { width: number; height: number; depth: number} 
-export type Vector2Declaration = number | [x: number, y: number] | { x: number; y: number}  | { width: number; height: number} 
+export type Vector3Declaration =
+  | number
+  | [x: number, y: number, z: number]
+  | { x: number; y: number; z: number }
+  | { width: number; height: number; depth: number }
+
+export type Vector2Declaration =
+  | number
+  | [x: number, y: number]
+  | { x: number; y: number }
+  | { width: number; height: number }
 
 export function solveVector3Declaration(arg: Vector3Declaration, out: Vector3 = new Vector3()): Vector3 {
   if (typeof arg === 'number') {
