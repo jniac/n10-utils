@@ -137,6 +137,14 @@ function stopAnimationLoop() {
   window.cancelAnimationFrame(loopId)
 }
 
+// --------------[ Clear ]--------------- //
+
+function clear(target: any) {
+  const instance = instanceWeakMap.get(target)
+  if (instance) {
+    destroyInstance(instance)
+  }
+}
 
 
 // --------------[ During ]--------------- //
@@ -273,6 +281,7 @@ const AnimationBundle = {
   during,
   easing,
   tween,
+  clear,
   core: {
     updateInstances,
     startAnimationLoop,
@@ -282,11 +291,11 @@ const AnimationBundle = {
 
 export type {
   Callback as AnimationCallback,
-  TweenArg as AnimationTweenArg,
+  TweenArg as AnimationTweenArg
 }
 
 export {
-  AnimationBundle as Animation,
+  AnimationBundle as Animation
 }
 
 // if (typeof window !== 'undefined') {
