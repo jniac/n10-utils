@@ -101,6 +101,13 @@ export class Rectangle implements RectangleLike {
     yield this.width
     yield this.height
   }
+  multiplyScalar(scalarX: number, scalarY: number): this {
+    this.x *= scalarX
+    this.y *= scalarY
+    this.width *= scalarX
+    this.height *= scalarY
+    return this
+  }
   applyPadding(padding: PaddingParams): this {
     const pad = Padding.ensure(padding)
     this.x += pad.left
