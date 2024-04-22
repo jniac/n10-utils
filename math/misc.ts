@@ -1,5 +1,15 @@
 
 /**
+ * A sine curve that goes from 0 to 1, with a period of 1.
+ */
+export const sin01 = (x: number) => .5 + .5 * Math.sin(x * Math.PI * 2)
+
+/**
+ * A cosine curve that goes from 0 to 1, with a period of 1.
+ */
+export const cos01 = (x: number) => .5 + .5 * Math.cos(x * Math.PI * 2)
+
+/**
  * https://iquilezles.org/articles/functions/
  */
 export const pcurve = (x: number, a: number, b: number): number => {
