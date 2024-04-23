@@ -6,6 +6,7 @@ type BasicPointerInfo = {
   position: DOMPoint
   downPosition: DOMPoint
   upPosition: DOMPoint
+  event: Event
 }
 
 type Callback = (info: BasicPointerInfo) => void
@@ -52,27 +53,33 @@ function handleBasicPointer(element: PointerTarget, params: Params): () => void 
     position: new DOMPoint(),
     downPosition: new DOMPoint(),
     upPosition: new DOMPoint(),
+    event: null!,
   }
 
   // INFO UPDATE:
-  const updateDown = (x: number, y: number) => {
+  const updateDown = (event: Event, x: number, y: number) => {
     info.pressed = true
     info.downPosition.x = x
     info.downPosition.y = y
-    update(x, y)
+    update(event, x, y)
     params.onDown?.(info)
   }
 
-  const updateUp = (x: number, y: number) => {
+  const updateUp = (event: Event, x: number, y: number) => {
     info.pressed = false
     info.upPosition.x = x
     info.upPosition.y = y
-    update(x, y)
+    update(event, x, y)
     params.onUp?.(info)
+
+    // reset position
+    info.position.x = -1
+    info.position.y = -1
   }
 
-  const update = (x: number, y: number) => {
-    if (info.position.x !== x && info.position.y !== y) {
+  const update = (event: Event, x: number, y: number) => {
+    if (info.position.x !== x || info.position.y !== y) {
+      info.event = event
       info.position.x = x
       info.position.y = y
       params.onChange?.(info)
@@ -81,15 +88,15 @@ function handleBasicPointer(element: PointerTarget, params: Params): () => void 
 
   // MOUSE:
   const onMouseDown = (event: MouseEvent) => {
-    updateDown(event.clientX, event.clientY)
+    updateDown(event, event.clientX, event.clientY)
   }
 
   const onMouseUp = (event: MouseEvent) => {
-    updateUp(event.clientX, event.clientY)
+    updateUp(event, event.clientX, event.clientY)
   }
 
   const onMouseMove = (event: MouseEvent) => {
-    update(event.clientX, event.clientY)
+    update(event, event.clientX, event.clientY)
   }
 
   const onMouseOver = () => {
@@ -127,19 +134,19 @@ function handleBasicPointer(element: PointerTarget, params: Params): () => void 
   const onTouchStart = (event: TouchEvent) => {
     // Because when the touch start the position is not the same as the previous touch.
     if (event.touches.length === 1) { // ignore multi-touch
-      updateDown(event.touches[0].clientX, event.touches[0].clientY)
+      updateDown(event, event.touches[0].clientX, event.touches[0].clientY)
     }
   }
 
   const onTouchEnd = (event: TouchEvent) => {
     if (event.touches.length === 0) { // ignore multi-touch
-      updateUp(event.changedTouches[0].clientX, event.changedTouches[0].clientY)
+      updateUp(event, event.changedTouches[0].clientX, event.changedTouches[0].clientY)
     }
   }
 
   const onTouchMove = (event: TouchEvent) => {
     if (event.touches.length === 1) { // ignore multi-touch
-      update(event.touches[0].clientX, event.touches[0].clientY)
+      update(event, event.touches[0].clientX, event.touches[0].clientY)
     }
   }
 
