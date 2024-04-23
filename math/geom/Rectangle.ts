@@ -53,6 +53,7 @@ export class Rectangle implements RectangleLike {
   y: number = 0
   width: number = 0
   height: number = 0
+
   constructor()
   constructor(x: number, y: number, width: number, height: number)
   constructor(...args: any) {
@@ -60,6 +61,14 @@ export class Rectangle implements RectangleLike {
       this.set.apply(this, args)
     }
   }
+
+  *[Symbol.iterator](): Generator<number> {
+    yield this.x
+    yield this.y
+    yield this.width
+    yield this.height
+  }
+
   copy(other: Rectangle): this {
     this.x = other.x
     this.y = other.y
@@ -67,9 +76,11 @@ export class Rectangle implements RectangleLike {
     this.height = other.height
     return this
   }
+
   clone(): Rectangle {
     return new Rectangle().copy(this)
   }
+
   set(x: number, y: number, width: number, height: number): this
   set(other: Rectangle): this
   set(...args: any): this {
@@ -95,12 +106,7 @@ export class Rectangle implements RectangleLike {
     }
     throw new Error('Oops. Wrong parameters here.')
   }
-  *[Symbol.iterator](): Generator<number, void, unknown> {
-    yield this.x
-    yield this.y
-    yield this.width
-    yield this.height
-  }
+
   multiplyScalar(scalarX: number, scalarY: number): this {
     this.x *= scalarX
     this.y *= scalarY
@@ -108,6 +114,7 @@ export class Rectangle implements RectangleLike {
     this.height *= scalarY
     return this
   }
+
   applyPadding(padding: PaddingParams): this {
     const pad = Padding.ensure(padding)
     this.x += pad.left
@@ -116,6 +123,7 @@ export class Rectangle implements RectangleLike {
     this.height -= pad.top + pad.bottom
     return this
   }
+
   innerRectangle({
     aspect = 1,
     sizeMode = 'contain',
@@ -135,6 +143,7 @@ export class Rectangle implements RectangleLike {
       _rect.copy(this).applyPadding(padding),
       aspect, sizeMode, alignX, alignY, out)
   }
+
   // Sugar:
   get centerX() {
     return this.x + this.width / 2

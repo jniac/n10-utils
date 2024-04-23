@@ -28,6 +28,21 @@ export class Padding {
     this.set(params)
   }
 
+  *[Symbol.iterator](): Generator<number> {
+    yield this.top
+    yield this.right
+    yield this.bottom
+    yield this.left
+  }
+
+  setTRBL(top: number, right: number, bottom: number, left: number): this {
+    this.top = top
+    this.right = right
+    this.bottom = bottom
+    this.left = left
+    return this
+  }
+
   set(params: PaddingParams = {}) {
     if (Array.isArray(params)) {
       if (params.length === 1) {
