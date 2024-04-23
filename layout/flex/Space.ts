@@ -186,6 +186,12 @@ export class Space {
     return this
   }
 
+  setAlign(x: number, y: number = x): this {
+    this.alignX = x
+    this.alignY = y
+    return this
+  }
+
   setUserData(props: Record<string, any>): this {
     Object.assign(this.userData, props)
     return this
