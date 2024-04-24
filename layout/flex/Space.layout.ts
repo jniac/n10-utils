@@ -1,8 +1,8 @@
 import { Padding } from '../../math/geom/Padding'
 import { Rectangle } from '../../math/geom/Rectangle'
+import { Direction } from './Direction'
 import { ScalarType } from './Scalar'
 import { Space } from './Space'
-import { Direction } from './types'
 
 export function computeRootRect(space: Space) {
   const { offsetX, offsetY, sizeX, sizeY } = space

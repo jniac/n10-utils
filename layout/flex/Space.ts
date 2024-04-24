@@ -1,8 +1,8 @@
 import { Rectangle } from '../../math/geom/Rectangle'
 
+import { Direction, DirectionDeclaration, parseDirection } from './Direction'
 import { Scalar, ScalarDeclaration, ScalarType } from './Scalar'
 import { computeChildrenRect, computeRootRect } from './Space.layout'
-import { Direction } from './types'
 
 /**
  * `some-utilz/layout/flex` is a naive yet robust flex layout system.
@@ -119,6 +119,14 @@ export class Space {
     }
   }
 
+  *allLeaveDescendants({ includeSelf = true } = {}): Generator<Space> {
+    for (const space of this.allDescendants({ includeSelf })) {
+      if (space.children.length === 0) {
+        yield space
+      }
+    }
+  }
+
   get(...indexes: number[]): Space | null {
     let current: Space = this
     for (const index of indexes) {
@@ -149,10 +157,16 @@ export class Space {
 
   add(...spaces: Space[]): this {
     for (const space of spaces) {
+      space.removeFromParent()
       space.parent = this
       space.root = this.root
       this.children.push(space)
     }
+    return this
+  }
+
+  addTo(space: Space): this {
+    space.add(this)
     return this
   }
 
@@ -171,6 +185,11 @@ export class Space {
         space.removeFromParent()
       }
     }
+    return this
+  }
+
+  setDirection(direction: DirectionDeclaration): this {
+    this.direction = parseDirection(direction)
     return this
   }
 
