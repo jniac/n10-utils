@@ -107,6 +107,82 @@ export class Rectangle implements RectangleLike {
     throw new Error('Oops. Wrong parameters here.')
   }
 
+  getCenterX() {
+    return this.x + this.width / 2
+  }
+
+  setCenterX(value: number): this {
+    this.x = value - this.width / 2
+    return this
+  }
+
+  getCenterY() {
+    return this.y + this.height / 2
+  }
+
+  setCenterY(value: number): this {
+    this.y = value - this.height / 2
+    return this
+  }
+
+  getLeft() {
+    return this.x
+  }
+
+  setLeft(value: number): this {
+    if (value > this.left) {
+      this.width = 0
+      this.x = value
+    } else {
+      this.width += this.x - value
+      this.x = value
+    }
+    return this
+  }
+
+  getRight() {
+    return this.x + this.width
+  }
+
+  setRight(value: number): this {
+    if (value < this.x) {
+      this.width = 0
+      this.x = value
+    } else {
+      this.width = value - this.x
+    }
+    return this
+  }
+
+  getTop() {
+    return this.y
+  }
+
+  setTop(value: number): this {
+    if (value > this.y + this.height) {
+      this.height = 0
+      this.y = value
+    } else {
+      this.height += this.y - value
+      this.y = value
+    }
+    return this
+  }
+
+  getBottom() {
+    return this.y + this.height
+  }
+
+  setBottom(value: number): this {
+    if (value < this.y) {
+      this.height = 0
+      this.y = value
+    } else {
+      this.height = value - this.y
+    }
+    return this
+  }
+
   multiplyScalar(scalarX: number, scalarY: number): this {
     this.x *= scalarX
     this.y *= scalarY
@@ -146,16 +222,45 @@ export class Rectangle implements RectangleLike {
 
   // Sugar:
   get centerX() {
-    return this.x + this.width / 2
+    return this.getCenterX()
   }
   set centerX(value: number) {
-    this.x = value - this.width / 2
+    this.setCenterX(value)
   }
+
   get centerY() {
-    return this.y + this.height / 2
+    return this.getCenterY()
   }
   set centerY(value: number) {
-    this.y = value - this.height / 2
+    this.setCenterY(value)
+  }
+
+  get left() {
+    return this.getLeft()
+  }
+  set left(value: number) {
+    this.setLeft(value)
+  }
+
+  get right() {
+    return this.getRight()
+  }
+  set right(value: number) {
+    this.setRight(value)
+  }
+
+  get top() {
+    return this.getTop()
+  }
+  set top(value: number) {
+    this.setTop(value)
+  }
+
+  get bottom() {
+    return this.getBottom()
+  }
+  set bottom(value: number) {
+    this.setBottom(value)
   }
 }
 
