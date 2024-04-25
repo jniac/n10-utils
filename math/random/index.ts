@@ -41,6 +41,7 @@ export class PRNG {
       }
     }
   }
+  static range(): number
   static range(max: number): number
   static range(min: number, max: number): number
   static range(min: number, max: number, distribution: (x: number) => number): number
