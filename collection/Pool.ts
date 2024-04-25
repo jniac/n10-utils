@@ -17,7 +17,6 @@ export class Pool<T> {
     }
     const item = this.free.pop()!
     this.used.push(item)
-    console.log(`count: ${this.free.length + this.used.length}`)
     return item
   }
 
