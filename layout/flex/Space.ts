@@ -170,6 +170,21 @@ export class Space {
     return this
   }
 
+  prepend(...space: Space[]): this {
+    for (const s of space) {
+      s.removeFromParent()
+      this.children.unshift(s)
+      s.parent = this
+      s.root = this.root
+    }
+    return this
+  }
+
+  prependTo(space: Space): this {
+    space.prepend(this)
+    return this
+  }
+
   removeFromParent(): this {
     if (this.parent) {
       this.parent.children.splice(this.parent.children.indexOf(this), 1)
@@ -185,6 +200,11 @@ export class Space {
         space.removeFromParent()
       }
     }
+    return this
+  }
+
+  sort(predicate: (a: Space, b: Space) => number): this {
+    this.children.sort(predicate)
     return this
   }
 
