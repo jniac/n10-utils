@@ -117,3 +117,11 @@ export const index3 = (index: number, width: number, height: number) => {
 	const y = Math.floor(rest / width)
 	return [rest - y * width, y, z]
 }
+
+export const distance2 = (x: number, y: number) => {
+	return Math.sqrt(x * x + y * y)
+}
+
+export const distance3 = (x: number, y: number, z: number) => {
+	return Math.sqrt(x * x + y * y + z * z)
+}

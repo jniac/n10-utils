@@ -220,6 +220,20 @@ export class Rectangle implements RectangleLike {
       aspect, sizeMode, alignX, alignY, out)
   }
 
+  containsXY(x: number, y: number): boolean {
+    return x >= this.x
+      && x < this.x + this.width
+      && y >= this.y
+      && y < this.y + this.height
+  }
+
+  containsRect(other: RectangleLike): boolean {
+    return other.x >= this.x
+      && other.y >= this.y
+      && other.x + other.width <= this.x + this.width
+      && other.y + other.height <= this.y + this.height
+  }
+
   // Sugar:
   get centerX() {
     return this.getCenterX()

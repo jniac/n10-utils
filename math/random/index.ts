@@ -50,6 +50,10 @@ export class PRNG {
     return min + (max - min) * distribution(PRNG.random())
   }
 
+  static int(maxExclusive: number): number {
+    return Math.floor(PRNG.random() * maxExclusive)
+  }
+
   static chance(probability: number): boolean {
     return PRNG.random() < probability
   }
