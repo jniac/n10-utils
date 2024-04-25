@@ -191,6 +191,20 @@ export class Rectangle implements RectangleLike {
     return this
   }
 
+  /**
+   * Resize the rectangle to fit a given area, keeping the aspect ratio.
+   */
+  setArea(value: number): this {
+    const scalar = Math.sqrt(value / this.area)
+    const width = this.width * scalar
+    const height = this.height * scalar
+    this.x += (this.width - width) / 2
+    this.y += (this.height - height) / 2
+    this.width = width
+    this.height = height
+    return this
+  }
+
   applyPadding(padding: PaddingParams): this {
     const pad = Padding.ensure(padding)
     this.x += pad.left
@@ -275,6 +289,13 @@ export class Rectangle implements RectangleLike {
   }
   set bottom(value: number) {
     this.setBottom(value)
+  }
+
+  get area() {
+    return this.width * this.height
+  }
+  set area(value: number) {
+    this.setArea(value)
   }
 }
 
