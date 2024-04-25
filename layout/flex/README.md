@@ -28,7 +28,7 @@ complex layouts with relative and absolute sizes, paddings and gaps.
   It's motion design friendly feature. You can animate the size of a space 
   based on its current size. It's useful for creating animations where a space
   could grow or shrink. The whole layout will be affected by this change 
-  accordingly to the space's direction and alignment.
+  accordingly to the space's direction and alignment.  
 
 ## Roadmap:
 - Min and max sizes

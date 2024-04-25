@@ -34,6 +34,8 @@ import { computeChildrenRect, computeRootRect } from './Space.layout'
  *   based on its current size. It's useful for creating animations where a space
  *   could grow or shrink. The whole layout will be affected by this change 
  *   accordingly to the space's direction and alignment.
+ *   This extra computed size is added after the regular size computation, so it
+ *   will not affect the size of the "part" spaces (only their position).
  * 
  * ## Roadmap:
  * - Min and max sizes
@@ -153,6 +155,15 @@ export class Space {
         yield space
       }
     }
+  }
+
+  pointCast(x: number, y: number): Space | null {
+    for (const space of this.allDescendants()) {
+      if (space.rect.containsXY(x, y)) {
+        return space
+      }
+    }
+    return null
   }
 
   add(...spaces: Space[]): this {
