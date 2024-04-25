@@ -49,7 +49,35 @@ export class PRNG {
     return min + (max - min) * distribution(PRNG.random())
   }
 
-  static among<T>(args: T[]): T {
-    return args[Math.floor(PRNG.random() * args.length)]
+  static chance(probability: number): boolean {
+    return PRNG.random() < probability
+  }
+
+  static among<T>(
+    options: T[],
+    weights: number[] | null = null,
+    { weightsAreNormalized = false } = {},
+  ): T {
+    // If no weights are provided, choose uniformly. Simple.
+    if (weights === null) {
+      return options[Math.floor(PRNG.random() * options.length)]
+    }
+
+    // If weights, normalize them if necessary.
+    if (!weightsAreNormalized) {
+      const sum = weights.reduce((acc, weight) => acc + weight, 0)
+      weights = weights.map(weight => weight / sum)
+    }
+
+    // Choose among the options.
+    const r = PRNG.random()
+    let sum = 0
+    for (let i = 0; i < options.length; i++) {
+      sum += weights[i]
+      if (r < sum) {
+        return options[i]
+      }
+    }
+    throw new Error('PRNG.among: unreachable')
   }
 }
