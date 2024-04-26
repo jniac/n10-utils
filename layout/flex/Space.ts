@@ -1,4 +1,5 @@
 import { Rectangle } from '../../math/geom/Rectangle'
+import { PointLike } from '../../types'
 
 import { Direction, DirectionDeclaration, parseDirection } from './Direction'
 import { Scalar, ScalarDeclaration, ScalarType } from './Scalar'
@@ -112,6 +113,16 @@ export class Space {
     return this.root === this
   }
 
+  depth(): number {
+    let depth = 0
+    let current: Space | null = this
+    while (current) {
+      current = current.parent
+      depth++
+    }
+    return depth
+  }
+
   *allDescendants({ includeSelf = true } = {}): Generator<Space> {
     if (includeSelf) {
       yield this
@@ -157,8 +168,11 @@ export class Space {
     }
   }
 
-  pointCast(x: number, y: number): Space | null {
-    for (const space of this.allDescendants()) {
+  pointCast(point: PointLike): Space | null
+  pointCast(x: number, y: number): Space | null
+  pointCast(...args: any[]): Space | null {
+    const [x, y] = args.length === 1 ? [args[0].x, args[0].y] : args
+    for (const space of this.allLeaveDescendants()) {
       if (space.rect.containsXY(x, y)) {
         return space
       }
@@ -289,7 +303,7 @@ export class Space {
     return this
   }
 
-  computeLayout() {
+  computeLayout(): this {
     if (this.isRoot()) {
       computeRootRect(this)
     }
@@ -300,5 +314,7 @@ export class Space {
       computeChildrenRect(current)
       queue.push(...current.children)
     }
+
+    return this
   }
 }

@@ -55,7 +55,7 @@ export class Scalar {
       case ScalarType.LargerRelative:
         return this.value * Math.max(parentValue, parentOppositeValue)
       case ScalarType.Part:
-        return this.value * parentValue
+        return parentValue // "Part" space is always parent's size on normal axis (on colinear axis it is not computed here)
     }
   }
 
