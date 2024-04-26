@@ -12,6 +12,11 @@ export type Editable<T> = {
   -readonly [P in keyof T]: T[P]
 }
 
+export type PointLike = {
+  x: number
+  y: number
+}
+
 export type RectangleLike = {
   x: number
   y: number

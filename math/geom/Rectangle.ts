@@ -1,4 +1,4 @@
-import { RectangleLike } from '../../types'
+import { PointLike, RectangleLike } from '../../types'
 import { Padding, PaddingParams } from './Padding'
 
 export function innerRectangle<T extends RectangleLike>(
@@ -252,6 +252,17 @@ export class Rectangle implements RectangleLike {
       && x < this.x + this.width
       && y >= this.y
       && y < this.y + this.height
+  }
+
+  containsPoint(point: { x: number, y: number }): boolean {
+    return this.containsXY(point.x, point.y)
+  }
+
+  uv<T extends PointLike = PointLike>({ x, y }: PointLike, out?: T): T {
+    out ??= { x: 0, y: 0 } as T
+    out.x = (x - this.x) / this.width
+    out.y = (y - this.y) / this.height
+    return out
   }
 
   containsRect(other: RectangleLike): boolean {

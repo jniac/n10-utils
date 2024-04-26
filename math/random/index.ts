@@ -50,8 +50,12 @@ export class PRNG {
     return min + (max - min) * distribution(PRNG.random())
   }
 
-  static int(maxExclusive: number): number {
-    return Math.floor(PRNG.random() * maxExclusive)
+  static int(maxExclusive: number): number
+  static int(min: number, maxExclusive: number): number
+  static int(min: number, maxExclusive: number, distribution: (x: number) => number): number
+  static int(...args: any[]): number {
+    const [min, maxExclusive, distribution] = PRNG.solveRangeParameters(args)
+    return min + Math.floor(distribution(PRNG.random()) * (maxExclusive - min))
   }
 
   static chance(probability: number): boolean {
