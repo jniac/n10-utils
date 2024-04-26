@@ -234,6 +234,19 @@ export class Rectangle implements RectangleLike {
       aspect, sizeMode, alignX, alignY, out)
   }
 
+  /**
+   * Very useful method to calculate, for example, the uv coordinates of a rectangle.
+   */
+  relativeTo(other: RectangleLike): this {
+    this.x -= other.x
+    this.y -= other.y
+    this.x /= other.width
+    this.y /= other.height
+    this.width /= other.width
+    this.height /= other.height
+    return this
+  }
+
   containsXY(x: number, y: number): boolean {
     return x >= this.x
       && x < this.x + this.width

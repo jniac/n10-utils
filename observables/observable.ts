@@ -170,6 +170,11 @@ class Observable<T = any> {
       : false
   }
 
+  clearListeners(): this {
+    this._listeners.clear()
+    return this
+  }
+
   onChange(callback: Callback<T>): DestroyableObject
   onChange(options: OnChangeOptions, callback: Callback<T>): DestroyableObject
   onChange(...args: any[]): DestroyableObject {
