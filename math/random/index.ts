@@ -11,13 +11,18 @@ export class PRNG {
   static readonly defaultSeed = DEFAULT_SEED
   static readonly seedMax = MAX
 
-  static init(seed: number | string = DEFAULT_SEED): typeof PRNG {
+  static seed(seed: number | string = DEFAULT_SEED): typeof PRNG {
     if (typeof seed === 'string') {
       seed = seed.split('').reduce((acc, char) => acc * 7 + char.charCodeAt(0), 0)
     }
     state = init(seed)
     return PRNG
   }
+
+  /**
+   * @deprecated Use `PRNG.seed` instead.
+   */
+  static init = PRNG.seed
 
   static random(): number {
     state = next(state)
