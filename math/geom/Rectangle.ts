@@ -258,18 +258,57 @@ export class Rectangle implements RectangleLike {
     return this.containsXY(point.x, point.y)
   }
 
-  uv<T extends PointLike = PointLike>({ x, y }: PointLike, out?: T): T {
-    out ??= { x: 0, y: 0 } as T
-    out.x = (x - this.x) / this.width
-    out.y = (y - this.y) / this.height
-    return out
-  }
-
   containsRect(other: RectangleLike): boolean {
     return other.x >= this.x
       && other.y >= this.y
       && other.x + other.width <= this.x + this.width
       && other.y + other.height <= this.y + this.height
+  }
+
+  /**
+   * Readable / declarative method that can be called with different parameters:
+   * contains(x, y) -> containsXY(x, y)
+   * contains([x, y]) -> containsXY(x, y)
+   * contains(point) -> containsPoint(point)
+   * contains(rect) -> containsRect(rect)
+   */
+  contains(x: number, y: number): boolean
+  contains(other: PointLike): boolean
+  contains(other: RectangleLike): boolean
+  contains(...args: any[]): boolean {
+    if (args.length === 2) {
+      const [x, y] = args
+      return this.containsXY(x, y)
+    }
+    if (args.length === 1) {
+      const [arg] = args
+      if (Array.isArray(arg)) {
+        const [x, y] = arg
+        return this.containsXY(x, y)
+      }
+      if (typeof arg === 'object') {
+        // Duck typing
+        if ('x' in arg && 'y' in arg) {
+          // In Three.js, Vector2 has "width" and "height" aliases, so duck typing 
+          // is not reliable here. Instead, we check for the constructor name.
+          if (/vector2|point/.test(arg.constructor.name)) {
+            return this.containsPoint(arg)
+          }
+          if ('width' in arg && 'height' in arg) {
+            return this.containsRect(arg)
+          }
+          return this.containsPoint(arg)
+        }
+      }
+    }
+    throw new Error('Oops. Wrong parameters here.')
+  }
+
+  uv<T extends PointLike = PointLike>({ x, y }: PointLike, out?: T): T {
+    out ??= { x: 0, y: 0 } as T
+    out.x = (x - this.x) / this.width
+    out.y = (y - this.y) / this.height
+    return out
   }
 
   // Sugar:
