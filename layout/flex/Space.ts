@@ -132,12 +132,28 @@ export class Space {
     }
   }
 
+  allDescendantsCount({ includeSelf = true } = {}): number {
+    let count = 0
+    for (const _ of this.allDescendants({ includeSelf })) {
+      count++
+    }
+    return count
+  }
+
   *allLeaveDescendants({ includeSelf = true } = {}): Generator<Space> {
     for (const space of this.allDescendants({ includeSelf })) {
       if (space.children.length === 0) {
         yield space
       }
     }
+  }
+
+  allLeaveDescendantsCount({ includeSelf = true } = {}): number {
+    let count = 0
+    for (const _ of this.allLeaveDescendants({ includeSelf })) {
+      count++
+    }
+    return count
   }
 
   get(...indexes: number[]): Space | null {
