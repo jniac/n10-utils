@@ -30,7 +30,7 @@ export class PRNG {
   }
 
   // sugar-syntax:
-  private static solveRangeParameters(parameters: any[]): [number, number, (x: number) => number] {
+  private static solveBetweenParameters(parameters: any[]): [number, number, (x: number) => number] {
     switch (parameters.length) {
       default: {
         return [0, 1, identity]
@@ -46,20 +46,22 @@ export class PRNG {
       }
     }
   }
-  static range(): number
-  static range(max: number): number
-  static range(min: number, max: number): number
-  static range(min: number, max: number, distribution: (x: number) => number): number
-  static range(...args: any[]): number {
-    const [min, max, distribution] = PRNG.solveRangeParameters(args)
+  static between(): number
+  static between(max: number): number
+  static between(min: number, max: number): number
+  static between(min: number, max: number, distribution: (x: number) => number): number
+  static between(...args: any[]): number {
+    const [min, max, distribution] = PRNG.solveBetweenParameters(args)
     return min + (max - min) * distribution(PRNG.random())
   }
+
+  static range = PRNG.between // backward compatibility
 
   static int(maxExclusive: number): number
   static int(min: number, maxExclusive: number): number
   static int(min: number, maxExclusive: number, distribution: (x: number) => number): number
   static int(...args: any[]): number {
-    const [min, maxExclusive, distribution] = PRNG.solveRangeParameters(args)
+    const [min, maxExclusive, distribution] = PRNG.solveBetweenParameters(args)
     return min + Math.floor(distribution(PRNG.random()) * (maxExclusive - min))
   }
 
