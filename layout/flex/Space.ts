@@ -5,6 +5,28 @@ import { Direction, DirectionDeclaration, parseDirection } from './Direction'
 import { Scalar, ScalarDeclaration, ScalarType } from './Scalar'
 import { computeChildrenRect, computeRootRect } from './Space.layout'
 
+type PaddingDeclaration =
+  | ScalarDeclaration
+  | [all: ScalarDeclaration]
+  | [vertical: ScalarDeclaration, horizontal: ScalarDeclaration]
+  | [top: ScalarDeclaration, right: ScalarDeclaration, bottom: ScalarDeclaration, left: ScalarDeclaration]
+
+function solvePaddingDeclaration(args: PaddingDeclaration) {
+  if (Array.isArray(args) === false) {
+    return [args, args, args, args]
+  } else {
+    if (args.length === 1) {
+      return [args[0], args[0], args[0], args[0]]
+    } else if (args.length === 2) {
+      return [args[0], args[1], args[0], args[1]]
+    } else if (args.length === 4) {
+      return args
+    }
+  }
+  throw new Error('Invalid number of arguments')
+}
+
+
 /**
  * `some-utilz/layout/flex` is a naive yet robust flex layout system.
  * 
@@ -206,6 +228,24 @@ export class Space {
     return this
   }
 
+  populate({
+    count = 3,
+    size = <ScalarDeclaration>'1prt',
+    sizeX = <ScalarDeclaration>size,
+    sizeY = <ScalarDeclaration>size,
+    spacing = <ScalarDeclaration>0,
+    gap = <ScalarDeclaration>spacing,
+    padding = <PaddingDeclaration>0,
+  } = {}): this {
+    for (let i = 0; i < count; i++) {
+      this.add(new Space()
+        .setSize(sizeX, sizeY)
+        .setPadding(padding)
+        .setSpacing(gap))
+    }
+    return this
+  }
+
   addTo(space: Space): this {
     space.add(this)
     return this
@@ -277,21 +317,15 @@ export class Space {
     return this
   }
 
+  setPadding(all: PaddingDeclaration): this
   setPadding(all: ScalarDeclaration): this
   setPadding(vertical: ScalarDeclaration, horizontal: ScalarDeclaration): this
   setPadding(top: ScalarDeclaration, right: ScalarDeclaration, bottom: ScalarDeclaration, left: ScalarDeclaration): this
   setPadding(...args: any[]): this {
-    function solveArgs(args: any[]) {
-      if (args.length === 1) {
-        return [args[0], args[0], args[0], args[0]]
-      } else if (args.length === 2) {
-        return [args[0], args[1], args[0], args[1]]
-      } else if (args.length === 4) {
-        return args
-      }
-      throw new Error('Invalid number of arguments')
+    if (args.length === 1 && Array.isArray(args[0])) {
+      args = args[0]
     }
-    const [top, right, bottom, left] = solveArgs(args)
+    const [top, right, bottom, left] = solvePaddingDeclaration(args as any)
     this.padding[0].parse(top)
     this.padding[1].parse(right)
     this.padding[2].parse(bottom)
