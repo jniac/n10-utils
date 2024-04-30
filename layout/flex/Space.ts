@@ -11,16 +11,17 @@ type PaddingDeclaration =
   | [vertical: ScalarDeclaration, horizontal: ScalarDeclaration]
   | [top: ScalarDeclaration, right: ScalarDeclaration, bottom: ScalarDeclaration, left: ScalarDeclaration]
 
-function solvePaddingDeclaration(args: PaddingDeclaration) {
-  if (Array.isArray(args) === false) {
-    return [args, args, args, args]
+function solvePaddingDeclaration(arg: PaddingDeclaration) {
+  if (Array.isArray(arg) === false) {
+    return [arg, arg, arg, arg]
   } else {
-    if (args.length === 1) {
-      return [args[0], args[0], args[0], args[0]]
-    } else if (args.length === 2) {
-      return [args[0], args[1], args[0], args[1]]
-    } else if (args.length === 4) {
-      return args
+    const array = arg as any[]
+    if (array.length === 1) {
+      return [array[0], array[0], array[0], array[0]]
+    } else if (array.length === 2) {
+      return [array[0], array[1], array[0], array[1]]
+    } else if (array.length === 4) {
+      return array
     }
   }
   throw new Error('Invalid number of arguments')
