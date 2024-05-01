@@ -1,16 +1,23 @@
 import { Vector2, Vector3 } from 'three'
 
-export type Vector3Declaration =
+type ReadonlyOrNot<T> = T | Readonly<T>
+
+type Vector3DeclarationBase =
   | number
+  | [x: number, y: number, z: number]
   | [x: number, y: number, z: number]
   | { x: number; y: number; z: number }
   | { width: number; height: number; depth: number }
 
-export type Vector2Declaration =
+export type Vector3Declaration = ReadonlyOrNot<Vector3DeclarationBase>
+
+type Vector2DeclarationBase =
   | number
   | [x: number, y: number]
   | { x: number; y: number }
   | { width: number; height: number }
+
+export type Vector2Declaration = ReadonlyOrNot<Vector2DeclarationBase>
 
 export function solveVector3Declaration(arg: Vector3Declaration, out: Vector3 = new Vector3()): Vector3 {
   if (typeof arg === 'number') {
@@ -24,7 +31,7 @@ export function solveVector3Declaration(arg: Vector3Declaration, out: Vector3 = 
     const { width, height, depth } = arg
     return out.set(width, height, depth)
   }
-  const { x, y, z } = arg
+  const { x, y, z } = arg as { x: number; y: number; z: number }
   return out.set(x, y, z)
 }
 
@@ -40,6 +47,6 @@ export function solveVector2Declaration(arg: Vector2Declaration, out: Vector2 = 
     const { width, height } = arg
     return out.set(width, height)
   }
-  const { x, y } = arg
+  const { x, y } = arg as { x: number; y: number }
   return out.set(x, y)
 }
