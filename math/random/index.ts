@@ -69,6 +69,17 @@ export class PRNG {
     return PRNG.random() < probability
   }
 
+  static shuffle<T>(array: Iterable<T>, out = [...array]): T[] {
+    const length = out.length
+    for (let i = 0; i < length; i++) {
+      const j = Math.floor(length * PRNG.random())
+      const temp = out[i]
+      out[i] = out[j]
+      out[j] = temp
+    }
+    return out
+  }
+
   static among<T>(
     options: T[],
     weights: number[] | null = null,
