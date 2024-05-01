@@ -115,4 +115,31 @@ export class PRNG {
    * @deprecated Use `PRNG.pick` instead.
    */
   static among = PRNG.pick // backward compatibility
+
+  /**
+   * Facilitates picking an option from a list of options with associated weights.
+   * 
+   * e.g.
+   * ```
+   * const picker = PRNG.createPicker([
+   *   ['red', 1],
+   *   ['green', 2],
+   *   ['blue', 3],
+   * ])
+   * 
+   * PRNG.seed(56789) // optional (seed can be set at any time)
+   * const color = picker() // 50% chance of blue, 33% chance of green, 17% chance of red
+   * ```
+   */
+  static createPicker<T>(
+    entries: [T, number][],
+  ): () => T {
+    const options = entries.map(([entry]) => entry)
+    const weights = entries.map(([_, weight]) => weight)
+    const sum = weights.reduce((acc, weight) => acc + weight, 0)
+    for (const [i, weight] of weights.entries()) {
+      weights[i] = weight / sum
+    }
+    return () => PRNG.pick(options, weights, { weightsAreNormalized: true })
+  }
 }
