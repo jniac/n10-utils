@@ -38,15 +38,18 @@ class AnimationInstance {
   readonly duration: number
   readonly delay: number
   readonly target: any
+  timeScale: number
 
   time: number = 0
   timeOld: number = 0
   progress: number = 0
   frame: number = 0
 
-  constructor(duration: number, delay: number, target: any) {
+  constructor(duration: number, delay: number, timeScale: number, target: any) {
     this.duration = duration
     this.delay = delay
+    this.timeScale = timeScale
+    this.time = -delay
     this.target = target
   }
 
@@ -97,7 +100,7 @@ const updateInstances = (deltaTime: number) => {
     const instance = instances[i]
 
     instance.timeOld = instance.time
-    instance.time += deltaTime
+    instance.time += deltaTime * instance.timeScale
     instance.progress = Number.isFinite(instance.duration)
       ? clamp01(instance.time / instance.duration)
       : 0 // progress is zero on infinite animation.
@@ -150,10 +153,22 @@ function clear(target: any) {
 // --------------[ During ]--------------- //
 
 type DuringArg = {
-  /** duration in seconds */
+  /**
+   * Duration in seconds.
+   */
   duration: number
-  /** delay in seconds */
+  /**
+   * Delay in seconds.
+   */
   delay?: number
+  /**
+   * Time scale.
+   */
+  timeScale?: number
+  /**
+   * Target, if an instance is associated with a target, it will be destroyed 
+   * when a new instance is created for the same target.
+   */
   target?: any
 }
 
@@ -164,11 +179,11 @@ function during(arg: DuringArg): AnimationInstance
  */
 function during(duration: number): AnimationInstance
 function during(arg: any) {
-  const [duration, delay, target] = (typeof arg === 'number'
-    ? [arg, 0, undefined]
-    : [arg.duration, arg.delay ?? 0, arg.target]
-  ) as [number, number, any]
-  return registerInstance(new AnimationInstance(duration, delay, target))
+  const [duration, delay, timeScale, target] = (typeof arg === 'number'
+    ? [arg, 0, 1, undefined]
+    : [arg.duration, arg.delay ?? 0, arg.timeScale ?? 1, arg.target]
+  ) as [number, number, number, any]
+  return registerInstance(new AnimationInstance(duration, delay, timeScale, target))
 }
 
 
@@ -178,7 +193,8 @@ function during(arg: any) {
 const defaultTweenArg = {
   duration: 1,
   delay: 0,
-  ease: 'inOut2' as EasingDeclaration,
+  timeScale: 1,
+  ease: <EasingDeclaration>'inOut2',
 }
 
 type TweenEntry = {
@@ -243,12 +259,13 @@ function tween<T extends Record<string, any>>(arg: TweenArg<T>): TweenInstance {
   const {
     duration,
     delay,
+    timeScale,
     ease,
     target,
     from,
     to,
   } = { ...defaultTweenArg, ...arg }
-  const instance = registerInstance(new TweenInstance(duration, delay, target))
+  const instance = registerInstance(new TweenInstance(duration, timeScale, delay, target))
   if (from ?? to) {
     instance.add({ target, from, to })
   }
@@ -264,7 +281,21 @@ function tween<T extends Record<string, any>>(arg: TweenArg<T>): TweenInstance {
   return instance
 }
 
+type Bundle = {
+  during: typeof during
+  easing: typeof easing
+  tween: typeof tween
+  clear: typeof clear
+  core: {
+    updateInstances: typeof updateInstances
+    startAnimationLoop: typeof startAnimationLoop
+    stopAnimationLoop: typeof stopAnimationLoop
+  }
+}
+
 /**
+ * Low-level animation utility.
+ * 
  * Usage:
  * ```ts
  * Animation
@@ -277,7 +308,7 @@ function tween<T extends Record<string, any>>(arg: TweenArg<T>): TweenInstance {
  *   })
  * ```
  */
-const AnimationBundle = {
+const AnimationBundle: Bundle = {
   during,
   easing,
   tween,
