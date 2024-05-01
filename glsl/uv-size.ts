@@ -1,3 +1,8 @@
+/**
+ * GLSL functions for adjusting UV coordinates based on aspect ratio and size mode.
+ * 
+ * sizeMode: 0 for "contain", 1 for "cover"
+ */
 export const glsl_uv_size = /* glsl */ `
   // sizeMode: 0 for "contain", 1 for "cover"
   vec2 applyUvSize(vec2 uv, float outerAspect, float innerAspect, float sizeMode, vec2 align, vec2 scale) {
