@@ -55,6 +55,9 @@ export class PRNG {
     return min + (max - min) * distribution(PRNG.random())
   }
 
+  /**
+   * @deprecated Use `PRNG.between` instead.
+   */
   static range = PRNG.between // backward compatibility
 
   static int(maxExclusive: number): number
@@ -80,7 +83,7 @@ export class PRNG {
     return out
   }
 
-  static among<T>(
+  static pick<T>(
     options: T[],
     weights: number[] | null = null,
     { weightsAreNormalized = false } = {},
@@ -107,4 +110,9 @@ export class PRNG {
     }
     throw new Error('PRNG.among: unreachable')
   }
+
+  /** 
+   * @deprecated Use `PRNG.pick` instead.
+   */
+  static among = PRNG.pick // backward compatibility
 }
