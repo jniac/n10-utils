@@ -1,7 +1,9 @@
 export const glsl_color_adjust = /* glsl */`
 
 float contrast(float mValue, float mScale, float mMidPoint) {
-	return clamp((mValue - mMidPoint) * mScale + mMidPoint, 0.0, 1.0);
+	// Why clamp? If necessary, it has to be done outside of this function.
+	// return clamp((mValue - mMidPoint) * mScale + mMidPoint, 0.0, 1.0);
+	return (mValue - mMidPoint) * mScale + mMidPoint;
 }
 
 float contrast(float mValue, float mScale) {
