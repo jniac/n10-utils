@@ -155,7 +155,7 @@ export class Space {
     }
   }
 
-  allDescendantsCount({ includeSelf = true } = {}): number {
+  descendantsCount({ includeSelf = true } = {}): number {
     let count = 0
     for (const _ of this.allDescendants({ includeSelf })) {
       count++
@@ -163,7 +163,7 @@ export class Space {
     return count
   }
 
-  *allLeaveDescendants({ includeSelf = true } = {}): Generator<Space> {
+  *allLeaves({ includeSelf = true } = {}): Generator<Space> {
     for (const space of this.allDescendants({ includeSelf })) {
       if (space.children.length === 0) {
         yield space
@@ -171,9 +171,9 @@ export class Space {
     }
   }
 
-  allLeaveDescendantsCount({ includeSelf = true } = {}): number {
+  leavesCount({ includeSelf = true } = {}): number {
     let count = 0
-    for (const _ of this.allLeaveDescendants({ includeSelf })) {
+    for (const _ of this.allLeaves({ includeSelf })) {
       count++
     }
     return count
@@ -211,7 +211,7 @@ export class Space {
   pointCast(x: number, y: number): Space | null
   pointCast(...args: any[]): Space | null {
     const [x, y] = args.length === 1 ? [args[0].x, args[0].y] : args
-    for (const space of this.allLeaveDescendants()) {
+    for (const space of this.allLeaves()) {
       if (space.rect.containsXY(x, y)) {
         return space
       }

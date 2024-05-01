@@ -304,7 +304,7 @@ export class Rectangle implements RectangleLike {
     throw new Error('Oops. Wrong parameters here.')
   }
 
-  uv<T extends PointLike = PointLike>({ x, y }: PointLike, out?: T): T {
+  uv<T extends PointLike = PointLike>({ x, y }: T, out?: T): T {
     out ??= { x: 0, y: 0 } as T
     out.x = (x - this.x) / this.width
     out.y = (y - this.y) / this.height
