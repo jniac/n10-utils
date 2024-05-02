@@ -4,9 +4,8 @@ type ReadonlyOrNot<T> = T | Readonly<T>
 
 type Vector3DeclarationBase =
   | number
-  | [x: number, y: number, z: number]
-  | [x: number, y: number, z: number]
-  | { x: number; y: number; z: number }
+  | [x: number, y: number, z?: number]
+  | { x: number; y: number; z?: number }
   | { width: number; height: number; depth: number }
 
 export type Vector3Declaration = ReadonlyOrNot<Vector3DeclarationBase>
@@ -24,14 +23,14 @@ export function solveVector3Declaration(arg: Vector3Declaration, out: Vector3 = 
     return out.set(arg, arg, arg)
   }
   if (Array.isArray(arg)) {
-    const [x, y, z] = arg
+    const [x, y, z = 0] = arg
     return out.set(x, y, z)
   }
   if ('width' in arg) {
     const { width, height, depth } = arg
     return out.set(width, height, depth)
   }
-  const { x, y, z } = arg as { x: number; y: number; z: number }
+  const { x, y, z = 0 } = arg as { x: number; y: number; z?: number }
   return out.set(x, y, z)
 }
 
