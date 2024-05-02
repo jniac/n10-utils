@@ -1,5 +1,5 @@
 import { MultiKeyWeakMap } from '../collection/multi-key-map'
-import { clamp01 } from '../math/basics'
+import { clamp, clamp01 } from '../math/basics'
 import { isObject } from '../object/common'
 import { expandObject } from '../object/expand'
 import { EasingDeclaration, easing } from './easing'
@@ -38,18 +38,31 @@ class AnimationInstance {
   readonly duration: number
   readonly delay: number
   readonly target: any
+  unclampedTime: number
+  unclampedTimeOld: number
+  frame: number
   timeScale: number
 
+  // Computed user destinated values.
   time: number = 0
   timeOld: number = 0
   progress: number = 0
-  frame: number = 0
+
+  get delayed() {
+    return this.unclampedTime < 0
+  }
+
+  get deltaTime() {
+    return this.time - this.timeOld
+  }
 
   constructor(duration: number, delay: number, timeScale: number, target: any) {
     this.duration = duration
     this.delay = delay
+    this.frame = 0
     this.timeScale = timeScale
-    this.time = -delay
+    this.unclampedTimeOld =
+      this.unclampedTime = -delay
     this.target = target
   }
 
@@ -99,15 +112,22 @@ const updateInstances = (deltaTime: number) => {
   for (let i = 0, max = instances.length; i < max; i++) {
     const instance = instances[i]
 
+    instance.frame++
+
+    instance.unclampedTimeOld = instance.unclampedTime
+    instance.unclampedTime += deltaTime * instance.timeScale
+
     instance.timeOld = instance.time
-    instance.time += deltaTime * instance.timeScale
+    instance.time = clamp(instance.unclampedTime, 0, instance.duration)
+
     instance.progress = Number.isFinite(instance.duration)
       ? clamp01(instance.time / instance.duration)
       : 0 // progress is zero on infinite animation.
-    instance.frame++
 
-    for (const callback of onUpdate.get(instance.id)) {
-      callback(instance)
+    if (instance.unclampedTime > 0 || instance.frame === 1) {
+      for (const callback of onUpdate.get(instance.id)) {
+        callback(instance)
+      }
     }
   }
 
