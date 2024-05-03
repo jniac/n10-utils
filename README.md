@@ -13,7 +13,7 @@ Compilation of typescript utils, essentially for front-end concerns, essentially
 Used as a submodule for now, could be turned to a NPM package.
 
 ```
-git submodule add https://github.com/jniac/n10-utilz.git src/some-utilz
+git submodule add https://github.com/jniac/some-utilz.git src/some-utilz
 ```
 
 ## tsconfig
