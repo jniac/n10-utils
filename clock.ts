@@ -433,7 +433,29 @@ const appClock = (() => {
   return () => appClock ?? (appClock = new Clock({ updateDuration: Infinity }))
 })()
 
-function clockRequestUpdateOnUserInteraction(element: HTMLElement, { updateDuration } = {} as { updateDuration?: number }): DestroyableObject {
+
+
+type ClockRequestUpdateOnUserInteractionArg = Partial<{
+  element: HTMLElement
+  updateDuration: number
+}>
+function solveClockRequestUpdateOnUserInteractionArgs(args: any[]): ClockRequestUpdateOnUserInteractionArg {
+  if (args[0] instanceof HTMLElement) {
+    return {
+      element: args[0],
+      ...args[1]
+    }
+  }
+  return args as any
+}
+
+function clockRequestUpdateOnUserInteraction(element: HTMLElement, option: { updateDuration?: number }): DestroyableObject // Backward compatibility
+function clockRequestUpdateOnUserInteraction(arg?: ClockRequestUpdateOnUserInteractionArg): DestroyableObject
+function clockRequestUpdateOnUserInteraction(...args: any[]): DestroyableObject {
+  const {
+    element = document.documentElement,
+    updateDuration,
+  } = solveClockRequestUpdateOnUserInteractionArgs(args)
   const onInteraction = () => {
     clock().requestUpdate(updateDuration)
   }
