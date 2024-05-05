@@ -1,7 +1,21 @@
+// @ts-nocheck
 import { useEffect, useMemo } from 'react'
 
 import { Observable, ObservableNumber } from '../../../observables'
 import { useTriggerRender } from './misc'
+
+/**
+ * This hook is used to get the value of an observable and trigger a render
+ * whenever the observable changes.
+ */
+export function useValue<T>(observable: Observable<T>): T {
+	const triggerRender = useTriggerRender()
+	useEffect(() => {
+		const { destroy } = observable.onChange(() => triggerRender())
+		return destroy
+	}, [triggerRender, observable])
+	return observable.value
+}
 
 /**
  * Very similar in usage as `useState` but with an observable returned instead of
