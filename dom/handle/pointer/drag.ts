@@ -1,4 +1,4 @@
-import { clock } from '@/some-utilz/clock'
+import { clock } from '../../../clock'
 import { PointerButton, PointerTarget } from './type'
 
 type Direction = 'horizontal' | 'vertical'
