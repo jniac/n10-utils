@@ -192,6 +192,7 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
       all = [],
       any = this._allFlags,
       none = [],
+      executeImmediately = true,
       callback,
       on,
       off,
@@ -199,16 +200,27 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
     const allMask = reduceFlags(this._allFlags, ...all)
     const anyMask = reduceFlags(this._allFlags, ...any)
     const noneMask = reduceFlags(this._allFlags, ...none)
-    const hasAll = (this.value & allMask) === allMask
-    const hasAny = (this.value & anyMask) !== BigInt(0)
-    const hasNone = (this.value & noneMask) === BigInt(0)
-    let matchOld = hasAll && hasAny && hasNone
-    callback?.(matchOld, this)
-    return this.onChange(value => {
+
+    function computeMatch(value: bigint): boolean {
       const hasAll = (value & allMask) === allMask
       const hasAny = (value & anyMask) !== BigInt(0)
       const hasNone = (value & noneMask) === BigInt(0)
-      const match = hasAll && hasAny && hasNone
+      return hasAll && hasAny && hasNone
+    }
+
+    const match = computeMatch(this.value)
+    if (executeImmediately) {
+      callback?.(match, this)
+      if (match) {
+        on?.(match, this)
+      } else {
+        off?.(match, this)
+      }
+    }
+
+    let matchOld = match
+    return this.onChange(value => {
+      const match = computeMatch(value)
       if (match !== matchOld) {
         callback?.(match, this)
         if (match) {
