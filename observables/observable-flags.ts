@@ -132,6 +132,21 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
     this.value = BigInt((2 << this._allFlags.length) - 1)
     return this
   }
+
+  toDebugString(): string {
+    const str = this._allFlags
+      .map(flag => {
+        const active = this.has(flag)
+        return `  ${flag}${active ? ' (active)' : ''}`
+      })
+      .join('\n')
+    return `${this.constructor.name}:\n${str}`
+  }
+
+  logDebugString(): this {
+    console.log(this.toDebugString())
+    return this
+  }
 }
 
 export { ObservableFlags }
