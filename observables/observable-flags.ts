@@ -1,3 +1,4 @@
+import { DestroyableObject } from '../types'
 import { ConstructorOptions, Observable } from './observable'
 
 const { reduceFlags, expandFlags } = (() => {
@@ -79,12 +80,32 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
     return (this.value & reduceFlags(this._allFlags, flag)) !== BigInt(0)
   }
 
+  hasOld(flag: Flag): boolean {
+    return (this.valueOld & reduceFlags(this._allFlags, flag)) !== BigInt(0)
+  }
+
   hasAll(...flags: Flag[]): boolean {
     return flags.every(flag => this.has(flag))
   }
 
+  hasAllOld(...flags: Flag[]): boolean {
+    return flags.every(flag => this.hasOld(flag))
+  }
+
   hasAny(...flags: Flag[]): boolean {
     return flags.some(flag => this.has(flag))
+  }
+
+  hasAnyOld(...flags: Flag[]): boolean {
+    return flags.some(flag => this.hasOld(flag))
+  }
+
+  hasNone(...flags: Flag[]): boolean {
+    return !flags.some(flag => this.has(flag))
+  }
+
+  hasNoneOld(...flags: Flag[]): boolean {
+    return !flags.some(flag => this.hasOld(flag))
   }
 
   toggle(...flags: Flag[]): boolean {
@@ -133,14 +154,62 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
     return this
   }
 
+  onMatch(matchParams: {
+    /**
+     * All flags that must be active.
+     */
+    all?: Flag[],
+    /**
+     * At least one of these flags must be active.
+     */
+    any?: Flag[],
+    /**
+     * None of these flags must be active.
+     */
+    none?: Flag[],
+    /**
+     * If true, the callback will be called immediately.
+     */
+    executeImmediately?: boolean,
+    /**
+     * Callback that will be called when the flags match the conditions.
+     */
+    callback?: (match: boolean, obs: ObservableFlags<Flags, Flag>) => void,
+  }): DestroyableObject {
+    const {
+      all = [],
+      any = this._allFlags,
+      none = [],
+      callback,
+    } = matchParams
+    const allMask = reduceFlags(this._allFlags, ...all)
+    const anyMask = reduceFlags(this._allFlags, ...any)
+    const noneMask = reduceFlags(this._allFlags, ...none)
+    const hasAll = (this.value & allMask) === allMask
+    const hasAny = (this.value & anyMask) !== BigInt(0)
+    const hasNone = (this.value & noneMask) === BigInt(0)
+    let matchOld = hasAll && hasAny && hasNone
+    callback?.(matchOld, this)
+    return this.onChange(value => {
+      const hasAll = (value & allMask) === allMask
+      const hasAny = (value & anyMask) !== BigInt(0)
+      const hasNone = (value & noneMask) === BigInt(0)
+      const match = hasAll && hasAny && hasNone
+      if (match !== matchOld) {
+        callback?.(match, this)
+        matchOld = match
+      }
+    })
+  }
+
   toDebugString(): string {
     const str = this._allFlags
       .map(flag => {
         const active = this.has(flag)
-        return `  ${flag}${active ? ' (active)' : ''}`
+        return `  ${flag}${active ? '(X)' : '(_)'}`
       })
       .join('\n')
-    return `${this.constructor.name}:\n${str}`
+    return `${this.constructor.name}: (X/_)\n${str}`
   }
 
   logDebugString(): this {
@@ -148,6 +217,34 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
     return this
   }
 }
+
+// function test() {
+//   const o = new ObservableFlags(['foo', 'bar', 'qux'])
+
+//   o.onChange(() => {
+//     console.log(`\n`)
+//     o.logDebugString()
+//   })
+
+//   o.onMatch({
+//     all: ['foo'],
+//     any: ['foo', 'qux'],
+//     none: ['bar'],
+//     callback: match => {
+//       console.log(match ? 'OOOOK!!' : 'KO...')
+//     },
+//   })
+
+//   o.update({
+//     add: ['foo', 'bar'],
+//     remove: [],
+//   })
+
+//   o.add('qux')
+//   o.remove('bar')
+//   o.remove('qux')
+//   o.remove('foo')
+// }
 
 export { ObservableFlags }
 
