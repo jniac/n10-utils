@@ -2,6 +2,10 @@ import { DestroyableObject } from '../types'
 import { ConstructorOptions, Observable } from './observable'
 
 const { reduceFlags, expandFlags } = (() => {
+  /**
+   * A global cache for flag maps. This is used to optimize the conversion between
+   * flags and their indexes.
+   */
   const cache = new WeakMap<readonly any[], Map<any, number>>()
 
   function getMap(flags: readonly any[]): Map<any, number> {
@@ -168,19 +172,29 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
      */
     none?: Flag[],
     /**
-     * If true, the callback will be called immediately.
+     * If true, the callback will be called immediately (without waiting for the next change).
      */
     executeImmediately?: boolean,
     /**
-     * Callback that will be called when the flags match the conditions.
+     * Callback that will be called when the flags match again or not anymore.
      */
     callback?: (match: boolean, obs: ObservableFlags<Flags, Flag>) => void,
+    /**
+     * Callback that will be called when the flags match the conditions again.
+     */
+    on?: (match: boolean, obs: ObservableFlags<Flags, Flag>) => void,
+    /**
+     * Callback that will be called when the flags do not match the conditions anymore.
+     */
+    off?: (match: boolean, obs: ObservableFlags<Flags, Flag>) => void,
   }): DestroyableObject {
     const {
       all = [],
       any = this._allFlags,
       none = [],
       callback,
+      on,
+      off,
     } = matchParams
     const allMask = reduceFlags(this._allFlags, ...all)
     const anyMask = reduceFlags(this._allFlags, ...any)
@@ -197,6 +211,11 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
       const match = hasAll && hasAny && hasNone
       if (match !== matchOld) {
         callback?.(match, this)
+        if (match) {
+          on?.(match, this)
+        } else {
+          off?.(match, this)
+        }
         matchOld = match
       }
     })
