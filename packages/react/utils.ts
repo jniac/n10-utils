@@ -1,14 +1,39 @@
+// @ts-ignore
 import { ForwardedRef, MutableRefObject, Ref } from 'react'
 
 /**
- * Simplifies the declaration of className.
+ * Will return "foo bar baz" from makeClassName('foo', { bar: true }, { baz: true, qux: false })
  */
-export function className(...args: any[]) {
+export function makeClassName(...args: any[]) {
 	return args
 		.flat(Infinity)
-		.filter(item => typeof item === 'string' && item.length > 0)
+		.map(arg => {
+			if (typeof arg === 'string') {
+				return arg
+			}
+			if (typeof arg === 'object') {
+				return Object.entries(arg)
+					.map(([key, value]) => {
+						if (value) {
+							return key
+						}
+						return ''
+					})
+					.join(' ')
+			}
+			return ''
+		})
+		.filter(arg => !!arg)
 		.join(' ')
 }
+
+/**
+ * @deprecated Use `makeClassName` instead.
+ */
+export function className(...args: any[]) {
+	return makeClassName(...args)
+}
+
 
 /**
  * Simplifies the binding of refs.
