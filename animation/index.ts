@@ -83,6 +83,24 @@ class AnimationInstance {
     onDestroy.add(this.id, callback)
     return this
   }
+
+  // Facilitators:
+  /**
+   * Lerps the current progress value.
+   * 
+   * Usage:
+   * ```
+   * Animation
+   *   .during(1)
+   *   .onUpdate(({ progressLerp }) => {
+   *     const alpha = progressLerp(.75, 1, 'cubic-bezier(.33, 0, .66, 1)')
+   *   })
+   * ```
+   */
+  progressLerp = (from: number, to: number, ease: EasingDeclaration = 'linear') => {
+    const alpha = easing(ease)(this.progress)
+    return from + (to - from) * alpha
+  }
 }
 
 let instances: AnimationInstance[] = []
