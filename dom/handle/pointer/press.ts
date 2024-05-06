@@ -1,6 +1,13 @@
+import { Rectangle } from '../../../math/geom/Rectangle'
 import { PointerTarget } from './type'
 
-type PressInfo = { position: DOMPoint }
+type PressInfo = {
+  position: DOMPoint
+  delta: DOMPoint
+  target: PointerTarget
+  targetRectOnDown: Rectangle
+  pointerIsInside: boolean
+}
 
 type Callback = (info: PressInfo) => void
 
@@ -30,7 +37,15 @@ function handlePress(element: PointerTarget, params: Params) {
   const pointer = new DOMPoint(0, 0)
   const position = new DOMPoint(0, 0)
   const delta = new DOMPoint(0, 0)
-  const info = { position, delta }
+  const info: PressInfo = {
+    position,
+    delta,
+    target: element,
+    targetRectOnDown: new Rectangle(),
+    get pointerIsInside() {
+      return info.targetRectOnDown.contains(pointer.x, pointer.y)
+    },
+  }
 
   const dragFrame = () => {
     if (dragged) {
@@ -48,6 +63,7 @@ function handlePress(element: PointerTarget, params: Params) {
     window.addEventListener('mouseup', onMouseUp)
     frameID = window.requestAnimationFrame(dragFrame)
     dragged = true
+    info.targetRectOnDown.copy(element.getBoundingClientRect())
     delta.x = 0
     delta.y = 0
     position.x = event.clientX
@@ -76,6 +92,7 @@ function handlePress(element: PointerTarget, params: Params) {
       window.addEventListener('touchend', onTouchEnd)
       frameID = window.requestAnimationFrame(dragFrame)
       dragged = true
+      info.targetRectOnDown.copy(element.getBoundingClientRect())
       delta.x = 0
       delta.y = 0
       position.x = touch.clientX
