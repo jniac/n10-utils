@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Color, ColorRepresentation } from 'three'
 
 const _color = new Color()
@@ -12,6 +13,13 @@ const _color = new Color()
  * }
  * ```
  */
-export function makeColor(arg: ColorRepresentation, out: Color = _color) {
+export function makeColor(arg: ColorRepresentation, out?: Color): Color
+export function makeColor(r: number, g: number, b: number, out?: Color): Color
+export function makeColor(...args: any[]) {
+  if (typeof args[0] === 'number') {
+    const [r, g, b, out = _color] = args
+    return out.setRGB(r, g, b)
+  }
+  const [arg, out = _color] = args
   return out.set(arg)
 }
