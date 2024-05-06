@@ -48,6 +48,14 @@ const { reduceFlags, expandFlags } = (() => {
   }
 })()
 
+function reduceFlagIndexes(...activeIndexes: number[]): bigint {
+  let mask = BigInt(0)
+  for (const index of activeIndexes) {
+    mask |= BigInt(1 << index)
+  }
+  return mask
+}
+
 /**
  * An observable that can switch between a set of values.
  * 
@@ -124,15 +132,31 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
     add = [],
     remove = [],
   }: Partial<{
-    add: Flag[]
-    remove: Flag[]
+    add: Flag[] | number[]
+    remove: Flag[] | number[]
   }>): boolean {
     let { value } = this
-    for (const flag of add) {
-      value |= reduceFlags(this._allFlags, flag)
+    if (add.length > 0) {
+      if (typeof add[0] === 'number') {
+        for (const index of add as number[]) {
+          value |= reduceFlagIndexes(index)
+        }
+      } else {
+        for (const flag of add) {
+          value |= reduceFlags(this._allFlags, flag)
+        }
+      }
     }
-    for (const flag of remove) {
-      value &= ~reduceFlags(this._allFlags, flag)
+    if (remove.length > 0) {
+      if (typeof remove[0] === 'number') {
+        for (const index of remove as number[]) {
+          value &= ~reduceFlagIndexes(index)
+        }
+      } else {
+        for (const flag of remove) {
+          value &= ~reduceFlags(this._allFlags, flag)
+        }
+      }
     }
     return this.setValue(value)
   }
@@ -148,8 +172,12 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
   /**
    * Sets the flags to the given values.
    */
-  set(...flags: Flag[]): boolean {
-    const value = reduceFlags(this._allFlags, ...flags)
+  set(...flags: Flag[]): boolean
+  set(...flagIndexes: number[]): boolean
+  set(...flags: any[]): boolean {
+    const value = typeof flags[0] === 'number'
+      ? reduceFlagIndexes(...flags as number[])
+      : reduceFlags(this._allFlags, ...flags)
     return this.setValue(value)
   }
 
