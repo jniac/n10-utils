@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-ignore
 import { useEffect, useMemo } from 'react'
 
 import { Observable, ObservableNumber } from '../../../observables'
