@@ -4,7 +4,7 @@ export enum ScalarType {
   OppositeRelative = 1 << 2,
   SmallerRelative = 1 << 3,
   LargerRelative = 1 << 4,
-  Part = 1 << 5,
+  Fraction = 1 << 5,
 }
 
 const scalarExtensions = {
@@ -13,15 +13,21 @@ const scalarExtensions = {
   'opp': ScalarType.OppositeRelative,
   'sml': ScalarType.SmallerRelative,
   'lrg': ScalarType.LargerRelative,
-  'prt': ScalarType.Part,
+  'fr': ScalarType.Fraction,
 }
 
-type ScalarExtension = keyof typeof scalarExtensions
+const scalarExtraExtensions = {
+  'prt': ScalarType.Fraction, // backwards compatibility
+}
+
+const allScalarExtensions = { ...scalarExtensions, ...scalarExtraExtensions }
+
+type ScalarExtension = keyof typeof allScalarExtensions
 
 export type ScalarDeclaration = number | `${number}${ScalarExtension}`
 
 const scalarExtensionsReverse: Record<ScalarType, ScalarExtension> = Object.fromEntries(
-  Object.entries(scalarExtensions).map(([k, v]) => [v, k] as [ScalarType, ScalarExtension])) as any
+  Object.entries(allScalarExtensions).map(([k, v]) => [v, k] as [ScalarType, ScalarExtension])) as any
 
 export class Scalar {
   static parse(str: ScalarDeclaration, out = new Scalar()): Scalar {
@@ -54,7 +60,7 @@ export class Scalar {
         return this.value * Math.min(parentValue, parentOppositeValue)
       case ScalarType.LargerRelative:
         return this.value * Math.max(parentValue, parentOppositeValue)
-      case ScalarType.Part:
+      case ScalarType.Fraction:
         return parentValue // "Part" space is always parent's size on normal axis (on colinear axis it is not computed here)
     }
   }
@@ -75,7 +81,7 @@ export class Scalar {
     if (!m) return false
     const [_, v, t] = m
     const value = Number.parseFloat(v)
-    const type = scalarExtensions[t as ScalarExtension]
+    const type = allScalarExtensions[t as ScalarExtension]
     if (Number.isNaN(value) || type === undefined) return false
     this.value = value
     this.type = type

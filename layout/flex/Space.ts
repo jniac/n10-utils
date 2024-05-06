@@ -105,8 +105,8 @@ export class Space {
 
   offsetX = new Scalar(0, ScalarType.Absolute)
   offsetY = new Scalar(0, ScalarType.Absolute)
-  sizeX = new Scalar(1, ScalarType.Part)
-  sizeY = new Scalar(1, ScalarType.Part)
+  sizeX = new Scalar(1, ScalarType.Fraction)
+  sizeY = new Scalar(1, ScalarType.Fraction)
 
   extraSizeX = new Scalar(1, ScalarType.Relative)
   extraSizeY = new Scalar(1, ScalarType.Relative)

@@ -30,7 +30,7 @@ export function computePadding(space: Space) {
   {
     // Check
     for (const side of space.padding) {
-      if (side.type === ScalarType.Part) {
+      if (side.type === ScalarType.Fraction) {
         throw new Error('Share padding is not allowed')
       }
     }
@@ -55,7 +55,7 @@ export function computeChildrenRect(space: Space) {
     const size = direction === Direction.Horizontal
       ? child.sizeX
       : child.sizeY
-    if (size.type !== ScalarType.Part) {
+    if (size.type !== ScalarType.Fraction) {
       acc[0].push(child)
     } else {
       acc[1].push(child)
