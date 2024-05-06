@@ -49,6 +49,24 @@ export function innerRectangle<T extends RectangleLike>(
  * Useful Rectangle class, for easier calculations.
  */
 export class Rectangle implements RectangleLike {
+  static from(other: RectangleLike): Rectangle
+  static from(params: { aspect: number, diagonal: number }): Rectangle
+  static from(arg: any): Rectangle {
+    if (typeof arg === 'object') {
+      if ('aspect' in arg && 'diagonal' in arg) {
+        const { aspect, diagonal } = arg
+        const height = Math.sqrt(diagonal ** 2 / (1 + aspect ** 2))
+        const width = height * aspect
+        return new Rectangle(0, 0, width, height)
+      }
+
+      if ('x' in arg && 'y' in arg && 'width' in arg && 'height' in arg) {
+        return new Rectangle().copy(arg)
+      }
+    }
+    throw new Error('Oops. Wrong parameters here.')
+  }
+
   x: number = 0
   y: number = 0
   width: number = 0
@@ -69,7 +87,7 @@ export class Rectangle implements RectangleLike {
     yield this.height
   }
 
-  copy(other: Rectangle): this {
+  copy(other: RectangleLike): this {
     this.x = other.x
     this.y = other.y
     this.width = other.width
