@@ -145,8 +145,12 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
     return this.update({ remove: flags })
   }
 
-  set(active: boolean, ...flags: Flag[]): boolean {
-    return active ? this.add(...flags) : this.remove(...flags)
+  /**
+   * Sets the flags to the given values.
+   */
+  set(...flags: Flag[]): boolean {
+    const value = reduceFlags(this._allFlags, ...flags)
+    return this.setValue(value)
   }
 
   clear(): void {
