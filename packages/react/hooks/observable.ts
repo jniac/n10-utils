@@ -9,6 +9,10 @@ import { useTriggerRender } from './misc'
  * whenever the observable changes.
  */
 export function useValue<T>(observable: Observable<T>): T {
+	if (observable instanceof Observable === false) {
+		throw new Error('useValue() must be called with an Observable instance.')
+	}
+
 	const triggerRender = useTriggerRender()
 	useEffect(() => {
 		const { destroy } = observable.onChange(() => triggerRender())
