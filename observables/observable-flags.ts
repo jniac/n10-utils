@@ -267,9 +267,9 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
 
   toDebugString(): string {
     const str = this._allFlags
-      .map(flag => {
+      .map((flag, index) => {
         const active = this.has(flag)
-        return `  ${flag}${active ? '(X)' : '(_)'}`
+        return `  ${index} ${flag}${active ? '(X)' : '(_)'}`
       })
       .join('\n')
     return `${this.constructor.name}: (X/_)\n${str}`
