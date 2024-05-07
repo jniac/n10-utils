@@ -158,6 +158,27 @@ class Observable<T = any> {
   }
 
   /**
+   * Usefull to set the value from a string (eg: from a serialized value).
+   */
+  setValueFromString(value: string, options?: SetValueOptions): boolean {
+    const type = typeof this._value
+    switch (type) {
+      case 'string':
+        return this.setValue(value as T, options)
+      case 'number':
+        return this.setValue(Number(value) as T, options)
+      case 'boolean':
+        const booleanValue = /^true|1$/.test(value)
+        return this.setValue(booleanValue as T, options)
+      case 'bigint':
+        return this.setValue(BigInt(value) as T, options)
+      default:
+        console.warn(`Observable#setValueFromString: Unsupported type "${type}"`)
+        return false
+    }
+  }
+
+  /**
    * Since the valueMapper can change the inner value, defining a new value mapper
    * with a non-null value internally invokes setValue() and returns the result.
    * @param valueMapper 
