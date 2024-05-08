@@ -46,7 +46,18 @@ export function innerRectangle<T extends RectangleLike>(
 }
 
 /**
- * Useful Rectangle class, for easier calculations.
+ * Very versatile and useful class for working with rectangles.
+ * 
+ * Features:
+ * - alignment
+ * - aspect ratio
+ * - diagonal
+ * - area
+ * - padding
+ * - inner rectangle
+ * - relative coordinates
+ * - uv coordinates
+ * - contains methods
  */
 export class Rectangle implements RectangleLike {
   static from(other: RectangleLike): Rectangle
@@ -55,9 +66,7 @@ export class Rectangle implements RectangleLike {
     if (typeof arg === 'object') {
       if ('aspect' in arg && 'diagonal' in arg) {
         const { aspect, diagonal } = arg
-        const height = Math.sqrt(diagonal ** 2 / (1 + aspect ** 2))
-        const width = height * aspect
-        return new Rectangle(0, 0, width, height)
+        return new Rectangle().setDiagonalAndAspect(diagonal, aspect)
       }
 
       if ('x' in arg && 'y' in arg && 'width' in arg && 'height' in arg) {
@@ -73,6 +82,7 @@ export class Rectangle implements RectangleLike {
   height: number = 0
 
   constructor()
+  constructor(width: number, height: number)
   constructor(x: number, y: number, width: number, height: number)
   constructor(...args: any) {
     if (args.length > 0) {
@@ -99,6 +109,7 @@ export class Rectangle implements RectangleLike {
     return new Rectangle().copy(this)
   }
 
+  set(width: number, height: number): this
   set(x: number, y: number, width: number, height: number): this
   set(other: Rectangle): this
   set(...args: any): this {
@@ -107,6 +118,11 @@ export class Rectangle implements RectangleLike {
       this.y = args[1]
       this.width = args[2]
       this.height = args[3]
+      return this
+    }
+    if (args.length === 2) {
+      this.width = args[0]
+      this.height = args[1]
       return this
     }
     if (args.length === 1) {
@@ -209,18 +225,52 @@ export class Rectangle implements RectangleLike {
     return this
   }
 
-  /**
-   * Resize the rectangle to fit a given area, keeping the aspect ratio.
-   */
-  setArea(value: number): this {
-    const scalar = Math.sqrt(value / this.area)
-    const width = this.width * scalar
-    const height = this.height * scalar
-    this.x += (this.width - width) / 2
-    this.y += (this.height - height) / 2
+  setPosition(x: number, y: number, align?: { x: number, y: number }): this {
+    const alignX = align?.x ?? 0
+    const alignY = align?.y ?? 0
+    this.x = x - this.width * alignX
+    this.y = y - this.height * alignY
+    return this
+  }
+
+  setSize(width: number, height: number, align?: { x: number, y: number }): this {
+    const alignX = align?.x ?? 0
+    const alignY = align?.y ?? 0
+    this.x += (this.width - width) * alignX
+    this.y += (this.height - height) * alignY
     this.width = width
     this.height = height
     return this
+  }
+
+  /**
+   * Resize the rectangle to fit a given area, keeping the aspect ratio.
+   */
+  setArea(value: number, align?: { x: number, y: number }): this {
+    const scalar = Math.sqrt(value / this.area)
+    const width = this.width * scalar
+    const height = this.height * scalar
+    return this.setSize(width, height, align)
+  }
+
+  setDiagonal(value: number, align?: { x: number, y: number }): this {
+    const aspect = this.width / this.height
+    const height = Math.sqrt(value ** 2 / (1 + aspect ** 2))
+    const width = height * aspect
+    return this.setSize(width, height, align)
+  }
+
+  setAspect(aspect: number, align?: { x: number, y: number }): this {
+    const { diagonal } = this
+    const height = Math.sqrt(diagonal ** 2 / (1 + aspect ** 2))
+    const width = height * aspect
+    return this.setSize(width, height, align)
+  }
+
+  setDiagonalAndAspect(diagonal: number, aspect: number, align?: { x: number, y: number }): this {
+    const height = Math.sqrt(diagonal ** 2 / (1 + aspect ** 2))
+    const width = height * aspect
+    return this.setSize(width, height, align)
   }
 
   applyPadding(padding: PaddingParams): this {
@@ -377,6 +427,20 @@ export class Rectangle implements RectangleLike {
   }
   set area(value: number) {
     this.setArea(value)
+  }
+
+  get diagonal() {
+    return Math.sqrt(this.width ** 2 + this.height ** 2)
+  }
+  set diagonal(value: number) {
+    this.setDiagonal(value)
+  }
+
+  get aspect() {
+    return this.width / this.height
+  }
+  set aspect(value: number) {
+    this.setAspect(value)
   }
 }
 
