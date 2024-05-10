@@ -178,6 +178,10 @@ class Observable<T = any> {
     }
   }
 
+  valueToString(): string {
+    return String(this._value)
+  }
+
   /**
    * Since the valueMapper can change the inner value, defining a new value mapper
    * with a non-null value internally invokes setValue() and returns the result.
