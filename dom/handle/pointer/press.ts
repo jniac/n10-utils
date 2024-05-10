@@ -80,7 +80,7 @@ function handlePress(element: PointerTarget, params: Params) {
 
   const onMouseUp = () => {
     window.removeEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
+    window.removeEventListener('mouseup', onMouseUp)
     dragged = false
     onPressStop?.(info)
   }
