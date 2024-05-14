@@ -86,6 +86,7 @@ function handlePress(element: PointerTarget, params: Params) {
   }
 
   const onTouchStart = (event: TouchEvent) => {
+    event.preventDefault() // prevent mouse events to be fired
     const touch = event.touches[0]
     if (touch) {
       window.addEventListener('touchmove', onTouchMove)
