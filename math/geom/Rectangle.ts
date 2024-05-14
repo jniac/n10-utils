@@ -217,7 +217,21 @@ export class Rectangle implements RectangleLike {
     return this
   }
 
-  multiplyScalar(scalarX: number, scalarY: number): this {
+  translate(x: number, y: number): this {
+    this.x += x
+    this.y += y
+    return this
+  }
+
+  multiplyScalar(scalar: number): this {
+    this.x *= scalar
+    this.y *= scalar
+    this.width *= scalar
+    this.height *= scalar
+    return this
+  }
+
+  multiply(scalarX: number, scalarY: number): this {
     this.x *= scalarX
     this.y *= scalarY
     this.width *= scalarX
@@ -273,12 +287,19 @@ export class Rectangle implements RectangleLike {
     return this.setSize(width, height, align)
   }
 
-  applyPadding(padding: PaddingParams): this {
-    const pad = Padding.ensure(padding)
-    this.x += pad.left
-    this.y += pad.top
-    this.width -= pad.left + pad.right
-    this.height -= pad.top + pad.bottom
+  applyPadding(padding: PaddingParams, mode = <'shrink' | 'grow'>'shrink'): this {
+    const { top, right, bottom, left } = Padding.ensure(padding)
+    if (mode === 'shrink') {
+      this.x += left
+      this.y += top
+      this.width -= left + right
+      this.height -= top + bottom
+    } else {
+      this.x -= left
+      this.y -= top
+      this.width += left + right
+      this.height += top + bottom
+    }
     return this
   }
 
