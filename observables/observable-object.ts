@@ -10,6 +10,11 @@ import { Observable, SetValueOptions } from './observable'
  * - The object is cloned deeply when setting a new value.
  */
 export class ObservableObject<T extends {}> extends Observable<T> {
+  get value() {
+    // Return a deep clone of the value, for immutability:
+    return deepClone(this._value)
+  }
+
   override setValue(value: T, options?: SetValueOptions): boolean {
     return this.updateValue(value as any, options)
   }
