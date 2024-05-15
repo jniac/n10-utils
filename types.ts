@@ -21,6 +21,12 @@ export type PointLike = {
   y: number
 }
 
+export type Point3Like = {
+  x: number
+  y: number
+  z: number
+}
+
 export type RectangleLike = {
   x: number
   y: number
