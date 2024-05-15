@@ -209,6 +209,9 @@ export class ObservableNumber extends Observable<number> {
     return this.setValue(this._value + delta)
   }
 
+  /**
+   * Changes the inner value towards the target by a certain amount.
+   */
   lerpTo(target: number, alpha: number, {
     clamp = true,
     epsilon = 1e-9,
@@ -220,6 +223,9 @@ export class ObservableNumber extends Observable<number> {
     return this.setValue(newValue)
   }
 
+  /**
+   * Linear interpolation of the inner value between the two given values.
+   */
   lerp(a: number, b: number, options?: Partial<{ clamped: boolean }>): number {
     let alpha = this._value
     if (options?.clamped === true) {
