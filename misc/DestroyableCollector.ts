@@ -26,6 +26,17 @@ export class DestroyableCollector {
     map.get(this)?.push(destroyable) ?? map.set(this, [destroyable])
   }
 
+  /**
+   * Will add the destroyable if it has a `destroy` method or if it is a function.
+   */
+  safeAdd(candidate: any) {
+    if (candidate && typeof candidate === 'object' && 'destroy' in candidate) {
+      this.add(candidate)
+    } else if (typeof candidate === 'function') {
+      this.add(candidate)
+    }
+  }
+
   destroy = () => {
     const destroyables = map.get(this)
     if (destroyables) {
