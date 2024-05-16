@@ -172,9 +172,9 @@ class ObservableFlags<Flags extends readonly Flag[] = any[], Flag = Flags[number
   /**
    * Sets the flags to the given values.
    */
-  set(...flags: Flag[]): boolean
-  set(...flagIndexes: number[]): boolean
-  set(...flags: any[]): boolean {
+  setFlags(...flags: Flag[]): boolean
+  setFlags(...flagIndexes: number[]): boolean
+  setFlags(...flags: any[]): boolean {
     const value = typeof flags[0] === 'number'
       ? reduceFlagIndexes(...flags as number[])
       : reduceFlags(this._allFlags, ...flags)
