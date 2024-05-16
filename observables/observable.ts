@@ -264,6 +264,10 @@ class Observable<T = any> {
   set value(value) { this.setValue(value) }
   get valueOld() { return this._valueOld }
 
+  // Short syntax:
+  get = () => this._value
+  set = this.setValue.bind(this)
+
   // Debug
   log(formatValue: (value: T) => string = (value: T) => `Obs#${this._observableId} value has changed: ${value}`): DestroyableObject {
     return this.onChange(value => {
