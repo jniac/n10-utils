@@ -88,4 +88,9 @@ export const glsl_easings = /* glsl */`
             x <= i ? 1.0 / pow(i, p - 1.0) * pow(x, p) :
             1.0 - 1.0 / pow(1.0 - i, p - 1.0) * pow(1.0 - x, p);
   }
+
+  // https://www.desmos.com/calculator/nrjlezusdv
+  float easeInThenOut(float x, float p) {
+    return 1.0 - pow(abs(2.0 * x - 1.0), p);
+  }
 `
