@@ -18,6 +18,7 @@ export function deepClone<T>(target: T): T {
   }
 
   // Objects
+  // @ts-ignore
   const constructor = target.constructor
   if (constructor === RegExp || constructor === Date) {
     // @ts-ignore
@@ -31,6 +32,7 @@ export function deepClone<T>(target: T): T {
       clone[i] = deepClone(target[i])
     }
   } else {
+    // @ts-ignore
     for (const [key, value] of Object.entries(target)) {
       clone[key] = deepClone(value)
     }
