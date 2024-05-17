@@ -449,7 +449,7 @@ function solveClockRequestUpdateOnUserInteractionArgs(args: any[]): ClockRequest
   return args as any
 }
 
-function clockRequestUpdateOnUserInteraction(element: HTMLElement, option: { updateDuration?: number }): DestroyableObject // Backward compatibility
+function clockRequestUpdateOnUserInteraction(element: HTMLElement, option?: { updateDuration?: number }): DestroyableObject // Backward compatibility
 function clockRequestUpdateOnUserInteraction(arg?: ClockRequestUpdateOnUserInteractionArg): DestroyableObject
 function clockRequestUpdateOnUserInteraction(...args: any[]): DestroyableObject {
   const {
