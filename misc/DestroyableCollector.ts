@@ -22,18 +22,22 @@ const map = new WeakMap<DestroyableCollector, Destroyable[]>()
  * ```
  */
 export class DestroyableCollector {
-  add(destroyable: Destroyable) {
-    map.get(this)?.push(destroyable) ?? map.set(this, [destroyable])
+  add(...destroyables: Destroyable[]) {
+    for (const destroyable of destroyables) {
+      map.get(this)?.push(destroyable) ?? map.set(this, [destroyable])
+    }
   }
 
   /**
    * Will add the destroyable if it has a `destroy` method or if it is a function.
    */
-  safeAdd(candidate: any) {
-    if (candidate && typeof candidate === 'object' && 'destroy' in candidate) {
-      this.add(candidate)
-    } else if (typeof candidate === 'function') {
-      this.add(candidate)
+  safeAdd(...candidates: any[]) {
+    for (const candidate of candidates) {
+      if (candidate && typeof candidate === 'object' && 'destroy' in candidate) {
+        this.add(candidate)
+      } else if (typeof candidate === 'function') {
+        this.add(candidate)
+      }
     }
   }
 
