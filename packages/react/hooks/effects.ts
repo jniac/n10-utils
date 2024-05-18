@@ -1,4 +1,6 @@
+// @ts-ignore
 import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+
 import { Destroyable } from '../../../types'
 import { digestProps } from './digestProps'
 

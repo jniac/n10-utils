@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Material, WebGLProgramParametersWithUniforms } from 'three'
 
 import { MeshPhysicalMaterialFragmentTokens, MeshPhysicalMaterialVertexTokens, glTokens } from './Tokens'
@@ -7,7 +8,7 @@ import { Uniforms, getGlType, solveUniformDeclaration } from './types'
 let current: WebGLProgramParametersWithUniforms = null!
 
 const wrap = <T extends Material>(material: T, callback: (shader: WebGLProgramParametersWithUniforms) => void): T => {
-  material.onBeforeCompile = shader => {
+  material.onBeforeCompile = (shader: any) => {
     current = shader
   }
   return material

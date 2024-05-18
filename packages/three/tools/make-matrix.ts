@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Euler, EulerOrder, Matrix4, Quaternion, Vector3 } from 'three'
 
 export type MatrixParams = Partial<{

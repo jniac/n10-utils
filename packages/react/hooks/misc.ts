@@ -1,3 +1,4 @@
+// @ts-ignore
 import { useCallback, useMemo, useState } from 'react'
 
 let renderCounter = 0

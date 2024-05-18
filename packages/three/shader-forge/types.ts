@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Color, CubeTexture, IUniform, Matrix3, Matrix4, Quaternion, Texture, Vector2, Vector3, Vector4 } from 'three'
 
 import { Observable } from '../../../observables'
