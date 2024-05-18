@@ -38,7 +38,7 @@ type OnChangeOptions = Partial<{
   executeImmediately: boolean
 }>
 
-let observableCount = 0
+let observableNextId = 0
 
 /**
  * Observable is a very simple wrapper around a value (any kind) that makes it 
@@ -69,7 +69,9 @@ let observableCount = 0
  * ``` 
  */
 class Observable<T = any> {
-  protected _observableId = observableCount++
+  static get nextId() { return observableNextId }
+
+  protected readonly _observableId = observableNextId++
   protected _value: T
   protected _valueOld: T
   protected _valueMapper: ValueMapper<T> | null = null
