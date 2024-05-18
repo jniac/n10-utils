@@ -234,6 +234,9 @@ export class ObservableNumber extends Observable<number> {
     return a + (b - a) * alpha
   }
 
+  /**
+   * Inverse linear interpolation of the inner value between the two given values.
+   */
   inverseLerp(a: number, b: number, options?: Partial<{ clamped: boolean }>): number {
     let alpha = (this._value - a) / (b - a)
     if (options?.clamped === true) {
