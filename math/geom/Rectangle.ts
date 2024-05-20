@@ -59,7 +59,7 @@ export function innerRectangle<T extends RectangleLike>(
  * - uv coordinates
  * - contains methods
  */
-export class Rectangle implements RectangleLike {
+export class Rectangle implements RectangleLike, Iterable<number> {
   static from(other: RectangleLike): Rectangle
   static from(params: { aspect: number, diagonal: number }): Rectangle
   static from(arg: any): Rectangle {
@@ -486,6 +486,10 @@ export class Rectangle implements RectangleLike {
   }
   set aspect(value: number) {
     this.setAspect(value)
+  }
+
+  tupple(): [number, number, number, number] {
+    return [this.x, this.y, this.width, this.height]
   }
 }
 

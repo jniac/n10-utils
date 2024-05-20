@@ -29,7 +29,7 @@ export function getMatrixMaker({
   scale = new Vector3(),
   matrix = new Matrix4(),
 } = {}) {
-  return function makeMatrix(params: MatrixParams, out: Matrix4 = matrix) {
+  return function makeMatrix(params: MatrixParams, out: Matrix4 = matrix): Matrix4 {
     const {
       x = 0,
       y = 0,
