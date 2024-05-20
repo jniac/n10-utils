@@ -296,7 +296,7 @@ class Clock implements DestroyableObject, ClockState {
    * "Uniform" time, meant to be used in shaders.
    */
   get uTime() {
-    const getTime = () => this._state.time
+    const getTime = () => this._state.time % 1e3 // modulo 1e3 to avoid overflow.
     return { get value() { return getTime() } }
   }
 

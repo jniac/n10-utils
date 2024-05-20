@@ -136,6 +136,10 @@ export class Space {
     return this.root === this
   }
 
+  isLeaf(): boolean {
+    return this.children.length === 0
+  }
+
   depth(): number {
     let depth = 0
     let current: Space | null = this
