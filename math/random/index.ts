@@ -142,4 +142,39 @@ export class PRNG {
     }
     return () => PRNG.pick(options, weights, { weightsAreNormalized: true })
   }
+
+  /**
+   * Returns the given vector with each component set to a random value between `min` and `max`.
+   * 
+   * Usage:
+   * ```
+   * PRNG.vector([0, 0, 0]) // e.g. [0.123, 0.456, 0.789]
+   * PRNG.vector(new Vector3(), { min: -1, max: 1 }) // e.g. Vector3(-0.123, 0.456, -0.789)
+   * ```
+   */
+  static vector<T>(out: T, {
+    min = 0,
+    max = 1,
+  } = {}): T {
+    for (const key of Object.keys(out as any)) {
+      (out as any)[key] = PRNG.between(min, max)
+    }
+    return out
+  }
+
+  /**
+   * Same as `PRNG.vector`, but the resulting vector is normalized.
+   */
+  static unitVector<T>(out: T, {
+    min = -1,
+    max = 1,
+  } = {}): T {
+    const keys = Object.keys(out as any)
+    const values = keys.map(() => PRNG.between(min, max))
+    const length = Math.sqrt(values.reduce((acc, value) => acc + value * value, 0))
+    for (const [index, key] of keys.entries()) {
+      (out as any)[key] = values[index] / length
+    }
+    return out
+  }
 }
