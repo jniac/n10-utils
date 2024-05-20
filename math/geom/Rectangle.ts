@@ -348,6 +348,18 @@ export class Rectangle implements RectangleLike {
     return this
   }
 
+  lerpRectangles(a: RectangleLike, b: RectangleLike, t: number): this {
+    this.x = a.x + (b.x - a.x) * t
+    this.y = a.y + (b.y - a.y) * t
+    this.width = a.width + (b.width - a.width) * t
+    this.height = a.height + (b.height - a.height) * t
+    return this
+  }
+
+  lerp(other: RectangleLike, t: number): this {
+    return this.lerpRectangles(this, other, t)
+  }
+
   containsXY(x: number, y: number): boolean {
     return x >= this.x
       && x < this.x + this.width
