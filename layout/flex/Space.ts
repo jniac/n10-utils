@@ -368,4 +368,9 @@ export class Space {
 
     return this
   }
+
+  // Utils:
+  getUvRect(): Rectangle {
+    return this.rect.clone().relativeTo(this.root.rect)
+  }
 }
