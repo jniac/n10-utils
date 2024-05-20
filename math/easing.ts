@@ -115,6 +115,22 @@ export const easeInLinearEaseOut = (x: number, p: number, q: number, s: number) 
 	return (x * w - p1 + p2) / a
 }
 
+/**
+ * "in-then-out" easing curve using a cosine function.
+ * https://www.desmos.com/calculator/koudvu41xb
+ */
+export const inThenOutCos = (x: number) => {
+	return .5 + .5 * Math.cos(2 * Math.PI * (x - .5))
+}
+
+/**
+ * "in-then-out" easing curve using a power function.
+ * https://www.desmos.com/calculator/fzvpkbwej0
+ */
+export const inThenOutPow = (x: number, p: number) => {
+	return 1 - Math.abs(2 * x - 1) ** p
+}
+
 export const easing = {
 	linear,
 
@@ -141,4 +157,12 @@ export const easing = {
 
 	inOut: easeInOut,
 	inLinearOut: easeInLinearEaseOut,
+
+	/**
+	 * "in-then-out" easing curves are curves that start and end at zero.
+	 */
+	inThenOut: {
+		cos: inThenOutCos,
+		pow: inThenOutPow,
+	},
 }
