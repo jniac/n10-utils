@@ -263,7 +263,7 @@ class Clock implements DestroyableObject, ClockState {
           this._unfreezeListeners.call(state)
         }
 
-        if (this.catchErrors) {
+        if (this.catchErrors === false) {
           this._updateListeners.call(state)
         } else {
           try {
