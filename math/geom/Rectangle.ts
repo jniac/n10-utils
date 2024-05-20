@@ -159,6 +159,18 @@ export class Rectangle implements RectangleLike {
     return this
   }
 
+  getCenter<T extends PointLike>(out: T = { x: 0, y: 0 } as T): T {
+    out.x = this.getCenterX()
+    out.y = this.getCenterY()
+    return out
+  }
+
+  setCenter(point: PointLike): this {
+    return (this
+      .setCenterX(point.x)
+      .setCenterY(point.y))
+  }
+
   getLeft() {
     return this.x
   }
