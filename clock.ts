@@ -140,6 +140,16 @@ class Clock implements DestroyableObject, ClockState {
   suspend() { this.suspended = true }
   resume() { this.suspended = false }
 
+  /**
+   * If `true`, the clock will catch errors thrown by the callbacks and stop the 
+   * loop if it happens.
+   * 
+   * `true` by default.
+   * 
+   * Could be set to false for performance reasons.
+   */
+  catchErrors = true
+
   // Destroyable implementation.
   destroy: () => void
   value() { return this }
@@ -150,6 +160,7 @@ class Clock implements DestroyableObject, ClockState {
   private _unfreezeListeners = new Listeners()
   private _freezed = false
   private _requestAnimationFrame = 0
+  private _caughtErrors = false
 
   private _state: ClockState = {
     timeScale: 1,
@@ -194,7 +205,7 @@ class Clock implements DestroyableObject, ClockState {
     }
 
     const update = (windowDeltaTime: number) => {
-      if (this.suspended) {
+      if (this.suspended || this._caughtErrors) {
         return
       }
 
@@ -246,14 +257,28 @@ class Clock implements DestroyableObject, ClockState {
         deltaTime === 0 // Current delta time should be zero.
         && deltaTimeOld === 0 // But the old delta time also (this allows one "zero-delta-time" callback).
         && time === timeOld // Time should not have been update by any other ways.
+
       if (freezed === false) {
         if (this._freezed) {
           this._unfreezeListeners.call(state)
         }
-        this._updateListeners.call(state)
+
+        if (this.catchErrors) {
+          this._updateListeners.call(state)
+        } else {
+          try {
+            this._updateListeners.call(state)
+          } catch (error) {
+            this._caughtErrors = true
+            console.error(`Clock loop caught an error. The loop is now broken.`)
+            console.error(error)
+          }
+        }
+
         this._frame++
       } else {
         if (this._freezed === false) {
+          // Last call before freezing.
           this._freezeListeners.call(state)
         }
       }
