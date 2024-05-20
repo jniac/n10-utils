@@ -181,7 +181,10 @@ export class Space {
 
   get(...indexes: number[]): Space | null {
     let current: Space = this
-    for (const index of indexes) {
+    for (let index of indexes) {
+      if (index < 0) {
+        index = current.children.length + index
+      }
       current = current.children[index]
       if (!current) {
         return null
