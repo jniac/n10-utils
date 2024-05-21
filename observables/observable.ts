@@ -271,9 +271,26 @@ class Observable<T = any> {
   set = this.setValue.bind(this)
 
   // Debug
-  log(formatValue: (value: T) => string = (value: T) => `Obs#${this._observableId} value has changed: ${value}`): DestroyableObject {
-    return this.onChange(value => {
-      console.log(formatValue(value))
+  log(value?: (value: T) => string): DestroyableObject
+  log(options?: { value: (value: T) => string, message: (obs: Observable<T>) => string }): DestroyableObject
+  log(...args: any[]): DestroyableObject {
+    function solveArgs() {
+      if (args.length === 1) {
+        if (typeof args[0] === 'function') {
+          return { value: args[0] }
+        } else {
+          return args[0]
+        }
+      } else {
+        return {}
+      }
+    }
+    const {
+      value = (value: T) => value?.toString() ?? String(value),
+      message = (obs: Observable<T>) => `Obs#${this._observableId} value has changed: `,
+    } = solveArgs()
+    return this.onChange(() => {
+      console.log(`${message(this)} ${value(this._value)}`)
     })
   }
 }
