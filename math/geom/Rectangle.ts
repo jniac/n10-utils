@@ -355,6 +355,22 @@ export class Rectangle implements RectangleLike, Iterable<number> {
     return this
   }
 
+  /**
+   * Less useful method than `invertY()`, but still useful for flipping the x-axis. 
+   */
+  flipX(): this {
+    this.x = -this.x - this.width
+    return this
+  }
+
+  /**
+   * Useful for flipping the y-axis (e.g. canvas / web coordinates vs. screen / gl coordinates)
+   */
+  flipY(): this {
+    this.y = -this.y - this.height
+    return this
+  }
+
   innerRectangle({
     aspect = 1,
     sizeMode = 'contain',
