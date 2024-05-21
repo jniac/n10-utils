@@ -175,13 +175,23 @@ export class Rectangle implements RectangleLike, Iterable<number> {
     return this.x
   }
 
-  setLeft(value: number): this {
-    if (value > this.left) {
-      this.width = 0
-      this.x = value
-    } else {
-      this.width += this.x - value
-      this.x = value
+  setLeft(value: number, mode: 'resize' | 'translate' = 'resize'): this {
+    switch (mode) {
+      case 'resize': {
+        if (value > this.left) {
+          this.width = 0
+          this.x = value
+        } else {
+          this.width += this.x - value
+          this.x = value
+        }
+        break
+      }
+
+      case 'translate': {
+        this.x = value
+        break
+      }
     }
     return this
   }
@@ -190,12 +200,22 @@ export class Rectangle implements RectangleLike, Iterable<number> {
     return this.x + this.width
   }
 
-  setRight(value: number): this {
-    if (value < this.x) {
-      this.width = 0
-      this.x = value
-    } else {
-      this.width = value - this.x
+  setRight(value: number, mode: 'resize' | 'translate' = 'resize'): this {
+    switch (mode) {
+      case 'resize': {
+        if (value < this.x) {
+          this.width = 0
+          this.x = value
+        } else {
+          this.width = value - this.x
+        }
+        break
+      }
+
+      case 'translate': {
+        this.x = value - this.width
+        break
+      }
     }
     return this
   }
@@ -204,13 +224,23 @@ export class Rectangle implements RectangleLike, Iterable<number> {
     return this.y
   }
 
-  setTop(value: number): this {
-    if (value > this.y + this.height) {
-      this.height = 0
-      this.y = value
-    } else {
-      this.height += this.y - value
-      this.y = value
+  setTop(value: number, mode: 'resize' | 'translate' = 'resize'): this {
+    switch (mode) {
+      case 'resize': {
+        if (value > this.y + this.height) {
+          this.height = 0
+          this.y = value
+        } else {
+          this.height += this.y - value
+          this.y = value
+        }
+        break
+      }
+
+      case 'translate': {
+        this.y = value
+        break
+      }
     }
     return this
   }
@@ -219,12 +249,22 @@ export class Rectangle implements RectangleLike, Iterable<number> {
     return this.y + this.height
   }
 
-  setBottom(value: number): this {
-    if (value < this.y) {
-      this.height = 0
-      this.y = value
-    } else {
-      this.height = value - this.y
+  setBottom(value: number, mode: 'resize' | 'translate' = 'resize'): this {
+    switch (mode) {
+      case 'resize': {
+        if (value < this.y) {
+          this.height = 0
+          this.y = value
+        } else {
+          this.height = value - this.y
+        }
+        break
+      }
+
+      case 'translate': {
+        this.y = value - this.height
+        break
+      }
     }
     return this
   }
