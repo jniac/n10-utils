@@ -17,13 +17,13 @@ function update(newTime: number) {
   }
 }
 
-if (typeof window !== 'undefined') {
+if ('requestAnimationFrame' in globalThis && typeof globalThis.requestAnimationFrame === 'function') {
   const frame = (ms: number) => {
-    window.requestAnimationFrame(frame)
+    globalThis.requestAnimationFrame(frame)
     const time = ms / 1e3
     update(time)
   }
-  window.requestAnimationFrame(frame)
+  globalThis.requestAnimationFrame(frame)
 } else {
   const interval = 1000 / 60
   const start = Date.now()
@@ -48,10 +48,10 @@ function clearDelay(obs: Observable<any>) {
 }
 
 export type {
-  Delay,
+  Delay
 }
 
-export { 
-  withDelay, 
-  clearDelay,
+export {
+  clearDelay, withDelay
 }
+
