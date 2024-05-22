@@ -37,6 +37,10 @@ export class ObservableNumber extends Observable<number> {
     this.setMinMax(this._min, value)
   }
 
+  get delta(): number {
+    return this._value - this._valueOld
+  }
+
   constructor(initialValue: number, options?: [min: number, max: number] | ConstructorNumberOptions) {
     let min = -Infinity, max = Infinity
 
