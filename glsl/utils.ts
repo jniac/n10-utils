@@ -39,6 +39,10 @@ export const glsl_utils = /* glsl */`
       : clamp01((x - thresholdValue + width * .5) / width);
   }
 
+  mat3 extractRotation(mat4 matrix) {
+    return mat3(matrix[0].xyz, matrix[1].xyz, matrix[2].xyz);
+  }
+
   vec2 rotate(vec2 p, float a) {
     float c = cos(a);
     float s = sin(a);
