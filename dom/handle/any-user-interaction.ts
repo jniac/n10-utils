@@ -2,12 +2,21 @@ import { DestroyableObject } from '../../types'
 
 type Options = Partial<{ target: HTMLElement | Window }>
 export function handleAnyUserInteraction(options: Options, onInteraction: (event: Event) => void): DestroyableObject
+export function handleAnyUserInteraction(target: HTMLElement | Window, onInteraction: (event: Event) => void): DestroyableObject
 export function handleAnyUserInteraction(onInteraction: (event: Event) => void): DestroyableObject
 export function handleAnyUserInteraction(...args: any[]) {
-  const [options, onInteraction] = (args.length === 1
-    ? [{}, args[0]]
-    : args
-  ) as [Options, (event: Event) => void]
+  function solveArgs(args: any[]): [Options, (event: Event) => void] {
+    if (args.length === 1) {
+      return [{}, args[0]]
+    } else {
+      const [object, onInteraction] = args
+      if (object instanceof Window || object instanceof HTMLElement) {
+        return [{ target: object }, onInteraction]
+      }
+      return args as any
+    }
+  }
+  const [options, onInteraction] = solveArgs(args)
   const { target = window } = options
   const _onInteraction = (event: Event) => {
     onInteraction(event)
