@@ -197,6 +197,7 @@ const fragment = new ShaderTool<MeshPhysicalMaterialFragmentTokens>('fragmentSha
 const vertex = new ShaderTool<MeshPhysicalMaterialVertexTokens>('vertexShader')
 
 type ShaderForgeType = {
+  (shader?: WebGLProgramParametersWithUniforms): ShaderForgeType
   defines: typeof defines
   uniforms: typeof uniforms,
   globalUniforms: typeof globalUniforms,
@@ -216,8 +217,24 @@ type ShaderForgeType = {
  * - [MeshPhysicalMaterial](https://github.com/mrdoob/three.js/blob/master/src/renderers/shaders/ShaderLib/meshphysical.glsl.js)
  * - [MeshBasicMaterial](https://github.com/mrdoob/three.js/blob/master/src/renderers/shaders/ShaderLib/meshbasic.glsl.js)
  * - [ShaderChunk lib](https://github.com/mrdoob/three.js/tree/master/src/renderers/shaders/ShaderChunk)
+ * 
+ * Usage:
+ * ```
+ * material.onBeforeCompile = shader => ShaderForge(shader)
+ *   .uniforms({
+ *     uScalar: { value: 1 },
+ *   })
+ *   .vertex.before('project_vertex', `
+ *     transformed.xyz *= uScalar;
+ *   `)
+ * ```
  */
-export const ShaderForge: ShaderForgeType = {
+export const ShaderForge: ShaderForgeType = Object.assign(function (shader?: WebGLProgramParametersWithUniforms) {
+  if (shader) {
+    withShader(shader)
+  }
+  return ShaderForge
+}, {
   defines,
   uniforms,
   globalUniforms,
@@ -228,7 +245,7 @@ export const ShaderForge: ShaderForgeType = {
   clean,
   with: withShader,
   wrap,
-}
+})
 
 export type {
   Uniforms
