@@ -21,6 +21,10 @@ export function formatNumber(num: number, {
     throw new Error('maxDigits must be at least 6')
   }
 
+  if (num === 0) {
+    return '0'
+  }
+
   const str = num.toString()
   const [i, f] = str.split('.')
   const ilen = i.length
@@ -29,9 +33,8 @@ export function formatNumber(num: number, {
   const usePrecision =
     ilen > maxDigits ||
     flen < 0
-  console.log('usePrecision', usePrecision, ilen, maxDigits, flen)
   if (usePrecision) {
-    let [b, e] = num.toExponential().split('e')
+    let [b, e] = num.toPrecision().split('e')
     b = b.slice(0, maxDigits - e.length - 1)
     return `${removeTrailingZeros(b)}e${e}`
   }
