@@ -1,3 +1,4 @@
+import { calculateExponentialGrowth } from '../math/exponential-growth'
 import { DestroyableObject } from '../types'
 import { Memorization } from './memorization'
 import { Callback, ConstructorOptions, Observable, OnChangeOptions, SetValueOptions } from './observable'
@@ -247,5 +248,10 @@ export class ObservableNumber extends Observable<number> {
       alpha = alpha < 0 ? 0 : alpha > 1 ? 1 : alpha
     }
     return alpha
+  }
+
+  exponentialGrow(target: number, growthRate: number, deltaTime: number): boolean {
+    return this.setValue(calculateExponentialGrowth(this._value, target, growthRate, deltaTime))
+    // return this.setValue(this._value + (target - this._value) * (1 - Math.exp(-growthRate * deltaTime)))
   }
 }
