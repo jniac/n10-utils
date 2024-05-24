@@ -85,9 +85,30 @@ export class PRNG {
 
   static pick<T>(
     options: T[],
-    weights: number[] | null = null,
-    { weightsAreNormalized = false } = {},
-  ): T {
+    weights?: number[] | null,
+    pickOptions?: Partial<{ weightsAreNormalized: boolean }>,
+  ): T
+  static pick<T>(
+    options: Record<string, T>,
+    weights?: Record<string, number> | null,
+    pickOptions?: Partial<{ weightsAreNormalized: boolean }>,
+  ): T
+  static pick<T>(...args: any[]): T {
+    function solveArgs(args: any[]): [options: T[], weights: null | number[], pickOptions: Partial<{ weightsAreNormalized: boolean }>] {
+      const [options, weights = null, pickOptions = {}] = args
+      if (Array.isArray(options)) {
+        return [options, weights, pickOptions]
+      } else if (typeof options === 'object') {
+        return [
+          Object.values(options) as T[],
+          weights ? Object.values(weights) : null,
+          pickOptions,
+        ]
+      }
+      throw new Error('PRNG.pick: unsupported options type')
+    }
+
+    let [options, weights, { weightsAreNormalized = false } = {}] = solveArgs(args)
     // If no weights are provided, choose uniformly. Simple.
     if (weights === null) {
       return options[Math.floor(PRNG.random() * options.length)]
