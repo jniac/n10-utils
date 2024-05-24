@@ -1,3 +1,4 @@
+import { Point3Like, PointLike } from '../types'
 
 export const clamp = (x: number, min: number, max: number) => {
 	return x < min ? min : x > max ? max : x
@@ -124,4 +125,19 @@ export const distance2 = (x: number, y: number) => {
 
 export const distance3 = (x: number, y: number, z: number) => {
 	return Math.sqrt(x * x + y * y + z * z)
+}
+
+export function distance(a: PointLike | Point3Like, b: PointLike | Point3Like): number
+export function distance(x: number, y: number, z: number): number
+export function distance(...args: any[]) {
+	if (args.length === 2) {
+		const [a, b] = args
+		return ('z' in a
+			? distance3(a.x - b.x, a.y - b.y, a.z - b.z)
+			: distance2(a.x - b.x, a.y - b.y))
+	}
+	const [x, y, z] = args
+	return (z !== undefined
+		? distance3(x.x, x.y, x.z)
+		: distance2(x, y))
 }
