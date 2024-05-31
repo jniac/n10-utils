@@ -506,7 +506,7 @@ function clockRequestUpdateOnUserInteraction(...args: any[]): DestroyableObject 
   return { destroy }
 }
 
-const onTick = clock().onTick.bind(clock())
+const onTick: Clock['onTick'] = clock().onTick.bind(clock())
 
 export type { ClockState }
 
