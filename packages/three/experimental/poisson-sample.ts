@@ -1,4 +1,17 @@
+// @ts-ignore
 import { Vector2 } from 'three'
+
+type PoissonDiscSampler2DOptions = Partial<{
+  firstPoint: Vector2
+  radius: number
+  radiusDeltaRatio: number
+  maxIteration: number
+  maxPoints: number
+  gridSizeMax: number
+  securityCountMax: number
+  randomDelegate: () => number
+  pointIsOk: (point: Vector2) => boolean
+}>
 
 export function* poissonDiscSampler2D({
   firstPoint = new Vector2(),
@@ -10,7 +23,7 @@ export function* poissonDiscSampler2D({
   securityCountMax = 1000000,
   randomDelegate = () => Math.random(),
   pointIsOk = ({ x, y }: Vector2) => Math.abs(x) < 10 && Math.abs(y) < 10,
-} = {}): Generator<Vector2> {
+}: PoissonDiscSampler2DOptions = {}): Generator<Vector2> {
   const sqrRadius = radius * radius
   const cellSize = radius / Math.sqrt(2)
   const grid = new Map<number, Vector2>()

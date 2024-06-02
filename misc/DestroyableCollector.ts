@@ -1,4 +1,4 @@
-import { Destroyable } from '../types'
+import { Destroyable, DestroyableObject } from '../types'
 
 const map = new WeakMap<DestroyableCollector, Destroyable[]>()
 
@@ -21,17 +21,22 @@ const map = new WeakMap<DestroyableCollector, Destroyable[]>()
  * }
  * ```
  */
-export class DestroyableCollector {
-  add(...destroyables: Destroyable[]) {
+export class DestroyableCollector implements DestroyableObject {
+  constructor(...destroyables: Destroyable[]) {
+    this.add(...destroyables)
+  }
+
+  add(...destroyables: Destroyable[]): this {
     for (const destroyable of destroyables) {
       map.get(this)?.push(destroyable) ?? map.set(this, [destroyable])
     }
+    return this
   }
 
   /**
    * Will add the destroyable if it has a `destroy` method or if it is a function.
    */
-  safeAdd(...candidates: any[]) {
+  safeAdd(...candidates: any[]): this {
     for (const candidate of candidates) {
       if (candidate && typeof candidate === 'object' && 'destroy' in candidate) {
         this.add(candidate)
@@ -39,6 +44,7 @@ export class DestroyableCollector {
         this.add(candidate)
       }
     }
+    return this
   }
 
   destroy = () => {
