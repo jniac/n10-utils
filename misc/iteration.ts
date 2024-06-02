@@ -27,3 +27,11 @@ export function* iterate(count: number) {
     yield wrapper
   }
 }
+
+export function* pairwise<T>(iterable: Iterable<T>): Generator<[T, T]> {
+  const iterator = iterable[Symbol.iterator]()
+  let prev = iterator.next()
+  for (let current = iterator.next(); !current.done; prev = current, current = iterator.next()) {
+    yield [prev.value, current.value] as [T, T]
+  }
+}
