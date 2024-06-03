@@ -2,7 +2,7 @@ import { inverseLerp } from './math/basics'
 import { easeInOut2 } from './math/easing'
 import { DestroyableObject } from './types'
 
-type ClockState = Readonly<{
+type Tick = Readonly<{
   timeScale: number
   time: number
   timeOld: number
@@ -35,12 +35,13 @@ type ClockState = Readonly<{
   updateLastRequest: number
 }>
 
-type ClockCallback = (state: ClockState) => void | 'stop'
+type TickCallback = (state: Tick) => void | 'stop'
+
 
 let listenerNextId = 0
 type Listener = Readonly<{
   id: number
-  callback: ClockCallback
+  callback: TickCallback
   order: number
 }>
 
@@ -49,7 +50,7 @@ class Listeners {
   private _countDirty = true
   private readonly _listeners: Listener[] = []
   private _loopListeners: Listener[] = []
-  add(order: number, callback: ClockCallback): Listener {
+  add(order: number, callback: TickCallback): Listener {
     // NOTE: Optimization: we don't need to sort the listeners if the new listener
     // can be appended at the end of the list.
     // NOTE: If the sortDirty flag is already set, it means that the listeners are
@@ -65,7 +66,7 @@ class Listeners {
     this._listeners.push(listener)
     return listener
   }
-  remove(callback: ClockCallback): boolean {
+  remove(callback: TickCallback): boolean {
     const index = this._listeners.findIndex(listener => listener.callback === callback)
     if (index !== - 1) {
       this._listeners.splice(index, 1)
@@ -85,7 +86,7 @@ class Listeners {
       return false
     }
   }
-  call(state: ClockState) {
+  call(state: Tick) {
     if (this._sortDirty) {
       this._listeners.sort((A, B) => A.order - B.order)
       this._sortDirty = false
@@ -132,7 +133,7 @@ type OnTickOptions = Partial<{
   frameInterval: number
 }>
 
-class Clock implements DestroyableObject, ClockState {
+class Clock implements DestroyableObject, Tick {
   timeScale = 1
   maxDeltaTime = .1
 
@@ -162,7 +163,7 @@ class Clock implements DestroyableObject, ClockState {
   private _requestAnimationFrame = 0
   private _caughtErrors = false
 
-  private _state: ClockState = {
+  private _state: Tick = {
     timeScale: 1,
     time: 0,
     timeOld: 0,
@@ -300,11 +301,11 @@ class Clock implements DestroyableObject, ClockState {
     return { get value() { return getTime() } }
   }
 
-  onTick(callback: ClockCallback): DestroyableObject
-  onTick(order: number, callback: ClockCallback): DestroyableObject
-  onTick(options: OnTickOptions, callback: ClockCallback): DestroyableObject
+  onTick(callback: TickCallback): DestroyableObject
+  onTick(order: number, callback: TickCallback): DestroyableObject
+  onTick(options: OnTickOptions, callback: TickCallback): DestroyableObject
   onTick(...args: any[]): DestroyableObject {
-    function solveArgs(args: any[]): [OnTickOptions, ClockCallback] {
+    function solveArgs(args: any[]): [OnTickOptions, TickCallback] {
       if (args.length === 1) {
         return [{}, args[0]]
       }
@@ -508,7 +509,17 @@ function clockRequestUpdateOnUserInteraction(...args: any[]): DestroyableObject 
 
 const onTick: Clock['onTick'] = clock().onTick.bind(clock())
 
-export type { ClockState }
+export type { Tick, TickCallback }
+
+/**
+ * @deprecated Use `Tick` instead.
+ */
+export type ClockState = Tick
+
+/**
+ * @deprecated Use `TickCallback` instead.
+ */
+export type ClockCallback = TickCallback
 
 export {
   Clock,
