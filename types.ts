@@ -16,20 +16,34 @@ export type DeepPartial<T> = T extends object
   ? { [P in keyof T]?: DeepPartial<T[P]> }
   : T
 
-export type PointLike = {
+export type Vector2Like = {
   x: number
   y: number
 }
 
-export type Point3Like = {
+/**
+ * @deprecated Use `Point2Like` instead.
+ */
+export type PointLike = Vector2Like
+
+export type Point2Like = Vector2Like
+
+export type Vector3Like = {
   x: number
   y: number
   z: number
 }
+
+export type Point3Like = Vector3Like
 
 export type RectangleLike = {
   x: number
   y: number
   width: number
   height: number
+}
+
+export type Ray2Like = {
+  origin: Vector2Like
+  direction: Vector2Like
 }
