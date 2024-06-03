@@ -267,8 +267,8 @@ class Observable<T = any> {
   get valueOld() { return this._valueOld }
 
   // Short syntax:
-  get = () => this._value
-  set = this.setValue.bind(this)
+  get: () => T = () => this._value
+  set: (typeof this)['setValue'] = this.setValue.bind(this)
 
   // Debug
   log(value?: (value: T) => string): DestroyableObject
