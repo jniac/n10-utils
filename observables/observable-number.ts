@@ -215,13 +215,33 @@ export class ObservableNumber extends Observable<number> {
   }
 
   /**
+   * @param target The target value.
+   * @param alpha The amount to change towards the target.
+   * 
    * Changes the inner value towards the target by a certain amount.
+   * 
+   * Among options, `modulo` is a special case that allows to change the value 
+   * in a circular way:
+   * ```
+   * const seconds = new ObservableNumber(55)
+   * seconds.lerpTo(5, .1, { modulo: 60 })
+   * console.log(seconds.value) // 56 (and not 50)
+   * ```
+   * 
    */
   lerpTo(target: number, alpha: number, {
     clamp = true,
     epsilon = 1e-9,
+    modulo = -1,
   } = {}): boolean {
     const value = this._value
+    if (modulo >= 0) {
+      target = (target % modulo + modulo) % modulo
+      const diff = target - value
+      if (Math.abs(diff) > modulo / 2) {
+        target = value + (diff > 0 ? diff - modulo : diff + modulo)
+      }
+    }
     const newValue = Math.abs(target - value) < epsilon
       ? target
       : value + (target - value) * (clamp ? alpha < 0 ? 0 : alpha > 1 ? 1 : alpha : alpha)
