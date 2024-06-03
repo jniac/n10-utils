@@ -1,5 +1,6 @@
-import { PointLike, RectangleLike } from '../../types'
+import { Ray2Like, RectangleLike, Vector2Like } from '../../types'
 import { Padding, PaddingParams } from './Padding'
+import { Ray2, Ray2Args } from './Ray2'
 
 export function innerRectangle<T extends RectangleLike>(
   outerRect: RectangleLike,
@@ -45,6 +46,33 @@ export function innerRectangle<T extends RectangleLike>(
   return out
 }
 
+class RectangleCastResult {
+  constructor(
+    public ray: Ray2Like,
+    public intersects: boolean,
+    public tmin: number,
+    public tmax: number,
+  ) { }
+
+  getPoint<T extends Vector2Like>(t: number, out: T = { x: 0, y: 0 } as T): T {
+    out.x = this.ray.origin.x + this.ray.direction.x * t
+    out.y = this.ray.origin.y + this.ray.direction.y * t
+    return out
+  }
+
+  getPointMin<T extends Vector2Like>(out: T = { x: 0, y: 0 } as T, {
+    offset = 0,
+  } = {}): T {
+    return this.getPoint(this.tmin + offset, out)
+  }
+
+  getPointMax<T extends Vector2Like>(out: T = { x: 0, y: 0 } as T, {
+    offset = 0,
+  } = {}): T {
+    return this.getPoint(this.tmax + offset, out)
+  }
+}
+
 /**
  * Very versatile and useful class for working with rectangles.
  * 
@@ -62,11 +90,23 @@ export function innerRectangle<T extends RectangleLike>(
 export class Rectangle implements RectangleLike, Iterable<number> {
   static from(other: RectangleLike): Rectangle
   static from(params: { aspect: number, diagonal: number }): Rectangle
+  static from(params: { extent: number | Vector2Like }): Rectangle
   static from(arg: any): Rectangle {
     if (typeof arg === 'object') {
       if ('aspect' in arg && 'diagonal' in arg) {
         const { aspect, diagonal } = arg
         return new Rectangle().setDiagonalAndAspect(diagonal, aspect)
+      }
+
+      if ('extent' in arg) {
+        const { extent } = arg
+        if (typeof extent === 'number') {
+          return new Rectangle(-extent, -extent, extent * 2, extent * 2)
+        }
+        if (typeof extent === 'object') {
+          const { x = 0, y = 0 } = extent
+          return new Rectangle(-x, -y, x * 2, y * 2)
+        }
       }
 
       if ('x' in arg && 'y' in arg && 'width' in arg && 'height' in arg) {
@@ -159,13 +199,13 @@ export class Rectangle implements RectangleLike, Iterable<number> {
     return this
   }
 
-  getCenter<T extends PointLike>(out: T = { x: 0, y: 0 } as T): T {
+  getCenter<T extends Vector2Like>(out: T = { x: 0, y: 0 } as T): T {
     out.x = this.getCenterX()
     out.y = this.getCenterY()
     return out
   }
 
-  setCenter(point: PointLike): this {
+  setCenter(point: Vector2Like): this {
     return (this
       .setCenterX(point.x)
       .setCenterY(point.y))
@@ -442,7 +482,7 @@ export class Rectangle implements RectangleLike, Iterable<number> {
    * contains(rect) -> containsRect(rect)
    */
   contains(x: number, y: number): boolean
-  contains(other: PointLike): boolean
+  contains(other: Vector2Like): boolean
   contains(other: RectangleLike): boolean
   contains(...args: any[]): boolean {
     if (args.length === 2) {
@@ -473,11 +513,39 @@ export class Rectangle implements RectangleLike, Iterable<number> {
     throw new Error('Oops. Wrong parameters here.')
   }
 
-  uv<T extends PointLike = PointLike>({ x, y }: T, out?: T): T {
+  uv<T extends Vector2Like = Vector2Like>({ x, y }: T, out?: T): T {
     out ??= { x: 0, y: 0 } as T
     out.x = (x - this.x) / this.width
     out.y = (y - this.y) / this.height
     return out
+  }
+
+  linecast(...ray2Args: Ray2Args): RectangleCastResult {
+    const { x, y, width, height } = this
+    const ray = Ray2.from(...ray2Args)
+    const { ox, oy, dx, dy } = ray
+    const t1 = (x - ox) / dx
+    const t2 = (x + width - ox) / dx
+    const t3 = (y - oy) / dy
+    const t4 = (y + height - oy) / dy
+    const tmin = Math.max(Math.min(t1, t2), Math.min(t3, t4))
+    const tmax = Math.min(Math.max(t1, t2), Math.max(t3, t4))
+    const intersects = tmin <= tmax
+    return new RectangleCastResult(ray, intersects, tmin, tmax)
+  }
+
+  raycast(...ray2Args: Ray2Args): RectangleCastResult {
+    const result = this.linecast(...ray2Args)
+    if (result.intersects === false) {
+      return result
+    }
+    let { tmin, tmax } = result
+    const intersects = tmax >= 0
+    if (intersects === false) {
+      return new RectangleCastResult(result.ray, intersects, tmin, tmax)
+    }
+    tmin = tmin < 0 ? tmax : tmin
+    return new RectangleCastResult(result.ray, intersects, tmin, tmax)
   }
 
   // Sugar:
