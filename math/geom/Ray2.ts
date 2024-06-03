@@ -72,8 +72,8 @@ export class Ray2 implements Ray2Like {
     }
     if (args.length === 1) {
       return (this
-        .setOrigin(args[0].origin)
-        .setDirection(args[0].direction))
+        .setOrigin(args[0].origin ?? this.origin)
+        .setDirection(args[0].direction ?? this.direction))
     }
     throw new Error('Not implemented')
   }
@@ -94,5 +94,3 @@ export class Ray2 implements Ray2Like {
     this.setDirection(direction)
   }
 }
-
-console.log(new Ray2(1, 2, 3, 4))
