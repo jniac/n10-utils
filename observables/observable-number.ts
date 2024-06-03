@@ -261,8 +261,10 @@ export class ObservableNumber extends Observable<number> {
 
   /**
    * Inverse linear interpolation of the inner value between the two given values.
+   * 
+   * If no values are given, the min and max of the observable are used.
    */
-  inverseLerp(a: number, b: number, options?: Partial<{ clamped: boolean }>): number {
+  inverseLerp(a: number = this.min, b: number = this.max, options?: Partial<{ clamped: boolean }>): number {
     let alpha = (this._value - a) / (b - a)
     if (options?.clamped === true) {
       alpha = alpha < 0 ? 0 : alpha > 1 ? 1 : alpha
