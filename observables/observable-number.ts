@@ -241,10 +241,12 @@ export class ObservableNumber extends Observable<number> {
       if (Math.abs(diff) > modulo / 2) {
         target = value + (diff > 0 ? diff - modulo : diff + modulo)
       }
+      const newValue = Math.abs(target - value) < epsilon ? target :
+        value + (target - value) * (clamp ? alpha < 0 ? 0 : alpha > 1 ? 1 : alpha : alpha)
+      return this.setValue(newValue % modulo)
     }
-    const newValue = Math.abs(target - value) < epsilon
-      ? target
-      : value + (target - value) * (clamp ? alpha < 0 ? 0 : alpha > 1 ? 1 : alpha : alpha)
+    const newValue = Math.abs(target - value) < epsilon ? target :
+      value + (target - value) * (clamp ? alpha < 0 ? 0 : alpha > 1 ? 1 : alpha : alpha)
     return this.setValue(newValue)
   }
 
