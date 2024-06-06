@@ -3,7 +3,7 @@ import { Material, WebGLProgramParametersWithUniforms } from 'three'
 
 import { MeshPhysicalMaterialFragmentTokens, MeshPhysicalMaterialVertexTokens, glTokens } from './Tokens'
 import { globalUniforms } from './global-uniforms'
-import { Uniforms, getGlType, solveUniformDeclaration } from './types'
+import { Uniform, Uniforms } from './uniforms'
 
 let current: WebGLProgramParametersWithUniforms = null!
 
@@ -118,8 +118,8 @@ class ShaderTool<T> {
   uniforms(uniforms: Uniforms) {
     const declaration: string[] = []
     for (const [key, uniformDeclaration] of Object.entries(uniforms)) {
-      const uniform = solveUniformDeclaration(uniformDeclaration)
-      declaration.push(`uniform ${getGlType(uniform.value)} ${key};`)
+      const uniform = Uniform.from(key, uniformDeclaration)
+      declaration.push(uniform.computeDeclaration())
     }
     this.top(declaration.join('\n'))
     return mergeUniforms(uniforms)
@@ -142,7 +142,7 @@ const defines = (defines: Record<string, string | number>) => {
 
 const mergeUniforms = (uniforms: Uniforms) => {
   for (const [key, uniformDeclaration] of Object.entries(uniforms)) {
-    const uniform = solveUniformDeclaration(uniformDeclaration)
+    const uniform = Uniform.from(key, uniformDeclaration)
     if (key in current.uniforms) {
       if (uniform.value !== current.uniforms[key].value) {
         throw new Error(`Shader redefinition! (Uniform values are not equal)`)
