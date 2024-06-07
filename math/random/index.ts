@@ -175,9 +175,9 @@ export class PRNG {
    * PRNG.vector(new Vector3(), { min: -1, max: 1 }) // e.g. Vector3(-0.123, 0.456, -0.789)
    * ```
    */
-  static vector<T>(out: T, options: [min: number, max: number]): T
-  static vector<T>(out: T, options: { min: number, max: number }): T
-  static vector<T>(out: T, options: any): T {
+  static vector<T>(out: T, options?: [min: number, max: number]): T
+  static vector<T>(out: T, options?: { min: number, max: number }): T
+  static vector<T>(out: T, options?: any): T {
     const [min = 0, max = 1] =
       Array.isArray(options) ? options : [options?.min, options?.max]
     for (const key of Object.keys(out as any)) {
@@ -191,10 +191,10 @@ export class PRNG {
    * 
    * - min, max default to [-1, 1].
    */
-  static unitVector<T>(out: T, options: [min: number, max: number]): T
-  static unitVector<T>(out: T, options: { min: number, max: number }): T
-  static unitVector<T>(out: T, options: any): T {
-    const [min = 0, max = 1] =
+  static unitVector<T>(out: T, options?: [min: number, max: number]): T
+  static unitVector<T>(out: T, options?: { min: number, max: number }): T
+  static unitVector<T>(out: T, options?: any): T {
+    const [min = -1, max = 1] =
       Array.isArray(options) ? options : [options?.min, options?.max]
     const keys = Object.keys(out as any)
     const values = keys.map(() => PRNG.between(min, max))
