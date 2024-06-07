@@ -165,7 +165,9 @@ export class PRNG {
   }
 
   /**
-   * Returns the given vector with each component set to a random value between `min` and `max`.
+   * Returns the given vector with each component set to a random value between min and max.
+   * 
+   * - min, max (defaults to [0, 1]).
    * 
    * Usage:
    * ```
@@ -173,10 +175,11 @@ export class PRNG {
    * PRNG.vector(new Vector3(), { min: -1, max: 1 }) // e.g. Vector3(-0.123, 0.456, -0.789)
    * ```
    */
-  static vector<T>(out: T, {
-    min = 0,
-    max = 1,
-  } = {}): T {
+  static vector<T>(out: T, options: [min: number, max: number]): T
+  static vector<T>(out: T, options: { min: number, max: number }): T
+  static vector<T>(out: T, options: any): T {
+    const [min = 0, max = 1] =
+      Array.isArray(options) ? options : [options?.min, options?.max]
     for (const key of Object.keys(out as any)) {
       (out as any)[key] = PRNG.between(min, max)
     }
@@ -185,11 +188,14 @@ export class PRNG {
 
   /**
    * Same as `PRNG.vector`, but the resulting vector is normalized.
+   * 
+   * - min, max default to [-1, 1].
    */
-  static unitVector<T>(out: T, {
-    min = -1,
-    max = 1,
-  } = {}): T {
+  static unitVector<T>(out: T, options: [min: number, max: number]): T
+  static unitVector<T>(out: T, options: { min: number, max: number }): T
+  static unitVector<T>(out: T, options: any): T {
+    const [min = 0, max = 1] =
+      Array.isArray(options) ? options : [options?.min, options?.max]
     const keys = Object.keys(out as any)
     const values = keys.map(() => PRNG.between(min, max))
     const length = Math.sqrt(values.reduce((acc, value) => acc + value * value, 0))
