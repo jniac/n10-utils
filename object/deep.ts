@@ -5,10 +5,10 @@ function isObject(value: any): value is object {
 }
 
 /**
- * Clones an object deeply. 
- * 
- * NOTE: 
- * - Objects are cloned by invoking their constructor, so they must be instantiable 
+ * Clones an object deeply.
+ *
+ * NOTE:
+ * - Objects are cloned by invoking their constructor, so they must be instantiable
  *   without arguments.
  */
 export function deepClone<T>(target: T): T {
@@ -42,7 +42,7 @@ export function deepClone<T>(target: T): T {
 
 /**
  * Performs a deep copy of the `source` object into the `destination` object.
- * 
+ *
  * Returns `true` if the destination object has changed.
  */
 export function deepCopy<T extends object>(
@@ -51,35 +51,50 @@ export function deepCopy<T extends object>(
   allowNewKeys = false,
 ): boolean {
   let hasChanged = false
+
+  function clone(srcValue: any, key: string | number) {
+    // Objects:
+    if (isObject(srcValue)) {
+      // Dates:
+      if (srcValue instanceof Date) {
+        const destDate = (destination as any)[key] as Date
+        if ((destDate instanceof Date) === false || destDate.getTime() !== srcValue.getTime()) {
+          (destination as any)[key] = new Date(srcValue.getTime())
+          hasChanged = true
+        }
+      }
+
+      // Regular objects:
+      else {
+        hasChanged = deepCopy(srcValue, (destination as any)[key]) || hasChanged
+      }
+    }
+
+    // Primitives:
+    else {
+      if ((destination as any)[key] !== srcValue) {
+        (destination as any)[key] = srcValue
+        hasChanged = true
+      }
+    }
+  }
+
   if (Array.isArray(source)) {
     const len = allowNewKeys
       ? source.length
       : Math.min(source.length, (destination as any).length)
     for (let i = 0; i < len; i++) {
       const srcValue = source[i]
-      if (isObject(srcValue)) {
-        hasChanged = deepCopy(srcValue, (destination as any)[i]) || hasChanged
-      } else {
-        if ((destination as any)[i] !== srcValue) {
-          (destination as any)[i] = srcValue
-          hasChanged = true
-        }
-      }
+      clone(srcValue, i)
     }
   } else {
     for (const [key, srcValue] of Object.entries(source)) {
       if (allowNewKeys === false && key in destination === false) {
         continue
       }
-      if (isObject(srcValue)) {
-        hasChanged = deepCopy(srcValue, (destination as any)[key]) || hasChanged
-      } else {
-        if ((destination as any)[key] !== srcValue) {
-          (destination as any)[key] = srcValue
-          hasChanged = true
-        }
-      }
+      clone(srcValue, key)
     }
   }
+
   return hasChanged
 }
