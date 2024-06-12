@@ -15,11 +15,11 @@ type ConstructorOptions<T> = Partial<{
 
 type SetValueOptions = Partial<{
   /**
-   * A delay before applying the change. 
-   * 
-   * That option is tricky and has huge side effects. Use with caution. 
-   * 
-   * NOTE: Very opionated design: Any update in the mean time, delayed OR NOT, 
+   * A delay before applying the change.
+   *
+   * That option is tricky and has huge side effects. Use with caution.
+   *
+   * NOTE: Very opionated design: Any update in the mean time, delayed OR NOT,
    * that changes OR NOT the inner value, will cancel the delayed change.
    */
   delay: Delay
@@ -41,24 +41,24 @@ type OnChangeOptions = Partial<{
 let observableNextId = 0
 
 /**
- * Observable is a very simple wrapper around a value (any kind) that makes it 
+ * Observable is a very simple wrapper around a value (any kind) that makes it
  * to observe changes on that value.
- * 
+ *
  * It also facilitates
- * - to define "value-mapper" that rewrite internally the value 
+ * - to define "value-mapper" that rewrite internally the value
  * (eg: min / max bounds to number value)
- * - to react to "derived value" (eg: boolean that compare a number value to a 
+ * - to react to "derived value" (eg: boolean that compare a number value to a
  * threshold)
- * 
+ *
  * Other benefits may comes from the fact that:
  * - any subscription return a "destroy" function to facilitates... unsubscription.
- * - "setValue()", after having eventually remapped the value, performs an internal 
+ * - "setValue()", after having eventually remapped the value, performs an internal
  * check against the current value and do nothing if the value is the same (optim).
- * - it is eventually declined to specific flavour for even more convenience 
+ * - it is eventually declined to specific flavour for even more convenience
  * (eg: ObservableNumber)
- * 
+ *
  * Usage:
- * ``` 
+ * ```
  * const statusObs = new Observable<'none' | 'pending' | 'ready'>('none')
  * statusObs.onChange(status => {
  *   if (value === 'ready') {
@@ -66,7 +66,7 @@ let observableNextId = 0
  *   }
  * })
  * statusObs.value = 'ready'
- * ``` 
+ * ```
  */
 class Observable<T = any> {
   static get nextId() { return observableNextId }
@@ -159,10 +159,26 @@ class Observable<T = any> {
     return true
   }
 
+  protected valueStringifier: ((value: T) => string) | null = null
+  protected valueParser: ((value: string) => T) | null = null
+
+  initializeSerialization(
+    valueStringifier: (value: T) => string,
+    valueParser: (value: string) => T
+  ): this {
+    this.valueStringifier = valueStringifier
+    this.valueParser = valueParser
+    return this
+  }
+
   /**
    * Usefull to set the value from a string (eg: from a serialized value).
    */
   setValueFromString(value: string, options?: SetValueOptions): boolean {
+    if (this.valueParser) {
+      const parsedValue = this.valueParser(value)
+      return this.setValue(parsedValue, options)
+    }
     const type = typeof this._value
     switch (type) {
       case 'string':
@@ -181,14 +197,19 @@ class Observable<T = any> {
   }
 
   valueToString(): string {
+    if (this.valueStringifier) {
+      return this.valueStringifier(this._value)
+    }
     return String(this._value)
   }
+
+
 
   /**
    * Since the valueMapper can change the inner value, defining a new value mapper
    * with a non-null value internally invokes setValue() and returns the result.
-   * @param valueMapper 
-   * @returns 
+   * @param valueMapper
+   * @returns
    */
   setValueMapper(valueMapper: ValueMapper<T> | null): boolean {
     this._valueMapper = valueMapper

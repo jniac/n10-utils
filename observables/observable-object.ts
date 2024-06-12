@@ -5,7 +5,7 @@ import { Observable, SetValueOptions } from './observable'
 
 /**
  * An observable object.
- * 
+ *
  * NOTE:
  * - The object is cloned deeply when setting a new value.
  */
@@ -41,4 +41,4 @@ export class ObservableObject<T extends {}> extends Observable<T> {
       return false
     }
   }
-} 
+}
