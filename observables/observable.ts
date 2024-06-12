@@ -171,6 +171,13 @@ class Observable<T = any> {
     return this
   }
 
+  valueToString(): string {
+    if (this.valueStringifier) {
+      return this.valueStringifier(this._value)
+    }
+    return String(this._value)
+  }
+
   /**
    * Usefull to set the value from a string (eg: from a serialized value).
    */
@@ -194,13 +201,6 @@ class Observable<T = any> {
         console.warn(`Observable#setValueFromString: Unsupported type "${type}"`)
         return false
     }
-  }
-
-  valueToString(): string {
-    if (this.valueStringifier) {
-      return this.valueStringifier(this._value)
-    }
-    return String(this._value)
   }
 
 
