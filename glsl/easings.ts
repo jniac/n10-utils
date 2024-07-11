@@ -82,6 +82,7 @@ export const glsl_easings = /* glsl */`
     return x < 0.5 ? 32.0 * x * x * x * x * x * x : 1.0 - 32.0 * (x = 1.0 - x) * x * x * x * x * x;
   }
 
+  // https://www.desmos.com/calculator/mqou4lf9zc?lang=fr
   float easeInout(float x, float p, float i) {
     return  x <= 0.0 ? 0.0 :
             x >= 1.0 ? 1.0 :
