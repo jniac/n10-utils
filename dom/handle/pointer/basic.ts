@@ -177,7 +177,8 @@ function handleBasicPointer(element: PointerTarget, params: Params): () => void 
 }
 
 export type {
-  BasicPointerInfo, Params as HandleBasicPointerParams
+  BasicPointerInfo,
+  Params as HandleBasicPointerParams
 }
 
 export {

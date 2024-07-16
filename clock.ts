@@ -33,6 +33,8 @@ type Tick = Readonly<{
    * Last time the clock was requested to update (in "window" time which may differ from the current clock time).
    */
   updateLastRequest: number
+
+  toString(): string
 }>
 
 type TickCallback = (state: Tick) => void | 'stop'
@@ -163,7 +165,7 @@ class Clock implements DestroyableObject, Tick {
   private _requestAnimationFrame = 0
   private _caughtErrors = false
 
-  private _state: Tick = {
+  private _tick: Tick = {
     timeScale: 1,
     time: 0,
     timeOld: 0,
@@ -183,26 +185,26 @@ class Clock implements DestroyableObject, Tick {
   }
 
   // Getters, ClockState implementation.
-  get time() { return this._state.time }
-  get timeOld() { return this._state.timeOld }
-  get frame() { return this._state.frame }
-  get deltaTime() { return this._state.deltaTime }
-  get deltaTimeOld() { return this._state.deltaTimeOld }
-  get unscaledDeltaTime() { return this._state.unscaledDeltaTime }
-  get unscaledDeltaTimeOld() { return this._state.unscaledDeltaTimeOld }
-  get windowDeltaTime() { return this._state.windowDeltaTime }
-  get paused() { return this._state.paused }
-  get updateDuration() { return this._state.updateDuration }
-  get updateFadeDuration() { return this._state.updateFadeDuration }
-  get updateTimeScale() { return this._state.updateTimeScale }
-  get updateLastRequest() { return this._state.updateLastRequest }
+  get time() { return this._tick.time }
+  get timeOld() { return this._tick.timeOld }
+  get frame() { return this._tick.frame }
+  get deltaTime() { return this._tick.deltaTime }
+  get deltaTimeOld() { return this._tick.deltaTimeOld }
+  get unscaledDeltaTime() { return this._tick.unscaledDeltaTime }
+  get unscaledDeltaTimeOld() { return this._tick.unscaledDeltaTimeOld }
+  get windowDeltaTime() { return this._tick.windowDeltaTime }
+  get paused() { return this._tick.paused }
+  get updateDuration() { return this._tick.updateDuration }
+  get updateFadeDuration() { return this._tick.updateFadeDuration }
+  get updateTimeScale() { return this._tick.updateTimeScale }
+  get updateLastRequest() { return this._tick.updateLastRequest }
 
   get freezed() { return this._freezed }
-  get state() { return this._state }
+  get state() { return this._tick }
 
   constructor({ updateDuration } = {} as { updateDuration?: number }) {
     if (updateDuration !== undefined) {
-      this._state = { ...this._state, updateDuration }
+      this._tick = { ...this._tick, updateDuration }
     }
 
     const update = (windowDeltaTime: number) => {
@@ -211,7 +213,7 @@ class Clock implements DestroyableObject, Tick {
       }
 
       // Auto-pause handling:
-      let { updateDuration, updateFadeDuration, updateLastRequest } = this._state
+      let { updateDuration, updateFadeDuration, updateLastRequest } = this._tick
       if (this._requestAnimationFrame >= 0) {
         this._requestAnimationFrame += -windowDeltaTime
         updateLastRequest = windowTime
@@ -229,30 +231,34 @@ class Clock implements DestroyableObject, Tick {
 
       // Time handling:
       const { timeScale, maxDeltaTime } = this
-      const deltaTimeOld = this._state.deltaTime
+      const deltaTimeOld = this._tick.deltaTime
       const unscaledDeltaTime = Math.min(maxDeltaTime, windowDeltaTime) * timeScale
       const deltaTime = unscaledDeltaTime * updateTimeScale
-      const timeOld = this._state.time
+      const timeOld = this._tick.time
       const time = timeOld + deltaTime
-      const state = Object.freeze({
+      const frame = this._frame
+      const tick = Object.freeze({
+        frame,
+
         timeScale,
         deltaTimeOld,
         deltaTime,
-        unscaledDeltaTimeOld: this._state.unscaledDeltaTime,
+        unscaledDeltaTimeOld: this._tick.unscaledDeltaTime,
         unscaledDeltaTime,
         windowDeltaTime,
         paused: updateTimeScale === 0,
         time,
         timeOld,
         maxDeltaTime,
-        frame: this._frame,
 
         updateDuration,
         updateFadeDuration,
         updateTimeScale,
         updateLastRequest,
+
+        toString: () => `Tick { frame: ${frame}, time: ${time.toFixed(3)}, deltaTime: ${deltaTime.toFixed(3)} }`,
       })
-      this._state = state
+      this._tick = tick
 
       const freezed =
         deltaTime === 0 // Current delta time should be zero.
@@ -261,14 +267,14 @@ class Clock implements DestroyableObject, Tick {
 
       if (freezed === false) {
         if (this._freezed) {
-          this._unfreezeListeners.call(state)
+          this._unfreezeListeners.call(tick)
         }
 
         if (this.catchErrors === false) {
-          this._updateListeners.call(state)
+          this._updateListeners.call(tick)
         } else {
           try {
-            this._updateListeners.call(state)
+            this._updateListeners.call(tick)
           } catch (error) {
             this._caughtErrors = true
             console.error(`Clock loop caught an error. The loop is now broken.`)
@@ -280,7 +286,7 @@ class Clock implements DestroyableObject, Tick {
       } else {
         if (this._freezed === false) {
           // Last call before freezing.
-          this._freezeListeners.call(state)
+          this._freezeListeners.call(tick)
         }
       }
 
@@ -297,7 +303,7 @@ class Clock implements DestroyableObject, Tick {
    * "Uniform" time, meant to be used in shaders.
    */
   get uTime() {
-    const getTime = () => this._state.time % 1e3 // modulo 1e3 to avoid overflow.
+    const getTime = () => this._tick.time % 1e3 // modulo 1e3 to avoid overflow.
     return { get value() { return getTime() } }
   }
 
@@ -324,20 +330,20 @@ class Clock implements DestroyableObject, Tick {
     } = options
 
     if (frameInterval > 0) {
-      return this.onTick({ order, updateDuration }, state => {
-        if (state.frame % frameInterval === 0) {
-          return callback(state)
+      return this.onTick({ order, updateDuration }, tick => {
+        if (tick.frame % frameInterval === 0) {
+          return callback(tick)
         }
       })
     }
 
     if (timeInterval > 0) {
       let cumulativeTime = 0
-      return this.onTick({ order, updateDuration }, state => {
-        cumulativeTime += state.deltaTime
+      return this.onTick({ order, updateDuration }, tick => {
+        cumulativeTime += tick.deltaTime
         if (cumulativeTime >= timeInterval) {
           cumulativeTime += -timeInterval
-          return callback(state)
+          return callback(tick)
         }
       })
     }
@@ -397,8 +403,8 @@ class Clock implements DestroyableObject, Tick {
    * update constantly.
    */
   setUpdateDuration(value: number): this {
-    this._state = Object.freeze({
-      ...this._state,
+    this._tick = Object.freeze({
+      ...this._tick,
       updateDuration: Math.max(0, value),
     })
     return this
@@ -440,6 +446,10 @@ class Clock implements DestroyableObject, Tick {
       }
       this._updateListeners.add(0, callback)
     })
+  }
+
+  toString(): string {
+    return `Clock { frame: ${this._frame}, time: ${this._tick.time.toFixed(3)}, deltaTime: ${this._tick.deltaTime.toFixed(3)} }`
   }
 }
 
@@ -522,8 +532,8 @@ export type ClockState = Tick
 export type ClockCallback = TickCallback
 
 export {
-  Clock,
   appClock,
+  Clock,
   clock,
   clockRequestUpdateOnUserInteraction,
   onTick
