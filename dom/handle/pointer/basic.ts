@@ -157,9 +157,9 @@ function handleBasicPointer(element: PointerTarget, params: Params): () => void 
   element.addEventListener('mouseup', onMouseUp)
   element.addEventListener('mousemove', onMouseMove)
 
-  element.addEventListener('touchstart', onTouchStart)
-  element.addEventListener('touchend', onTouchEnd)
-  element.addEventListener('touchmove', onTouchMove)
+  element.addEventListener('touchstart', onTouchStart, { passive: false })
+  element.addEventListener('touchend', onTouchEnd, { passive: false })
+  element.addEventListener('touchmove', onTouchMove, { passive: false })
 
   return () => {
     element.removeEventListener('mouseover', onMouseOver)
