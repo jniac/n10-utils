@@ -40,7 +40,7 @@ function parseArgs<T>(args: any[]): [UseEffectsCallback<T>, DependencyList | 'al
   if (typeof arg0 === 'object') {
     return [arg1, arg2, arg0]
   }
-  return [arg0, arg1, arg2 ?? {}]
+  return [arg0, arg1 ?? 'always', arg2 ?? {}]
 }
 
 let nextId = 0
