@@ -11,8 +11,28 @@ const defaultOptions = {
 
 type Options = Partial<typeof defaultOptions>
 
+const defaultKeyboardFilter = {
+  key: '*' as StringFilter,
+  code: '*' as StringFilter,
+  noModifiers: false
+}
+
+type KeyboardFilter = typeof defaultKeyboardFilter
+
+type KeyboardFilterDeclaration =
+  | StringFilter
+  | Partial<KeyboardFilter>
+
+
+function solveKeyboardFilter(filter: KeyboardFilterDeclaration) {
+  if (typeof filter === 'string') {
+    return { ...defaultKeyboardFilter, key: filter }
+  }
+  return { ...defaultKeyboardFilter, ...filter }
+}
+
 type KeyboardListenerEntry = [
-  filter: StringFilter | { key: StringFilter } | { code: StringFilter },
+  filter: KeyboardFilterDeclaration,
   callback: (info: Info) => void,
 ]
 
@@ -36,11 +56,11 @@ export function handleKeyboard(...args: any[]): Destroyable {
     const info: Info = { event }
     for (let i = 0, max = listeners.length; i < max; i++) {
       const [filter, callback] = listeners[i]
+      const { key, code, noModifiers } = solveKeyboardFilter(filter)
       const match =
-        typeof filter === 'string' ? applyStringFilter(event.key, filter) :
-          'key' in filter ? applyStringFilter(event.key, filter.key) :
-            'code' in filter ? applyStringFilter(event.code, filter.code) :
-              false
+        applyStringFilter(event.key, key)
+        && applyStringFilter(event.code, code)
+        && (!noModifiers || (event.ctrlKey === false && event.altKey === false && event.shiftKey === false && event.metaKey === false))
       if (match) {
         if (preventDefault) {
           event.preventDefault()
