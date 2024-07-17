@@ -12,7 +12,7 @@ const defaultOptions = {
 type Options = Partial<typeof defaultOptions>
 
 type KeyboardListenerEntry = [
-  filter: StringFilter,
+  filter: StringFilter | { key: StringFilter } | { code: StringFilter },
   callback: (info: Info) => void,
 ]
 
@@ -36,7 +36,12 @@ export function handleKeyboard(...args: any[]): Destroyable {
     const info: Info = { event }
     for (let i = 0, max = listeners.length; i < max; i++) {
       const [filter, callback] = listeners[i]
-      if (applyStringFilter(event.code, filter)) {
+      const match =
+        typeof filter === 'string' ? applyStringFilter(event.key, filter) :
+          'key' in filter ? applyStringFilter(event.key, filter.key) :
+            'code' in filter ? applyStringFilter(event.code, filter.code) :
+              false
+      if (match) {
         if (preventDefault) {
           event.preventDefault()
         }
