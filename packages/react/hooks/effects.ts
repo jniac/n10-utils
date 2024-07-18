@@ -65,7 +65,7 @@ function useEffects<T = undefined>(...args: any[]): UseEffectsReturn<T> {
     useDigestProps = true,
   } = options
 
-  const deps = useDigestProps && propsDeps.length > 0
+  const deps = useDigestProps && Array.isArray(propsDeps) && propsDeps.length > 0
     ? [digestProps(propsDeps)]
     : propsDeps
 
