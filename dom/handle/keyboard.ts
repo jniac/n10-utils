@@ -11,10 +11,19 @@ const defaultOptions = {
 
 type Options = Partial<typeof defaultOptions>
 
+type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta'
+type Combination<T extends string, U extends string = T> =
+  T extends any
+  ? T | `${T}-${Combination<Exclude<U, T>>}`
+  : never
+type Modifiers = '' | Combination<Modifier>
+
 const defaultKeyboardFilter = {
   key: '*' as StringFilter,
+  keyCaseInsensitive: true,
   code: '*' as StringFilter,
-  noModifiers: false
+  noModifiers: false,
+  modifiers: '' as Modifiers,
 }
 
 type KeyboardFilter = typeof defaultKeyboardFilter
@@ -24,11 +33,14 @@ type KeyboardFilterDeclaration =
   | Partial<KeyboardFilter>
 
 
-function solveKeyboardFilter(filter: KeyboardFilterDeclaration) {
-  if (typeof filter === 'string') {
-    return { ...defaultKeyboardFilter, key: filter }
+function solveKeyboardFilter(filter: KeyboardFilterDeclaration): KeyboardFilter {
+  const result: KeyboardFilter = typeof filter === 'string'
+    ? { ...defaultKeyboardFilter, key: filter }
+    : { ...defaultKeyboardFilter, ...filter }
+  if (result.keyCaseInsensitive && typeof result.key === 'string') {
+    result.key = result.key.toLowerCase()
   }
-  return { ...defaultKeyboardFilter, ...filter }
+  return result
 }
 
 type KeyboardListenerEntry = [
@@ -56,11 +68,19 @@ export function handleKeyboard(...args: any[]): Destroyable {
     const info: Info = { event }
     for (let i = 0, max = listeners.length; i < max; i++) {
       const [filter, callback] = listeners[i]
-      const { key, code, noModifiers } = solveKeyboardFilter(filter)
-      const match =
-        applyStringFilter(event.key, key)
-        && applyStringFilter(event.code, code)
-        && (!noModifiers || (event.ctrlKey === false && event.altKey === false && event.shiftKey === false && event.metaKey === false))
+      const { key, keyCaseInsensitive, code, noModifiers, modifiers } = solveKeyboardFilter(filter)
+      const { ctrl = false, alt = false, shift = false, meta = false } = Object.fromEntries(modifiers.split('-').map(modifier => [modifier, true]))
+      const { ctrlKey, altKey, shiftKey, metaKey } = event
+
+      const eventKey = keyCaseInsensitive ? event.key.toLowerCase() : event.key
+      const matches = {
+        key: applyStringFilter(eventKey, key),
+        code: applyStringFilter(event.code, code),
+        noModifiers: !noModifiers || (ctrlKey === false && altKey === false && shiftKey === false && metaKey === false),
+        modifiers: !modifiers || (ctrl === ctrlKey && alt === altKey && shift === shiftKey && meta === metaKey),
+      }
+
+      const match = Object.values(matches).every(Boolean)
       if (match) {
         if (preventDefault) {
           event.preventDefault()
