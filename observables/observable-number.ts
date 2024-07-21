@@ -210,7 +210,7 @@ export class ObservableNumber extends Observable<number> {
     })
   }
 
-  increment(delta: number): boolean {
+  increment(delta = 1): boolean {
     return this.setValue(this._value + delta)
   }
 
