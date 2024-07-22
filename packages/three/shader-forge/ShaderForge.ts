@@ -162,13 +162,21 @@ const uniforms = (uniforms: Uniforms) => {
 
 const varyingTypes = ['float', 'vec2', 'vec3', 'vec4'] as const
 type VaryingType = (typeof varyingTypes)[number]
-const varying = (varying: Record<string, VaryingType>) => {
-  const declaration: string[] = []
-  for (const [name, type] of Object.entries(varying)) {
-    declaration.push(`varying ${type} ${name};`)
+function varying(type: string): typeof ShaderForge
+function varying(type: Record<string, VaryingType>): typeof ShaderForge
+function varying(varying: string | Record<string, VaryingType>) {
+  let str = ''
+  if (typeof varying === 'string') {
+    str = varying
+  } else {
+    const declaration: string[] = []
+    for (const [name, type] of Object.entries(varying)) {
+      declaration.push(`varying ${type} ${name};`)
+    }
+    str = declaration.join('\n')
   }
-  vertex.top(declaration.join('\n'))
-  fragment.top(declaration.join('\n'))
+  vertex.top(str)
+  fragment.top(str)
   return ShaderForge
 }
 
