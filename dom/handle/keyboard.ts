@@ -1,5 +1,5 @@
-import { applyStringFilter } from '../../string'
-import { Destroyable, StringFilter } from '../../types'
+import { applyStringMatcher } from '../../string'
+import { Destroyable, StringMatcher } from '../../types'
 
 type Info = {
   event: KeyboardEvent
@@ -14,14 +14,14 @@ type Options = Partial<typeof defaultOptions>
 type Modifier = 'ctrl' | 'alt' | 'shift' | 'meta'
 type Combination<T extends string, U extends string = T> =
   T extends any
-  ? T | `${T}-${Combination<Exclude<U, T>>}`
+  ? T | `${T}+${Combination<Exclude<U, T>>}`
   : never
 type Modifiers = '' | Combination<Modifier>
 
 const defaultKeyboardFilter = {
-  key: '*' as StringFilter,
+  key: '*' as StringMatcher,
   keyCaseInsensitive: true,
-  code: '*' as StringFilter,
+  code: '*' as StringMatcher,
   noModifiers: false,
   modifiers: '' as Modifiers,
 }
@@ -29,7 +29,7 @@ const defaultKeyboardFilter = {
 type KeyboardFilter = typeof defaultKeyboardFilter
 
 type KeyboardFilterDeclaration =
-  | StringFilter
+  | StringMatcher
   | Partial<KeyboardFilter>
 
 
@@ -74,8 +74,8 @@ export function handleKeyboard(...args: any[]): Destroyable {
 
       const eventKey = keyCaseInsensitive ? event.key.toLowerCase() : event.key
       const matches = {
-        key: applyStringFilter(eventKey, key),
-        code: applyStringFilter(event.code, code),
+        key: applyStringMatcher(eventKey, key),
+        code: applyStringMatcher(event.code, code),
         noModifiers: !noModifiers || (ctrlKey === false && altKey === false && shiftKey === false && metaKey === false),
         modifiers: !modifiers || (ctrl === ctrlKey && alt === altKey && shift === shiftKey && meta === metaKey),
       }
@@ -89,9 +89,12 @@ export function handleKeyboard(...args: any[]): Destroyable {
       }
     }
   }
+
   target.addEventListener('keydown', onKeyDown, { passive: false })
+
   const destroy = () => {
     target.removeEventListener('keydown', onKeyDown)
   }
+
   return { destroy }
 }

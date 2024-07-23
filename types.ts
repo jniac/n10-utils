@@ -1,7 +1,12 @@
 export type DestroyableObject<V = any> = { destroy: () => void, value?: V }
 export type Destroyable = DestroyableObject | (() => void)
 
-export type StringFilter = '*' | string | RegExp | ((str: string) => boolean)
+export type StringMatcher = '*' | string | RegExp | ((str: string) => boolean)
+
+/**
+ * @deprecated Use `StringMatcher` instead.
+ */
+export type StringFilter = StringMatcher
 
 export type OneOrMany<T> = T | T[]
 

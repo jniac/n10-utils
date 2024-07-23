@@ -1,18 +1,22 @@
-import { StringFilter } from './types'
+import { StringMatcher } from './types'
 
-export function applyStringFilter(str: string, filter: StringFilter) {
-  switch (typeof filter) {
-    case 'string': {
-      if (filter === '*') {
-        return true
-      }
-      return str === filter
-    }
-    case 'function': {
-      return filter(str)
-    }
-    default: {
-      return filter.test(str)
-    }
+export function applyStringMatcher(str: string, matcher: StringMatcher) {
+  if (matcher === '*') {
+    return true
   }
+  if (typeof matcher === 'string') {
+    return matcher === str
+  }
+  if (matcher instanceof RegExp) {
+    return matcher.test(str)
+  }
+  if (typeof matcher === 'function') {
+    return matcher(str)
+  }
+  return false
 }
+
+/**
+ * @deprecated Use `applyStringMatcher` instead.
+ */
+export const applyStringFilter = applyStringMatcher
