@@ -115,14 +115,19 @@ class ShaderTool<T> {
     return ShaderForge
   }
 
-  uniforms(uniforms: Uniforms) {
-    const declaration: string[] = []
-    for (const [key, uniformDeclaration] of Object.entries(uniforms)) {
-      const uniform = Uniform.from(key, uniformDeclaration)
-      declaration.push(uniform.computeDeclaration())
+  uniforms(uniforms: Uniforms | string) {
+    if (typeof uniforms === 'string') {
+      this.top(uniforms)
+    } else {
+      const declaration: string[] = []
+      for (const [key, uniformDeclaration] of Object.entries(uniforms)) {
+        const uniform = Uniform.from(key, uniformDeclaration)
+        declaration.push(uniform.computeDeclaration())
+      }
+      this.top(declaration.join('\n'))
+      mergeUniforms(uniforms)
     }
-    this.top(declaration.join('\n'))
-    return mergeUniforms(uniforms)
+    return ShaderForge
   }
 
   clean() {
@@ -154,7 +159,7 @@ const mergeUniforms = (uniforms: Uniforms) => {
   return ShaderForge
 }
 
-const uniforms = (uniforms: Uniforms) => {
+const uniforms = (uniforms: Uniforms | string) => {
   vertex.uniforms(uniforms)
   fragment.uniforms(uniforms)
   return ShaderForge
