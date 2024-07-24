@@ -1,5 +1,5 @@
-import { clock } from '../../../clock'
 import { clamp } from '../../../math/basics'
+import { ticker } from '../../../ticker'
 import { InfoBase } from './info'
 import { EventPhase, PointerTarget } from './type'
 
@@ -27,7 +27,7 @@ const defaultParams = {
    * The order in which the drag callback is called. 
    * 
    * If undefined, the drag callback is called by using window.requestAnimationFrame.
-   * Otherwise, the drag callback is called by using clock().requestAnimationFrame 
+   * Otherwise, the drag callback is called by using ticker().requestAnimationFrame 
    * with the given order.
    */
   wheelFrameTickOrder: <number | undefined>undefined,
@@ -134,14 +134,14 @@ function handleWheelFrame(element: PointerTarget, params: Params): () => void {
     _cancelFrame()
     _state.frameID = wheelFrameTickOrder === undefined
       ? window.requestAnimationFrame(_frame)
-      : clock().requestAnimationFrame(_frame, { order: wheelFrameTickOrder })
+      : ticker().requestAnimationFrame(_frame, { order: wheelFrameTickOrder })
   }
 
   const _cancelFrame = () => {
     if (wheelFrameTickOrder === undefined) {
       window.cancelAnimationFrame(_state.frameID)
     } else {
-      clock().cancelAnimationFrame(_state.frameID)
+      ticker().cancelAnimationFrame(_state.frameID)
     }
   }
 

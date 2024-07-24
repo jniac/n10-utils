@@ -1,9 +1,9 @@
-import { clock } from '../../../clock'
 import { lazy } from '../../../lazy'
+import { ticker } from '../../../ticker'
 
 export const globalUniforms = lazy(() => {
   const uTime = { value: 0 }
-  clock().onTick(({ time }) => {
+  ticker().onTick(({ time }) => {
     uTime.value = time
   })
   return {

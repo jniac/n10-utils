@@ -1,5 +1,5 @@
+import { Tick, ticker } from '../../ticker'
 import { DestroyableObject } from '../../types'
-import { ClockState, clock } from '../../clock'
 
 export function handleInterval(interval: number, callback: () => void) {
   const id = window.setInterval(() => {
@@ -21,8 +21,8 @@ export function handleTimeout(delay: number | `${number}s`, callback: () => void
   return { destroy }
 }
 
-export function handleTick(callback: (state: ClockState) => void): DestroyableObject {
-  return clock().onTick(callback)
+export function handleTick(callback: (tick: Tick) => void): DestroyableObject {
+  return ticker().onTick(callback)
 }
 
 export function handleNextFrame(callback: () => void): DestroyableObject

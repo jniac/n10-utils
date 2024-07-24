@@ -3,8 +3,8 @@ import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
 import { Camera, Object3D, PerspectiveCamera, Vector2, WebGLRenderer } from 'three'
 import { EffectComposer } from 'three/examples/jsm/Addons.js'
 
-import { clock } from '../../../clock'
 import { clamp01 } from '../../../math/basics'
+import { ticker } from '../../../ticker'
 import { DestroyableObject } from '../../../types'
 import { useEffects } from '../../react/hooks'
 import { VertigoCamera } from '../../three/vertigo/VertigoCamera'
@@ -189,7 +189,7 @@ export function ViewportProvider({
     renderer.autoClear = false
 
     const size = new Vector2()
-    yield clock().onTick(tickOrder, () => {
+    yield ticker().onTick(tickOrder, () => {
       renderer.clear(true, true, true)
       renderer.resetState()
       renderer.getSize(size)

@@ -11,8 +11,8 @@ import {
   Vector3,
 } from 'three'
 
-import { clock } from '../../../clock'
 import { getUniqueId } from '../../../misc/getUniqueId'
+import { ticker } from '../../../ticker'
 import { useEffects } from '../../react/hooks'
 import { solveVector3Declaration, Vector3Declaration } from '../../three/declaration'
 
@@ -143,7 +143,7 @@ function useDebugDraw(): DebugDrawGroup {
 function DebugDrawProvider({ children }: { children?: React.ReactNode | React.ReactNode[] }) {
   const debugDraw = useMemo(() => new DebugDrawGroup(), [])
   useEffects(function* () {
-    yield clock().onTick(() => {
+    yield ticker().onTick(() => {
       debugDraw.update()
     })
     yield debugDraw

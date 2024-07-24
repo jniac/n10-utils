@@ -1,4 +1,4 @@
-import { clock } from '../../../clock'
+import { ticker } from '../../../ticker'
 import { PointerButton, PointerTarget } from './type'
 
 type Direction = 'horizontal' | 'vertical'
@@ -24,7 +24,7 @@ const defaultParams = {
    * The order in which the drag callback is called. 
    * 
    * If undefined, the drag callback is called by using window.requestAnimationFrame.
-   * Otherwise, the drag callback is called by using clock().requestAnimationFrame 
+   * Otherwise, the drag callback is called by using ticker().requestAnimationFrame 
    * with the given order.
    */
   dragTickOrder: <number | undefined>undefined,
@@ -94,14 +94,14 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
   const requestDragFrame = () => {
     frameID = dragTickOrder === undefined
       ? window.requestAnimationFrame(dragFrame)
-      : clock().requestAnimationFrame(dragFrame, { order: dragTickOrder })
+      : ticker().requestAnimationFrame(dragFrame, { order: dragTickOrder })
   }
 
   const cancelDragFrame = () => {
     if (dragTickOrder === undefined) {
       window.cancelAnimationFrame(frameID)
     } else {
-      clock().cancelAnimationFrame(frameID)
+      ticker().cancelAnimationFrame(frameID)
     }
   }
 
