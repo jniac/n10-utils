@@ -1,7 +1,7 @@
 import { Observable, SetValueOptions } from './observable'
 
 /**
- * ObservableSet is a set that can be observed for changes. Among other things, 
+ * ObservableSet is a set that can be observed for changes. Among other things,
  * it can be used to track entering and leaving items.
  */
 export class ObservableSet<T> extends Observable<Iterable<T>> {
@@ -13,6 +13,8 @@ export class ObservableSet<T> extends Observable<Iterable<T>> {
 
   get entering() { return new Set(this._entering) }
   get leaving() { return new Set(this._leaving) }
+
+  get size() { return this._set.size }
 
   constructor() {
     super(new Set())
@@ -75,7 +77,7 @@ export class ObservableSet<T> extends Observable<Iterable<T>> {
 
   /**
    * TODO: Implement this in its own instead of relying on setValue.
-   * @param values 
+   * @param values
    */
   add(...values: T[]): boolean {
     return this.setValue([...this.value, ...values])
@@ -83,7 +85,7 @@ export class ObservableSet<T> extends Observable<Iterable<T>> {
 
   /**
    * TODO: Implement this in its own instead of relying on setValue.
-   * @param values 
+   * @param values
    */
   remove(...values: T[]): boolean {
     return this.setValue([...this.value].filter(value => !values.includes(value)))
