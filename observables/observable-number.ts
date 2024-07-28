@@ -18,51 +18,71 @@ function clamp(x: number, min: number, max: number): number {
 
 export class ObservableNumber extends Observable<number> {
   private _memorization: Memorization | null = null
-  private _min: number
-  private _max: number
+  private _lowerBound: number
+  private _upperBound: number
   private _integer: boolean
 
-  get min(): number {
-    return this._min
+  get lowerBound(): number {
+    return this._lowerBound
   }
 
-  set min(value: number) {
-    this.setMinMax(value, this._max)
+  set lowerBound(value: number) {
+    this.setBounds(value, this._upperBound)
   }
 
-  get max(): number {
-    return this._max
+  get upperBound(): number {
+    return this._upperBound
   }
 
-  set max(value: number) {
-    this.setMinMax(this._min, value)
+  set upperBound(value: number) {
+    this.setBounds(this._lowerBound, value)
   }
+
+  /**
+   * @deprecated Use `lowerBound` instead.
+   */
+  get min() { return this.lowerBound }
+
+  /**
+   * @deprecated Use `lowerBound` instead.
+   */
+  set min(value: number) { this.lowerBound = value }
+
+  /**
+   * @deprecated Use `upperBound` instead.
+   */
+  get max() { return this.upperBound }
+
+  /**
+   * @deprecated Use `upperBound` instead.
+   */
+  set max(value: number) { this.upperBound = value }
 
   get delta(): number {
     return this._value - this._valueOld
   }
 
-  constructor(initialValue: number, options?: [min: number, max: number] | ConstructorNumberOptions) {
-    let min = -Infinity, max = Infinity
+  constructor(initialValue: number, options?: [lowerBound: number, upperBound: number] | ConstructorNumberOptions) {
+    let lowerBound = -Infinity, upperBound = Infinity
 
     if (Array.isArray(options)) {
-      [min, max] = options
+      [lowerBound, upperBound] = options
       options = {} as ConstructorOptions<number>
     } else {
-      min = options?.min ?? min
-      max = options?.max ?? max
+      lowerBound = options?.min ?? lowerBound
+      upperBound = options?.max ?? upperBound
     }
 
-    super(clamp(initialValue, min, max), options)
+    super(clamp(initialValue, lowerBound, upperBound), options)
 
-    this._min = min
-    this._max = max
+    this._lowerBound = lowerBound
+    this._upperBound = upperBound
     this._integer = options?.integer ?? false
   }
 
   override setValue(incomingValue: number, options?: SetValueOptions): boolean {
     // Before anything, clamp the incoming value:
-    incomingValue = clamp(incomingValue, this._min, this._max)
+    incomingValue = clamp(incomingValue, this._lowerBound, this._upperBound)
     incomingValue = this._integer ? Math.round(incomingValue) : incomingValue
 
     // Delay special case:
@@ -82,14 +102,21 @@ export class ObservableNumber extends Observable<number> {
   /**
    * Returns true if the value has changed (because of the new bounds).
    */
-  setMinMax(min: number, max: number): boolean {
+  setBounds(min: number, max: number): boolean {
     const newValue = clamp(this._value, min, max)
-    this._min = min
-    this._max = max
+    this._lowerBound = min
+    this._upperBound = max
     if (this._value !== newValue) {
       return this.setValue(newValue)
     }
     return false
+  }
+
+  /**
+   * @deprecated Use `setBounds` instead.
+   */
+  setMinMax(...args: Parameters<ObservableNumber['setBounds']>) {
+    return this.setBounds(...args)
   }
 
   /**
@@ -266,7 +293,7 @@ export class ObservableNumber extends Observable<number> {
    * 
    * If no values are given, the min and max of the observable are used.
    */
-  inverseLerp(a: number = this.min, b: number = this.max, options?: Partial<{ clamped: boolean }>): number {
+  inverseLerp(a: number = this.lowerBound, b: number = this.upperBound, options?: Partial<{ clamped: boolean }>): number {
     let alpha = (this._value - a) / (b - a)
     if (options?.clamped === true) {
       alpha = alpha < 0 ? 0 : alpha > 1 ? 1 : alpha
