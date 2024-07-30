@@ -39,6 +39,38 @@ export class ObservableSet<T> extends Observable<Iterable<T>> {
     return (this._value as Set<T>).has(value)
   }
 
+  private _shouldKeep?: (value: T) => boolean
+
+  get shouldKeep() { return this._shouldKeep }
+
+  /**
+   * Once defined, the set will now only keep values ​​for which this function returns true.
+   * 
+   * To remove immediately all values that do not meet the condition, call `purge()`.
+   */
+  setShouldKeep(value: (value: T) => boolean): this {
+    this._shouldKeep = value
+    return this
+  }
+
+  purge(shouldKeep = this.shouldKeep): boolean {
+    if (!shouldKeep) {
+      return false
+    }
+    const copy = new Set(this._value)
+    let hasChanged = false
+    for (const value of copy) {
+      if (!shouldKeep(value)) {
+        copy.delete(value)
+        hasChanged = true
+      }
+    }
+    if (hasChanged) {
+      return this.setValue(copy)
+    }
+    return false
+  }
+
   override setValue(incomingValues: Iterable<T>, options?: SetValueOptions | undefined): boolean {
     // Delay special case:
     if (this._handleDelay(incomingValues, options)) {
@@ -47,13 +79,17 @@ export class ObservableSet<T> extends Observable<Iterable<T>> {
 
     this.swap()
 
-    const { _set, _setOld, _entering, _leaving } = this
+    const { _set, _setOld, _entering, _leaving, _shouldKeep } = this
 
     _entering.clear()
     _leaving.clear()
     _set.clear()
 
     for (const value of incomingValues) {
+      if (_shouldKeep && _shouldKeep(value) === false) {
+        continue
+      }
+
       if (!_setOld.has(value)) {
         _entering.add(value)
       }
@@ -147,17 +183,27 @@ export class ObservableSet<T> extends Observable<Iterable<T>> {
 //     const set = new ObservableSet<string>()
 
 //     function log() {
-//       console.log(`value: [${[...set.value].join(', ')}], entering: [${[...set.entering].join(', ')}], leaving: [${[...set.leaving].join(', ')}], valueOld: [${[...set.valueOld].join(', ')}]`)
+//       console.log(`value: [${[...set.value].join(', ')}], entering(${set.entering.size}): [${[...set.entering].join(', ')}], leaving(${set.leaving.size}): [${[...set.leaving].join(', ')}], valueOld: [${[...set.valueOld].join(', ')}]`)
 //     }
 
 //     log()
-//     set.setValue(['A', 'B'])
+//     set.set(['A', 'B'])
 //     log()
-//     set.setValue(['A', 'B', 'C'])
+//     set.add('B', 'C')
 //     log()
 //     set.setValue(['C'])
 //     log()
 //     set.remove('C')
+//     log()
+//     set.add(...'ABC')
+//     set.add(...'abcdef')
+//     set.add('D')
+//     log()
+//     set
+//       .setShouldKeep(value => value === value.toUpperCase())
+//       .purge()
+//     log()
+//     set.add(...'abc')
 //     log()
 //   }
 // })
