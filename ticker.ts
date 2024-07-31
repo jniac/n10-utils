@@ -134,10 +134,32 @@ if (typeof window !== 'undefined') {
 }
 
 type OnTickOptions = Partial<{
+  /**
+   * Order of the callback. The lower the order, the earlier the callback will be
+   * called.
+   */
   order: number
+  /**
+   * `activeDuration` controls the duration of the "update" phase (in seconds).
+   * 
+   * The value is held by the ticker, if it's not provided here, the current value
+   * will remain.
+   */
   activeDuration: number
+  /**
+   * If `timeInterval` is greater than 0, the callback will be called approximately
+   * every `timeInterval` seconds.
+   */
   timeInterval: number
+  /**
+   * If `frameInterval` is greater than 0, the callback will be called every
+   * `frameInterval` frames.
+   */
   frameInterval: number
+  /**
+   * If `true`, the callback will be removed after the first call.
+   */
+  once: boolean
 }>
 
 class Ticker implements DestroyableObject, Tick {
@@ -218,7 +240,8 @@ class Ticker implements DestroyableObject, Tick {
       }
 
       // Auto-pause handling:
-      let { activeDuration, updateFadeDuration, updateLastRequest } = this._tick
+      const { activeDuration, updateFadeDuration } = this._tick
+      let { updateLastRequest } = this._tick
       if (this._requestAnimationFrame >= 0) {
         this._requestAnimationFrame += -windowDeltaTime
         updateLastRequest = windowTime
@@ -332,7 +355,16 @@ class Ticker implements DestroyableObject, Tick {
       activeDuration,
       frameInterval = 0,
       timeInterval = 0,
+      once = false,
     } = options
+
+    if (once) {
+      const listener = this.onTick({ ...options, once: false }, tick => {
+        listener.destroy()
+        callback(tick)
+      })
+      return listener
+    }
 
     if (frameInterval > 0) {
       return this.onTick({ order, activeDuration }, tick => {

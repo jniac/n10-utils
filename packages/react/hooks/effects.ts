@@ -1,5 +1,5 @@
 // @ts-ignore
-import { DependencyList, MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { MutableRefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { Destroyable } from '../../../types'
 import { digestProps } from './digestProps'
@@ -34,6 +34,9 @@ type UseEffectsOptions = Partial<{
    */
   useDigestProps: boolean
 }>
+
+/** For some reason the DependencyList when imported from react, is marked as `any`, which is not desirable. */
+type DependencyList = readonly unknown[]
 
 function parseArgs<T>(args: any[]): [UseEffectsCallback<T>, DependencyList | 'always', UseEffectsOptions] {
   const [arg0, arg1, arg2] = args
