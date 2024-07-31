@@ -119,8 +119,8 @@ function handlePress(element: PointerTarget, params: Params) {
     onPressStop?.(info)
   }
 
-  element.addEventListener('mousedown', onMouseDown)
-  element.addEventListener('touchstart', onTouchStart)
+  element.addEventListener('mousedown', onMouseDown, { passive: false })
+  element.addEventListener('touchstart', onTouchStart, { passive: false })
 
   return () => {
     element.removeEventListener('mousedown', onMouseDown)
