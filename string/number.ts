@@ -40,7 +40,7 @@ export function formatNumber(n: number, {
   }
 
   const useExpontential =
-    n < 1 / Math.pow(10, maxDigits - 2)
+    Math.abs(n) < 1 / Math.pow(10, maxDigits - 2)
   if (useExpontential) {
     return removeTrailingZeros(n.toExponential(maxDigits - 5))
   }
