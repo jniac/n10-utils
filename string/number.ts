@@ -56,7 +56,7 @@ export function formatBigNumber(n: number, {
   thousandsSeparator = ',',
 } = {}) {
   const str = n.toFixed(0)
-  const parts = []
+  const parts = [] as string[]
   let i = str.length
   while (i > 0) {
     const start = Math.max(0, i - 3)
