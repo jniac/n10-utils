@@ -1,6 +1,16 @@
 import { DestroyableObject } from '../types'
 import { Delay, clearDelay, withDelay } from './delay'
 
+/**
+ * ObservableCore is the very basic interface for an observable. It is exposed
+ * sperately to allow to any kind of object to be observable (and work with 
+ * existing observables and hooks).
+ */
+type ObservableCore<T> = {
+  value: T
+  onChange(callback: () => void): DestroyableObject
+}
+
 type ValueMapper<T> =
   (incomingValue: T, observable: Observable<T>) => T
 
@@ -68,7 +78,7 @@ let observableNextId = 0
  * statusObs.value = 'ready'
  * ```
  */
-class Observable<T = any> {
+class Observable<T = any> implements ObservableCore<T> {
   static get nextId() { return observableNextId }
 
   protected readonly _observableId = observableNextId++
@@ -320,6 +330,7 @@ export type {
   Callback,
   ConstructorOptions,
   DerivativeCallback,
+  ObservableCore,
   OnChangeOptions,
   SetValueOptions
 }

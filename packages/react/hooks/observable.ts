@@ -1,14 +1,18 @@
 // @ts-ignore
 import { useEffect, useMemo } from 'react'
 
-import { Observable, ObservableNumber } from '../../../observables'
+import { Observable, ObservableCore, ObservableNumber } from '../../../observables'
 import { useTriggerRender } from './misc'
 
 /**
  * This hook is used to get the value of an observable and trigger a render
  * whenever the observable changes.
+ * 
+ * NOTE: This hook does not necessarily need to be used with an `Observable` 
+ * instance, any object that has a `value` property and an `onChange` method will 
+ * work (ObservableCore type).
  */
-export function useValue<T>(observable: Observable<T>): T {
+export function useValue<T>(observable: ObservableCore<T>): T {
 	if (observable instanceof Observable === false) {
 		throw new Error('useValue() must be called with an Observable instance.')
 	}
@@ -18,6 +22,7 @@ export function useValue<T>(observable: Observable<T>): T {
 		const { destroy } = observable.onChange(() => triggerRender())
 		return destroy
 	}, [triggerRender, observable])
+
 	return observable.value
 }
 

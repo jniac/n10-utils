@@ -1,6 +1,7 @@
 export type {
 	Callback as ObservableCallback,
 	ConstructorOptions as ObservableConstructorOptions,
+	ObservableCore,
 	DerivativeCallback as ObservableDerivativeCallback,
 	OnChangeOptions as ObservableOnChangeOptions
 } from './observable'
