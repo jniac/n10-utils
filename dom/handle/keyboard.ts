@@ -13,6 +13,12 @@ type Info = {
 
 const defaultOptions = {
   preventDefault: false,
+  /**
+   * If `true`, the event target must be the same as the target element.
+   * 
+   * Useful to avoid triggering the listener when the user is typing in an input.
+   */
+  strictTarget: false,
 }
 
 type Options = Partial<typeof defaultOptions>
@@ -67,7 +73,7 @@ type KeyboardListenerEntry = [
 
 function solveArgs(args: any[]): [HTMLElement, Options, KeyboardListenerEntry[]] {
   if (args.length === 1) {
-    return [document.documentElement, {}, args[0]]
+    return [document.body, {}, args[0]]
   }
   if (args.length === 2) {
     return [args[0], {}, args[1]]
@@ -112,11 +118,16 @@ export function handleKeyboard(...args: any[]): Destroyable {
   const [target, options, listeners] = solveArgs(args)
   const { preventDefault } = { ...defaultOptions, ...options }
   const onKeyDown = (event: KeyboardEvent): void => {
+    if (options.strictTarget && event.target !== target) {
+      return
+    }
+
     const { ctrlKey, altKey, shiftKey, metaKey } = event
     const info: Info = {
       event,
       modifiers: { ctrl: ctrlKey, alt: altKey, shift: shiftKey, meta: metaKey },
     }
+
     for (let i = 0, max = listeners.length; i < max; i++) {
       const [filter, callback] = listeners[i]
       const { key, keyCaseInsensitive, code, noModifiers, modifiers } = solveKeyboardFilter(filter)
