@@ -10,6 +10,11 @@ type DragInfo = {
   movement: DOMPoint
   delta: DOMPoint
   deltaTime: number
+
+  shiftKey: boolean
+  metaKey: boolean
+  altKey: boolean
+  ctrlKey: boolean
 }
 
 type Callback = (info: DragInfo) => void
@@ -85,6 +90,11 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
     movement,
     delta,
     deltaTime: 1 / 60,
+
+    shiftKey: false,
+    metaKey: false,
+    altKey: false,
+    ctrlKey: false,
   }
 
   /**
@@ -220,6 +230,12 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
   const onMouseMove = (event: MouseEvent) => {
     pointer.x = event.clientX
     pointer.y = event.clientY
+
+    info.shiftKey = event.shiftKey
+    info.metaKey = event.metaKey
+    info.altKey = event.altKey
+    info.ctrlKey = event.ctrlKey
+
     if (drag && dragPreventDefault) {
       event.preventDefault()
     }
@@ -263,6 +279,12 @@ function handleDrag(element: PointerTarget, params: Params): () => void {
     if (touch.identifier === firstTouch!.identifier) {
       pointer.x = touch.clientX
       pointer.y = touch.clientY
+
+      info.shiftKey = event.shiftKey
+      info.metaKey = event.metaKey
+      info.altKey = event.altKey
+      info.ctrlKey = event.ctrlKey
+
       if (drag && dragPreventDefault) {
         event.preventDefault()
       }
