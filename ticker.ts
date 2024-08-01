@@ -375,7 +375,7 @@ class Ticker implements DestroyableObject, Tick {
     }
 
     if (timeInterval > 0) {
-      let cumulativeTime = 0
+      let cumulativeTime = timeInterval
       return this.onTick({ order, activeDuration }, tick => {
         cumulativeTime += tick.deltaTime
         if (cumulativeTime >= timeInterval) {
