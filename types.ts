@@ -13,13 +13,42 @@ export type OneOrMany<T> = T | T[]
 /**
  * Makes all properties of an object type mutable. Reverse of `Readonly<T>`.
  */
-export type Editable<T> = {
+export type Mutable<T> = {
   -readonly [P in keyof T]: T[P]
 }
+
+/**
+ * @deprecated Use `Mutable` instead.
+ */
+export type Editable<T> = Mutable<T>
 
 export type DeepPartial<T> = T extends object
   ? { [P in keyof T]?: DeepPartial<T[P]> }
   : T
+
+/**
+ * Returns the keys of an object type that are mutable.
+ * 
+ * Kind of tricky to understand, but it works.
+ */
+export type MutableKeys<T> = {
+  [K in keyof T]-?: IfEquals<{ [Q in K]: T[K] }, { -readonly [Q in K]: T[K] }, K, never>
+}[keyof T]
+
+// Helper type
+type IfEquals<X, Y, A = X, B = never> =
+  (<T>() => T extends X ? 1 : 2) extends
+  (<T>() => T extends Y ? 1 : 2) ? A : B
+
+
+
+
+
+//----------------------------------------//
+//                                        //
+//              Math types                //
+//                                        //
+//----------------------------------------//
 
 export type Vector2Like = {
   x: number
