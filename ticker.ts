@@ -37,7 +37,7 @@ type Tick = Readonly<{
   toString(): string
 }>
 
-type TickCallback = (state: Tick) => void | 'stop'
+type TickCallback = (tick: Tick) => void | 'stop'
 
 
 let listenerNextId = 0
@@ -92,7 +92,7 @@ class Listeners {
     }
   }
 
-  call(state: Tick) {
+  call(tick: Tick) {
     if (this._sortDirty) {
       this._listeners.sort((A, B) => A.order - B.order)
       this._sortDirty = false
@@ -102,7 +102,7 @@ class Listeners {
       this._countDirty = false
     }
     for (const { callback } of this._loopListeners) {
-      const result = callback(state)
+      const result = callback(tick)
       if (result === 'stop') {
         this.remove(callback)
       }
@@ -214,7 +214,7 @@ class Ticker implements DestroyableObject, Tick {
     updateLastRequest: 0,
   }
 
-  // Getters, ClockState implementation.
+  // Getters, Tick implementation.
   get time() { return this._tick.time }
   get timeOld() { return this._tick.timeOld }
   get frame() { return this._tick.frame }
@@ -230,6 +230,11 @@ class Ticker implements DestroyableObject, Tick {
   get updateLastRequest() { return this._tick.updateLastRequest }
 
   get freezed() { return this._freezed }
+  get tick() { return this._tick }
+
+  /**
+   * @deprecated Use `tick` instead.
+   */
   get state() { return this._tick }
 
   constructor({ activeDuration } = {} as { activeDuration?: number }) {
@@ -429,9 +434,9 @@ class Ticker implements DestroyableObject, Tick {
    */
   requestAnimationFrame(callback: (ms: number) => void, { order = 0 } = {}): number {
     this.requestUpdate() // Request an update to ensure the callback is called.
-    const listener = this._updateListeners.add(order, state => {
+    const listener = this._updateListeners.add(order, tick => {
       this._updateListeners.removeById(listener.id)
-      callback(state.time * 1e3)
+      callback(tick.time * 1e3)
     })
     return listener.id
   }
