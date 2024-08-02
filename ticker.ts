@@ -167,8 +167,11 @@ class Ticker implements DestroyableObject, Tick {
   maxDeltaTime = .1
 
   suspended = false
+  suspendForceNextFrame = false
   suspend() { this.suspended = true }
   resume() { this.suspended = false }
+  /** When set to `true`, the ticker will render the next frame even if it's suspended. */
+  nextFrame() { this.suspendForceNextFrame = true }
 
   /**
    * If `true`, the clock will catch errors thrown by the callbacks and stop the
@@ -235,9 +238,12 @@ class Ticker implements DestroyableObject, Tick {
     }
 
     const update = (windowDeltaTime: number) => {
-      if (this.suspended || this._caughtErrors) {
+      if ((this.suspended && this.suspendForceNextFrame === false) || this._caughtErrors) {
         return
       }
+
+      // Reset the flag.
+      this.suspendForceNextFrame = false
 
       // Auto-pause handling:
       const { activeDuration, updateFadeDuration } = this._tick
