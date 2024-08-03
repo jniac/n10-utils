@@ -22,3 +22,31 @@ export function every<T>(values: Iterable<T>, predicate: (value: T) => boolean):
   }
   return true
 }
+
+export function* allDescendants<T>(root: T, {
+  includeRoot = false,
+  getChildren = null as ((value: T) => Iterable<T>) | null,
+} = {}): Generator<T> {
+  if (!getChildren) {
+    if ('children' in (root as any)) {
+      getChildren = (value) => (value as any).children
+    }
+  }
+
+  if (!getChildren) {
+    throw new Error('getChildren is required')
+  }
+
+  if (includeRoot) {
+    yield root
+  }
+
+  const stack = [root]
+  while (stack.length > 0) {
+    const value = stack.pop()!
+    yield value
+    for (const child of getChildren(value)) {
+      stack.push(child)
+    }
+  }
+}
