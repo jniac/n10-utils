@@ -1,7 +1,9 @@
+// @ts-ignore
 import { BufferAttribute, BufferGeometry, Color, ColorRepresentation } from 'three'
+
 import { clamp } from '../../../math/basics'
 
-export const setVertexColor = (geometry: BufferGeometry, color: ColorRepresentation, range: [startIndex: number, endIndex: number] = [0, -1]) => {
+export function setVertexColor<G extends BufferGeometry>(geometry: G, color: ColorRepresentation, range: [startIndex: number, endIndex: number] = [0, -1]): G {
   const count = geometry.attributes.position.count
 
   // Compute indexes
@@ -17,11 +19,13 @@ export const setVertexColor = (geometry: BufferGeometry, color: ColorRepresentat
   if (endIndex < startIndex) {
     endIndex = startIndex
   }
-  
+
   const colorAtt = geometry.attributes.color ?? new BufferAttribute(new Float32Array(count * 3), 3)
   const { r, g, b } = new Color(color)
   for (let i = startIndex; i < endIndex; i++) {
     colorAtt.setXYZ(i, r, g, b)
   }
   geometry.setAttribute('color', colorAtt)
+
+  return geometry
 }
