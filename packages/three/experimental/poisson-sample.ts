@@ -58,6 +58,8 @@ const defaultParams = {
   pointIsOk: ({ x, y }: Vector2) => Math.abs(x) < 10 && Math.abs(y) < 10,
 }
 
+Object.freeze(defaultParams)
+
 type Params = Partial<typeof defaultParams>
 
 export function* poissonDiscSampler2D(options: Params = {}): Generator<Vector2> {
