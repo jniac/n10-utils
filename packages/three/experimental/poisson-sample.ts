@@ -1,29 +1,78 @@
 // @ts-ignore
 import { Vector2 } from 'three'
 
-type PoissonDiscSampler2DOptions = Partial<{
-  firstPoint: Vector2
-  radius: number
-  radiusDeltaRatio: number
-  maxIteration: number
-  maxPoints: number
-  gridSizeMax: number
-  securityCountMax: number
-  randomDelegate: () => number
-  pointIsOk: (point: Vector2) => boolean
-}>
+const defaultParams = {
+  /**
+   * The first point to start the sampling.
+   * 
+   * Defaults to (0, 0).
+   */
+  firstPoint: new Vector2(),
+  /**
+   * The radius of the circle around each point where no other point can be generated.
+   * 
+   * Defaults to `0.5`.
+   */
+  radius: 0.5,
+  /**
+   * The "delta" ratio of the radius to generate the next point. 
+   * 
+   * The next point will be generated in a circle of `radius * (1 + radiusDeltaRatio * random)`.
+   * 
+   * Example:
+   * ```
+   * radius = 0.5, radiusDeltaRatio = 0.5 // random radius between 0.5 and 0.75
+   * radius = 0.5, radiusDeltaRatio = 1.0 // random radius between 0.5 and 1.0
+   * ```
+   * 
+   * Defaults to `0.5`.
+   */
+  radiusDeltaRatio: 0.5,
+  /**
+   * The maximum number of iterations to try to generate a point.
+   * 
+   * Defaults to `12`.
+   * 
+   * Could be decreased for better performance.
+   */
+  maxIteration: 12,
+  maxPoints: 10_000,
+  gridSizeMax: 1_000_000,
+  securityCountMax: 1_000_000,
+  /**
+   * The random delegate to use.
+   * 
+   * Defaults to `Math.random`.
+   */
+  randomDelegate: () => Math.random(),
+  /**
+   * The function to check if a point is ok.
+   * 
+   * Defaults to: 
+   * ```
+   * ({ x, y }) => Math.abs(x) < 10 && Math.abs(y) < 10
+   * // Point is ok if it is in a square of 20x20.
+   * ```
+   * 
+   */
+  pointIsOk: ({ x, y }: Vector2) => Math.abs(x) < 10 && Math.abs(y) < 10,
+}
 
-export function* poissonDiscSampler2D({
-  firstPoint = new Vector2(),
-  radius = 0.5,
-  radiusDeltaRatio = 0.5,
-  maxIteration = 12,
-  maxPoints = 10000,
-  gridSizeMax = 1000000,
-  securityCountMax = 1000000,
-  randomDelegate = () => Math.random(),
-  pointIsOk = ({ x, y }: Vector2) => Math.abs(x) < 10 && Math.abs(y) < 10,
-}: PoissonDiscSampler2DOptions = {}): Generator<Vector2> {
+type Params = Partial<typeof defaultParams>
+
+export function* poissonDiscSampler2D(options: Params = {}): Generator<Vector2> {
+  const {
+    firstPoint,
+    radius,
+    radiusDeltaRatio,
+    maxIteration,
+    maxPoints,
+    gridSizeMax,
+    securityCountMax,
+    randomDelegate,
+    pointIsOk,
+  } = { ...defaultParams, ...options }
+
   const sqrRadius = radius * radius
   const cellSize = radius / Math.sqrt(2)
   const grid = new Map<number, Vector2>()
