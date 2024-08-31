@@ -48,6 +48,16 @@ export type TransformDeclaration = Partial<{
   scaleScalar: number
 }>
 
+export function isVector2Declaration(arg: any): arg is Vector2Declaration {
+  if (typeof arg === 'number') return true
+  if (Array.isArray(arg)) return arg.length >= 2 && arg.length <= 3 && arg.every(v => typeof v === 'number')
+  if (typeof arg === 'object') {
+    if ('x' in arg && 'y' in arg) return true
+    if ('width' in arg && 'height' in arg) return true
+  }
+  return false
+}
+
 export function solveVector2Declaration(arg: Vector2Declaration, out: Vector2 = new Vector2()): Vector2 {
   if (typeof arg === 'number') {
     return out.set(arg, arg)
@@ -62,6 +72,16 @@ export function solveVector2Declaration(arg: Vector2Declaration, out: Vector2 = 
   }
   const { x, y } = arg as { x: number; y: number }
   return out.set(x, y)
+}
+
+export function isVector3Declaration(arg: any): arg is Vector3Declaration {
+  if (typeof arg === 'number') return true
+  if (Array.isArray(arg)) return arg.length >= 2 && arg.length <= 3 && arg.every(v => typeof v === 'number')
+  if (typeof arg === 'object') {
+    if ('x' in arg && 'y' in arg) return true
+    if ('width' in arg && 'height' in arg) return true
+  }
+  return false
 }
 
 export function solveVector3Declaration(arg: Vector3Declaration, out: Vector3 = new Vector3()): Vector3 {
