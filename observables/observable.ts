@@ -46,6 +46,7 @@ type VerifyCallback<T> =
 
 type OnChangeOptions = Partial<{
   executeImmediately: boolean
+  once: boolean
 }>
 
 let observableNextId = 0
@@ -236,15 +237,38 @@ class Observable<T = any> implements ObservableCore<T> {
   onChange(callback: Callback<T>): DestroyableObject
   onChange(options: OnChangeOptions, callback: Callback<T>): DestroyableObject
   onChange(...args: any[]): DestroyableObject {
-    const [{
-      executeImmediately = false,
-    }, callback] = (args.length === 2 ? args : [{}, args[0]]) as
+    const [options, callback] = (args.length === 2 ? args : [{}, args[0]]) as
       [OnChangeOptions, Callback<T>]
+
+    const {
+      executeImmediately = false,
+      once = false,
+    } = options
+
+    if (once) {
+      // No need to store the callback in the listeners set.
+      if (executeImmediately) {
+        callback(this._value, this)
+        return { destroy: () => { } }
+      }
+
+      // Destroyable object that will destroy itself after the first call.
+      const destroyable = this.onChange({ ...options, executeImmediately: false, once: false }, (value, obs) => {
+        destroyable.destroy()
+        callback(value, obs)
+      })
+
+      return destroyable
+    }
+
     this._listeners.add(callback)
+
     const destroy = () => this._listeners.delete(callback)
+
     if (executeImmediately) {
       callback(this._value, this)
     }
+
     return { destroy }
   }
 
