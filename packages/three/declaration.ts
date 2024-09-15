@@ -1,5 +1,5 @@
 // @ts-ignore
-import { Euler, Matrix4, Object3D, Vector2, Vector3 } from 'three'
+import { Euler, Matrix4, Object3D, Quaternion, Vector2, Vector3 } from 'three'
 
 /**
  * Because readonly types are compatible with their mutable counterparts, we can use this type to handle both cases.
@@ -113,11 +113,12 @@ export function solveEulerDeclaration(arg: EulerDeclaration, out: Euler = new Eu
 export const solveTransformDeclaration = (() => {
   const _position = new Vector3()
   const _rotation = new Euler()
+  const _quaternion = new Quaternion()
   const _scale = new Vector3()
 
   function solveTransformDeclaration(props: TransformDeclaration, out: Matrix4): Matrix4
   function solveTransformDeclaration<T extends Object3D>(props: TransformDeclaration, out: T): T
-  function solveTransformDeclaration(props: TransformDeclaration, out: any): Object3D {
+  function solveTransformDeclaration(props: TransformDeclaration, out: any): any {
     const {
       x = 0,
       y = 0,
@@ -138,28 +139,34 @@ export const solveTransformDeclaration = (() => {
       scale = { x: scaleX, y: scaleY, z: scaleZ },
     } = props
 
+    _rotation.set(rotationX, rotationY, rotationZ, rotationOrder)
+
     if (useDegree) {
       const s = Math.PI / 180
-      rotation.x *= s
-      rotation.y *= s
-      rotation.z *= s
+      _rotation.x *= s
+      _rotation.y *= s
+      _rotation.z *= s
     }
+
+    solveVector3Declaration(position, _position)
+    solveEulerDeclaration(rotation, _rotation)
+    solveVector3Declaration(scale, _scale).multiplyScalar(scaleScalar)
 
     if (out instanceof Matrix4) {
-      solveVector3Declaration(position, _position)
-      solveEulerDeclaration(rotation, _rotation)
-      solveVector3Declaration(scale, _scale).multiplyScalar(scaleScalar)
-      return out.compose(_position, _rotation, _scale)
+      return out.compose(_position, _quaternion.setFromEuler(_rotation), _scale)
     }
 
-    if (out instanceof Object3D) {
-      solveEulerDeclaration(position, out.position)
-      solveEulerDeclaration(rotation, out.rotation)
-      solveEulerDeclaration(scale, out.scale).multiplyScalar(scaleScalar)
+    function isObject3D(obj: any): obj is Object3D {
+      return obj && typeof obj.position === 'object' && typeof obj.quaternion === 'object' && typeof obj.scale === 'object'
+    }
+    if (isObject3D(out)) {
+      out.position.copy(_position)
+      out.quaternion.setFromEuler(_rotation)
+      out.scale.copy(_scale)
       return out
     }
 
-    throw new Error('Invalid out argument')
+    throw new Error(`Invalid out argument (${out.constructor.name})`)
   }
   return solveTransformDeclaration
 })()
