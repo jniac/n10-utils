@@ -2,43 +2,113 @@ import { inverseLerp } from './math/basics'
 import { easeInOut2 } from './math/easing'
 import { DestroyableObject } from './types'
 
-type Tick = Readonly<{
-  timeScale: number
-  time: number
-  timeOld: number
-  frame: number
-  deltaTime: number
-  deltaTimeOld: number
-  unscaledDeltaTime: number
-  unscaledDeltaTimeOld: number
-  windowDeltaTime: number
-  maxDeltaTime: number
-  paused: boolean
+function onUserInteraction(callback: () => void): DestroyableObject
+function onUserInteraction(element: HTMLElement | Window, callback: () => void): DestroyableObject
+function onUserInteraction(...args: any[]): DestroyableObject {
+  const [element, callback] = args.length === 1 ? [window, args[0]] : args
+  const onInteraction = () => {
+    callback()
+  }
+  element.addEventListener('mousemove', onInteraction)
+  element.addEventListener('mousedown', onInteraction)
+  element.addEventListener('mouseup', onInteraction)
+  element.addEventListener('touchstart', onInteraction)
+  element.addEventListener('touchmove', onInteraction)
+  element.addEventListener('wheel', onInteraction)
+  element.addEventListener('keydown', onInteraction)
+  element.addEventListener('keyup', onInteraction)
+  const destroy = () => {
+    element.removeEventListener('mousemove', onInteraction)
+    element.removeEventListener('mousedown', onInteraction)
+    element.removeEventListener('mouseup', onInteraction)
+    element.removeEventListener('touchstart', onInteraction)
+    element.removeEventListener('touchmove', onInteraction)
+    element.removeEventListener('wheel', onInteraction)
+    element.removeEventListener('keydown', onInteraction)
+    element.removeEventListener('keyup', onInteraction)
+  }
+  return { destroy }
+}
 
-  /**
-   * Duration of the "update" phase (in seconds). During this interval, the clock
-   * will update constantly.
-   */
-  activeDuration: number
-  /**
-   * Duration of the "fade" phase (in seconds). During this interval, the clock
-   * will progressively slow down to zero.
-   */
-  updateFadeDuration: number
-  /**
-   * Time scale during the "fade" phase. It goes from 1 to 0 and defaults to 1.
-   */
-  updateTimeScale: number
-  /**
-   * Last time the clock was requested to update (in "window" time which may differ from the current clock time).
-   */
-  updateLastRequest: number
+class Tick {
+  static defaultActiveDuration = 10
+  static defaultActiveFadeDuration = 1
+  static previousCountMax = 10
 
-  toString(): string
-}>
+  constructor(
+    public previousTick: Tick | null = null,
+    public readonly frame: number = 0,
+    public readonly timeScale: number = 1,
+    public readonly time: number = 0,
+    public readonly deltaTime: number = 0,
+    public readonly unscaledDeltaTime: number = 0,
+    public readonly windowDeltaTime: number = 0,
+    public readonly maxDeltaTime: number = 0,
+    public readonly paused: boolean = false,
+
+    // Active properties:
+    public readonly activeLastRequest: number = 0,
+    /**
+     * Duration of the "update" phase (in seconds). During this interval, the clock
+     * will update constantly.
+     */
+    public readonly activeDuration: number = Tick.defaultActiveDuration,
+    /**
+     * Duration of the "fade" phase (in seconds). During this interval, the clock
+     * will progressively slow down to zero.
+     */
+    public readonly activeFadeDuration: number = Tick.defaultActiveFadeDuration,
+    /**
+     * Last time the clock was requested to update (in "window" time which may differ from the current clock time).
+     */
+    public readonly activeTimeScale: number = 1,
+  ) {
+    let current = previousTick
+    let count = 0
+    while (current !== null) {
+      if (++count >= Tick.previousCountMax) {
+        current.previousTick = null
+        break
+      }
+      current = current.previousTick
+    }
+  }
+
+  // Old shorthands:
+  get previousTime() { return this.previousTick?.time ?? this.time }
+  get previousDeltaTime() { return this.previousTick?.deltaTime ?? this.deltaTime }
+  get previousUnscaledDeltaTime() { return this.previousTick?.unscaledDeltaTime ?? this.unscaledDeltaTime }
+
+  get remainingActiveDuration() { return this.activeLastRequest + this.activeDuration - windowTime }
+
+  // Backward compatibility:
+  /**
+   * @deprecated Use {@link Tick.previousTime} instead.
+   */
+  get timeOld() { return this.previousTime }
+  /**
+   * @deprecated Use {@link Tick.previousDeltaTime} instead.
+   */
+  get deltaTimeOld() { return this.previousDeltaTime }
+  /**
+   * @deprecated Use {@link Tick.activeDuration} instead.
+   */
+  get updateDuration() { return this.activeDuration }
+  /**
+   * @deprecated Use {@link Tick.activeFadeDuration} instead.
+   */
+  get updateFadeDuration() { return this.activeFadeDuration }
+  /**
+   * @deprecated Use {@link Tick.activeTimeScale} instead.
+   */
+  get updateFadeTimeScale() { return this.activeTimeScale }
+
+  toString() {
+    return `Tick { frame: ${this.frame}, time: ${this.time.toFixed(3)}, deltaTime: ${this.deltaTime.toFixed(3)} }`
+  }
+}
 
 type TickCallback = (tick: Tick) => void | 'stop'
-
 
 let listenerNextId = 0
 type Listener = Readonly<{
@@ -163,15 +233,27 @@ type OnTickOptions = Partial<{
 }>
 
 class Ticker implements DestroyableObject, Tick {
-  timeScale = 1
-  maxDeltaTime = .1
+  private _state = {
+    frame: 0,
+    timeScale: 1,
+    maxDeltaTime: .1,
+    freezed: false,
 
-  suspended = false
-  suspendForceNextFrame = false
-  suspend() { this.suspended = true }
-  resume() { this.suspended = false }
+    activeDuration: Tick.defaultActiveDuration,
+    activeFadeDuration: Tick.defaultActiveFadeDuration,
+    activeLastRequest: 0,
+
+    suspended: false,
+    suspendForceNextFrame: false,
+    requestAnimationFrame: 0,
+
+    caughtErrors: false,
+  }
+
+  suspend() { this._state.suspended = true }
+  resume() { this._state.suspended = false }
   /** When set to `true`, the ticker will render the next frame even if it's suspended. */
-  nextFrame() { this.suspendForceNextFrame = true }
+  nextFrame() { this._state.suspendForceNextFrame = true }
 
   /**
    * If `true`, the clock will catch errors thrown by the callbacks and stop the
@@ -187,49 +269,53 @@ class Ticker implements DestroyableObject, Tick {
   destroy: () => void
   value() { return this }
 
-  private _frame = 0
   private _updateListeners = new Listeners()
   private _freezeListeners = new Listeners()
   private _unfreezeListeners = new Listeners()
-  private _freezed = false
-  private _requestAnimationFrame = 0
-  private _caughtErrors = false
 
-  private _tick: Tick = {
-    timeScale: 1,
-    time: 0,
-    timeOld: 0,
-    frame: 0,
-    maxDeltaTime: .1,
-    deltaTime: 0,
-    deltaTimeOld: 0,
-    unscaledDeltaTime: 0,
-    unscaledDeltaTimeOld: 0,
-    windowDeltaTime: 0,
-    paused: false,
-
-    activeDuration: 3,
-    updateFadeDuration: 1,
-    updateTimeScale: 1,
-    updateLastRequest: 0,
-  }
+  private _tick = new Tick()
 
   // Getters, Tick implementation.
-  get time() { return this._tick.time }
-  get timeOld() { return this._tick.timeOld }
+  get previousTick() { return this._tick.previousTick }
   get frame() { return this._tick.frame }
+  get timeScale() { return this._tick.timeScale }
+  get time() { return this._tick.time }
+  get previousTime() { return this._tick.previousTime }
   get deltaTime() { return this._tick.deltaTime }
-  get deltaTimeOld() { return this._tick.deltaTimeOld }
+  get previousDeltaTime() { return this._tick.previousDeltaTime }
   get unscaledDeltaTime() { return this._tick.unscaledDeltaTime }
-  get unscaledDeltaTimeOld() { return this._tick.unscaledDeltaTimeOld }
+  get previousUnscaledDeltaTime() { return this._tick.previousUnscaledDeltaTime }
   get windowDeltaTime() { return this._tick.windowDeltaTime }
+  get maxDeltaTime() { return this._tick.maxDeltaTime }
   get paused() { return this._tick.paused }
+  get activeLastRequest() { return this._tick.activeLastRequest }
   get activeDuration() { return this._tick.activeDuration }
+  get activeFadeDuration() { return this._tick.activeFadeDuration }
+  get activeTimeScale() { return this._tick.activeTimeScale }
+  /**
+   * @deprecated Use {@link Ticker.previousTime} instead.
+   */
+  get timeOld() { return this._tick.timeOld }
+  /**
+   * @deprecated Use {@link Ticker.previousDeltaTime} instead.
+   */
+  get deltaTimeOld() { return this._tick.deltaTimeOld }
+  /**
+   * @deprecated Use {@link Ticker.activeDuration} instead.
+   */
+  get updateDuration() { return this._tick.updateDuration }
+  /**
+   * @deprecated Use {@link Ticker.activeFadeDuration} instead.
+   */
   get updateFadeDuration() { return this._tick.updateFadeDuration }
-  get updateTimeScale() { return this._tick.updateTimeScale }
-  get updateLastRequest() { return this._tick.updateLastRequest }
+  /**
+   * @deprecated Use {@link Ticker.activeTimeScale} instead.
+   */
+  get updateFadeTimeScale() { return this._tick.updateFadeTimeScale }
 
-  get freezed() { return this._freezed }
+  get remainingActiveDuration() { return this.activeLastRequest + this._tick.activeDuration - windowTime }
+
+  get freezed() { return this._state.freezed }
   get tick() { return this._tick }
 
   /**
@@ -239,64 +325,70 @@ class Ticker implements DestroyableObject, Tick {
 
   constructor({ activeDuration } = {} as { activeDuration?: number }) {
     if (activeDuration !== undefined) {
-      this._tick = { ...this._tick, activeDuration }
+      this._state.activeDuration = activeDuration
     }
 
     const update = (windowDeltaTime: number) => {
-      if ((this.suspended && this.suspendForceNextFrame === false) || this._caughtErrors) {
+      const {
+        frame,
+        timeScale,
+        maxDeltaTime,
+        activeDuration,
+        activeFadeDuration,
+        activeLastRequest,
+        suspended,
+        suspendForceNextFrame,
+        caughtErrors,
+        requestAnimationFrame,
+      } = this._state
+
+      if ((suspended && suspendForceNextFrame === false) || caughtErrors) {
         return
       }
 
       // Reset the flag.
-      this.suspendForceNextFrame = false
+      this._state.suspendForceNextFrame = false
 
       // Auto-pause handling:
-      const { activeDuration, updateFadeDuration } = this._tick
-      let { updateLastRequest } = this._tick
-      if (this._requestAnimationFrame >= 0) {
-        this._requestAnimationFrame += -windowDeltaTime
-        updateLastRequest = windowTime
+      if (requestAnimationFrame >= 0) {
+        this._state.requestAnimationFrame += -windowDeltaTime
+        this._state.activeLastRequest = windowTime
       }
 
-      const getUpdateTimeScale = () => {
+      const getActiveTimeScale = () => {
+        const { activeDuration, activeLastRequest } = this
         if (Number.isFinite(activeDuration)) {
-          const updateTime1 = updateLastRequest + activeDuration
-          const updateTime2 = updateTime1 + updateFadeDuration
+          const updateTime1 = activeLastRequest + activeDuration
+          const updateTime2 = updateTime1 + activeFadeDuration
           return easeInOut2(1 - inverseLerp(updateTime1, updateTime2, windowTime))
         }
         return 1
       }
-      const updateTimeScale = getUpdateTimeScale()
+      const activeTimeScale = getActiveTimeScale()
 
       // Time handling:
-      const { timeScale, maxDeltaTime } = this
       const deltaTimeOld = this._tick.deltaTime
-      const unscaledDeltaTime = Math.min(maxDeltaTime, windowDeltaTime) * timeScale
-      const deltaTime = unscaledDeltaTime * updateTimeScale
       const timeOld = this._tick.time
+      const unscaledDeltaTime = Math.min(maxDeltaTime, windowDeltaTime) * timeScale
+      const deltaTime = unscaledDeltaTime * activeTimeScale
+      const paused = activeTimeScale === 0
       const time = timeOld + deltaTime
-      const frame = this._frame
-      const tick = Object.freeze({
-        frame,
 
+      const tick = new Tick(
+        this._tick,
+        frame,
         timeScale,
-        deltaTimeOld,
+        time,
         deltaTime,
-        unscaledDeltaTimeOld: this._tick.unscaledDeltaTime,
         unscaledDeltaTime,
         windowDeltaTime,
-        paused: updateTimeScale === 0,
-        time,
-        timeOld,
         maxDeltaTime,
-
+        paused,
+        activeLastRequest,
         activeDuration,
-        updateFadeDuration,
-        updateTimeScale,
-        updateLastRequest,
+        activeFadeDuration,
+        activeTimeScale)
 
-        toString: () => `Tick { frame: ${frame}, time: ${time.toFixed(3)}, deltaTime: ${deltaTime.toFixed(3)} }`,
-      })
       this._tick = tick
 
       const freezed =
@@ -305,7 +397,7 @@ class Ticker implements DestroyableObject, Tick {
         && time === timeOld // Time should not have been update by any other ways.
 
       if (freezed === false) {
-        if (this._freezed) {
+        if (this._state.freezed) {
           this._unfreezeListeners.call(tick)
         }
 
@@ -315,26 +407,31 @@ class Ticker implements DestroyableObject, Tick {
           try {
             this._updateListeners.call(tick)
           } catch (error) {
-            this._caughtErrors = true
+            this._state.caughtErrors = true
             console.error(`Clock loop caught an error. The loop is now broken.`)
             console.error(error)
           }
         }
 
-        this._frame++
+        this._state.frame++
       } else {
-        if (this._freezed === false) {
+        if (this._state.freezed === false) {
           // Last call before freezing.
           this._freezeListeners.call(tick)
         }
       }
 
-      this._freezed = freezed
+      this._state.freezed = freezed
     }
 
     animationFrameCallbacks.add(update)
+
     this.destroy = () => {
       animationFrameCallbacks.delete(update)
+      this.onUserInteractionListener?.destroy()
+      this._freezeListeners.clear()
+      this._unfreezeListeners.clear()
+      this._updateListeners.clear()
     }
   }
 
@@ -397,7 +494,7 @@ class Ticker implements DestroyableObject, Tick {
     }
 
     if (activeDuration !== undefined) {
-      this.setUpdateDuration(activeDuration)
+      this.setActiveDuration(activeDuration)
     }
     this._updateListeners.add(order, callback)
     const destroy = () => {
@@ -416,11 +513,21 @@ class Ticker implements DestroyableObject, Tick {
    * interval, after which the activeDuration will apply again, before being
    * finally paused.
    */
-  requestUpdate(duration?: number): this {
-    this._requestAnimationFrame = duration !== undefined
-      ? Math.max(0, this._requestAnimationFrame, duration)
-      : Math.max(0, this._requestAnimationFrame)
+  requestActivation = (activeDuration?: number): this => {
+    this._state.requestAnimationFrame = activeDuration !== undefined
+      ? Math.max(0, this._state.requestAnimationFrame, activeDuration)
+      : Math.max(0, this._state.requestAnimationFrame)
     return this
+  }
+
+  /**
+   * @deprecated Use {@link Ticker.requestActivation} instead.
+   */
+  requestUpdate = this.requestActivation
+
+  private onUserInteractionListener: DestroyableObject | null = null
+  requestActivationOnUserInteraction(element: HTMLElement = document.documentElement, activeDuration?: number): DestroyableObject {
+    return this.onUserInteractionListener = onUserInteraction(element, () => this.requestActivation(activeDuration))
   }
 
   /**
@@ -433,7 +540,7 @@ class Ticker implements DestroyableObject, Tick {
    * to a specific position among the other callbacks.
    */
   requestAnimationFrame(callback: (ms: number) => void, { order = 0 } = {}): number {
-    this.requestUpdate() // Request an update to ensure the callback is called.
+    this.requestActivation() // Request activation to ensure the callback is called.
     const listener = this._updateListeners.add(order, tick => {
       this._updateListeners.removeById(listener.id)
       callback(tick.time * 1e3)
@@ -454,24 +561,26 @@ class Ticker implements DestroyableObject, Tick {
    * Set the "update" duration (in seconds). During this interval, the clock will
    * update constantly.
    */
-  setUpdateDuration(value: number): this {
-    this._tick = Object.freeze({
-      ...this._tick,
-      activeDuration: Math.max(0, value),
-    })
+  setActiveDuration(value: number): this {
+    this._state.activeDuration = Math.max(0, value)
     return this
   }
+
+  /**
+   * @deprecated Use {@link Ticker.setActiveDuration} instead.
+   */
+  setUpdateDuration = this.setActiveDuration.bind(this)
 
   /**
    * Returns a promise that will be resolved at the next frame. The promise's
    * inner value is the current frame.
    */
   waitNextFrame(): Promise<number> {
-    this.requestUpdate()
+    this.requestActivation()
     return new Promise<number>(resolve => {
       const callback = () => {
         this._updateListeners.remove(callback)
-        resolve(this._frame)
+        resolve(this._state.frame)
       }
       this._updateListeners.add(0, callback)
     })
@@ -484,7 +593,7 @@ class Ticker implements DestroyableObject, Tick {
   waitFrames(frameCount: number): number | Promise<number> {
     frameCount = Math.round(frameCount)
     if (frameCount <= 0) {
-      return this._frame
+      return this._state.frame
     }
     let count = 0
     return new Promise<number>(resolve => {
@@ -493,7 +602,7 @@ class Ticker implements DestroyableObject, Tick {
         this.requestUpdate()
         if (count === frameCount) {
           this._updateListeners.remove(callback)
-          resolve(this._frame)
+          resolve(this._state.frame)
         }
       }
       this._updateListeners.add(0, callback)
@@ -501,7 +610,7 @@ class Ticker implements DestroyableObject, Tick {
   }
 
   toString(): string {
-    return `Clock { frame: ${this._frame}, time: ${this._tick.time.toFixed(3)}, deltaTime: ${this._tick.deltaTime.toFixed(3)} }`
+    return `Clock { frame: ${this._state.frame}, time: ${this._tick.time.toFixed(3)}, deltaTime: ${this._tick.deltaTime.toFixed(3)} }`
   }
 }
 
@@ -537,43 +646,20 @@ function solveClockRequestUpdateOnUserInteractionArgs(args: any[]): ClockRequest
   return args as any
 }
 
-function onUserInteraction(callback: () => void): DestroyableObject
-function onUserInteraction(element: HTMLElement | Window, callback: () => void): DestroyableObject
-function onUserInteraction(...args: any[]): DestroyableObject {
-  const [element, callback] = args.length === 1 ? [window, args[0]] : args
-  const onInteraction = () => {
-    callback()
-  }
-  element.addEventListener('mousemove', onInteraction)
-  element.addEventListener('mousedown', onInteraction)
-  element.addEventListener('mouseup', onInteraction)
-  element.addEventListener('touchstart', onInteraction)
-  element.addEventListener('touchmove', onInteraction)
-  element.addEventListener('wheel', onInteraction)
-  element.addEventListener('keydown', onInteraction)
-  element.addEventListener('keyup', onInteraction)
-  const destroy = () => {
-    element.removeEventListener('mousemove', onInteraction)
-    element.removeEventListener('mousedown', onInteraction)
-    element.removeEventListener('mouseup', onInteraction)
-    element.removeEventListener('touchstart', onInteraction)
-    element.removeEventListener('touchmove', onInteraction)
-    element.removeEventListener('wheel', onInteraction)
-    element.removeEventListener('keydown', onInteraction)
-    element.removeEventListener('keyup', onInteraction)
-  }
-  return { destroy }
-}
-
-function tickerRequestUpdateOnUserInteraction(element: HTMLElement, option?: { activeDuration?: number }): DestroyableObject // Backward compatibility
-function tickerRequestUpdateOnUserInteraction(arg?: ClockRequestUpdateOnUserInteractionArg): DestroyableObject
-function tickerRequestUpdateOnUserInteraction(...args: any[]): DestroyableObject {
+function tickerRequestActivationOnUserInteraction(element: HTMLElement, option?: { activeDuration?: number }): DestroyableObject // Backward compatibility
+function tickerRequestActivationOnUserInteraction(arg?: ClockRequestUpdateOnUserInteractionArg): DestroyableObject
+function tickerRequestActivationOnUserInteraction(...args: any[]): DestroyableObject {
   const {
     element = document.documentElement,
     activeDuration,
   } = solveClockRequestUpdateOnUserInteractionArgs(args)
-  return onUserInteraction(element, () => ticker().requestUpdate(activeDuration))
+  return onUserInteraction(element, () => ticker().requestActivation(activeDuration))
 }
+
+/**
+ * @deprecated Use {@link tickerRequestActivationOnUserInteraction} instead.
+ */
+const tickerRequestUpdateOnUserInteraction = tickerRequestActivationOnUserInteraction
 
 const onTick = ticker().onTick.bind(ticker())
 const offTick = ticker().offTick.bind(ticker())
@@ -584,6 +670,7 @@ export {
   onUserInteraction,
   Ticker,
   ticker,
+  tickerRequestActivationOnUserInteraction,
   tickerRequestUpdateOnUserInteraction,
   windowTicker
 }
